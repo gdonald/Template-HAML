@@ -1,0 +1,6 @@
+
+use Template::Hosoi;
+use Test;
+
+my $hosoi;
+ok Hosoi.new;
