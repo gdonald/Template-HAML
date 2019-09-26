@@ -1,6 +1,6 @@
 {
   "name": "Template::Hosoi",
-  "description": "Template Language for Perl 6",
+  "description": "HTML Template Parser for Perl 6",
   "version": "0.0.1",
   "perl": "6.d",
   "authors": [
@@ -14,17 +14,18 @@
     "Test::META"
   ],
   "provides": {
-    "Template::Hosoi": "lib/Template/Hosia.pm6",
-    "Template::Hosoi::Render": "lib/Template/Hosia/Render.pm6"
+    "Template::Hosoi::Grammar": "lib/Template/Hosoi/Grammar.pm6",
+    "Template::Hosoi::Render": "lib/Template/Hosoi/Render.pm6"
   },
   "resources": [],
   "support": {
-    "source": "https://github.com/rakuis/Template-Hosoi/issues"
+    "source": "https://github.com/rakuist/Template-Hosoi/issues"
   },
   "license": "Artistic-2.0",
   "tags": [
+    "HTML",
     "Template",
-    "HTML"
+    "Parser"
   ],
   "source-url": "git://github.com/rakuist/Template-Hosoi.git"
 }
