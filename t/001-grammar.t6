@@ -1,0 +1,244 @@
+
+use v6.d;
+use lib 'lib';
+use Template::Haml::Actions;
+use Template::Haml::Grammar;
+use Template::Haml::Lines;
+use Test;
+
+plan 95;
+
+my $actions = Actions.new;
+my $m;
+my $tag;
+my $tags;
+my $classes;
+
+# <sigil>
+$m = Grammar.parse('%', :rule<sigil>, :$actions);
+ok $m.Str eq '%';
+
+$m = Grammar.parse('.', :rule<sigil>, :$actions);
+ok $m.Str eq '.';
+
+$m = Grammar.parse('#', :rule<sigil>, :$actions);
+ok $m.Str eq '#';
+
+
+# <op>
+$m = Grammar.parse('=', :rule<op>, :$actions);
+ok $m.Str eq '=';
+
+$m = Grammar.parse('-', :rule<op>, :$actions);
+ok $m.Str eq '-';
+
+
+# <param-key>
+$m = Grammar.parse('foo:', :rule<param-key>, :$actions);
+ok $m.made eq 'foo';
+
+
+# <quoted-string>
+$m = Grammar.parse('"foo"', :rule<quoted-string>, :$actions);
+ok $m.made eq 'foo';
+
+$m = Grammar.parse('"foo bar"', :rule<quoted-string>, :$actions);
+ok $m.made eq 'foo bar';
+
+$m = Grammar.parse("'foo'", :rule<quoted-string>, :$actions);
+ok $m.made eq 'foo';
+
+$m = Grammar.parse("'foo bar'", :rule<quoted-string>, :$actions);
+ok $m.made eq 'foo bar';
+
+
+# <param-value>
+$m = Grammar.parse('"foo"', :rule<param-value>, :$actions);
+ok $m.made eq 'foo';
+
+$m = Grammar.parse('"foo bar"', :rule<param-value>, :$actions);
+ok $m.made eq 'foo bar';
+
+$m = Grammar.parse("'foo'", :rule<param-value>, :$actions);
+ok $m.made eq 'foo';
+
+$m = Grammar.parse("'foo bar'", :rule<param-value>, :$actions);
+ok $m.made eq 'foo bar';
+
+$m = Grammar.parse(':foo', :rule<param-value>, :$actions);
+ok $m.made eq 'foo';
+
+
+# <param>
+$m = Grammar.parse('class: "foo"', :rule<param>, :$actions);
+ok $m.made ~~ Pair:D;
+ok $m.made<class> eq 'foo';
+
+$m = Grammar.parse("class: 'foo'", :rule<param>, :$actions);
+ok $m.made ~~ Pair:D;
+ok $m.made<class> eq 'foo';
+
+$m = Grammar.parse('class: "foo bar"', :rule<param>, :$actions);
+ok $m.made ~~ Pair:D;
+ok $m.made<class> eq 'foo bar';
+
+$m = Grammar.parse("class: 'foo bar'", :rule<param>, :$actions);
+ok $m.made ~~ Pair:D;
+ok $m.made<class> eq 'foo bar';
+
+$m = Grammar.parse('class: :foo', :rule<param>, :$actions);
+ok $m.made ~~ Pair:D;
+ok $m.made<class> eq 'foo';
+
+
+# <params>
+$m = Grammar.parse('class: "foo"', :rule<params>, :$actions);
+ok $m.made ~~ Hash:D;
+ok $m.made<class> eq 'foo';
+
+$m = Grammar.parse("class: 'foo'", :rule<params>, :$actions);
+ok $m.made ~~ Hash:D;
+ok $m.made<class> eq 'foo';
+
+$m = Grammar.parse('class: "foo bar"', :rule<params>, :$actions);
+ok $m.made ~~ Hash:D;
+ok $m.made<class> eq 'foo bar';
+
+$m = Grammar.parse("class: 'foo bar'", :rule<params>, :$actions);
+ok $m.made ~~ Hash:D;
+ok $m.made<class> eq 'foo bar';
+
+$m = Grammar.parse("class: :foo", :rule<params>, :$actions);
+ok $m.made ~~ Hash:D;
+ok $m.made<class> eq 'foo';
+
+$m = Grammar.parse('class: "foo", id: \'foo_1\'', :rule<params>, :$actions);
+ok $m.made ~~ Hash:D;
+ok $m.made<class> eq 'foo';
+ok $m.made<id> eq 'foo_1';
+
+$m = Grammar.parse("class: \"foo\", id: 'foo_1'", :rule<params>, :$actions);
+ok $m.made ~~ Hash:D;
+ok $m.made<class> eq 'foo';
+ok $m.made<id> eq 'foo_1';
+
+$m = Grammar.parse("class: :foo, id: 'foo_1', style: 'bar'", :rule<params>, :$actions);
+ok $m.made ~~ Hash:D;
+ok $m.made<class> eq 'foo';
+ok $m.made<id> eq 'foo_1';
+ok $m.made<style> eq 'bar';
+
+$m = Grammar.parse("\{ class: :foo, id: 'foo_1', style: 'bar' \}", :rule<params-hash>, :$actions);
+ok $m.made ~~ Hash:D;
+ok $m.made<class> eq 'foo';
+ok $m.made<id> eq 'foo_1';
+ok $m.made<style> eq 'bar';
+
+$m = Grammar.parse('{ class: :foo, id: "foo_1", style: "bar" }', :rule<params-hash>, :$actions);
+ok $m.made ~~ Hash:D;
+ok $m.made<class> eq 'foo';
+ok $m.made<id> eq 'foo_1';
+ok $m.made<style> eq 'bar';
+
+
+# <indent>
+$m = Grammar.parse('  ', :rule<indent>, :$actions);
+ok $m.made == 2;
+
+$m = Grammar.parse('    ', :rule<indent>, :$actions);
+ok $m.made == 4;
+
+dies-ok { Grammar.parse(' ', :rule<indent>, :$actions) };
+
+
+# <css-class>
+$m = Grammar.parse('.foo', :rule<css-class>, :$actions);
+ok $m.made eq 'foo';
+
+
+# <css-classes>
+$m = Grammar.parse('.foo.bar', :rule<css-classes>, :$actions);
+$classes = <foo bar>;
+ok $m.made.elems == 2;
+ok $classes.grep: $m.made[0];
+ok $classes.grep: $m.made[1];
+
+$m = Grammar.parse('.foo.bar.baz', :rule<css-classes>, :$actions);
+$classes = <foo bar baz>;
+ok $m.made.elems == 3;
+ok $classes.grep: $m.made[0];
+ok $classes.grep: $m.made[1];
+ok $classes.grep: $m.made[2];
+
+
+# <tag>
+Lines.clear;
+$m = Grammar.parse('%p', :rule<tag>, :$actions);
+ok Lines.entries.elems == 1;
+$tag = Lines.entries.first;
+ok $tag.open eq '<p>';
+ok $tag.close eq '</p>';
+
+Lines.clear;
+$m = Grammar.parse('%p{}', :rule<tag>, :$actions);
+ok Lines.entries.elems == 1;
+$tag = Lines.entries.first;
+ok $tag.open eq '<p>';
+ok $tag.close eq '</p>';
+
+Lines.clear;
+$m = Grammar.parse('%p{ class: "foo" }', :rule<tag>, :$actions);
+ok Lines.entries.elems == 1;
+$tag = Lines.entries.first;
+ok $tag.open eq "<p class='foo'>";
+ok $tag.close eq '</p>';
+
+Lines.clear;
+$m = Grammar.parse('%p{ class: "foo", id: :foo_1 }', :rule<tag>, :$actions);
+ok Lines.entries.elems == 1;
+$tag = Lines.entries.first;
+$tags = ["<p class='foo' id='foo_1'>", "<p id='foo_1' class='foo'>"];
+ok $tags.grep: $tag.open;
+ok $tag.close eq '</p>';
+
+Lines.clear;
+$m = Grammar.parse('  %p{ class: "foo", id: :foo_1 } Some content', :rule<tag>, :$actions);
+ok Lines.entries.elems == 1;
+$tag = Lines.entries.first;
+$tags = ["<p class='foo' id='foo_1'>", "<p id='foo_1' class='foo'>"];
+ok $tags.grep: $tag.open;
+ok $tag.content eq 'Some content';
+ok $tag.close eq '</p>';
+
+Lines.clear;
+$m = Grammar.parse('  %p{ class: "foo", id: :foo_1 } Some content ', :rule<tag>, :$actions);
+ok Lines.entries.elems == 1;
+$tag = Lines.entries.first;
+$tags = ["<p class='foo' id='foo_1'>", "<p id='foo_1' class='foo'>"];
+ok $tags.grep: $tag.open;
+ok $tag.content eq 'Some content';
+ok $tag.close eq '</p>';
+
+Lines.clear;
+$m = Grammar.parse('%p.foo{ id: "bar" }', :rule<tag>, :$actions);
+ok Lines.entries.elems == 1;
+$tag = Lines.entries.first;
+$tags = ["<p class='foo' id='bar'>", "<p id='bar' class='foo'>"];
+ok $tags.grep: $tag.open;
+ok $tag.close eq '</p>';
+
+Lines.clear;
+$m = Grammar.parse('%p.foo.bar', :rule<tag>, :$actions);
+ok Lines.entries.elems == 1;
+$tag = Lines.entries.first;
+ok $tag.open eq "<p class='foo bar'>";
+ok $tag.close eq '</p>';
+ok $tag.full eq "<p class='foo bar'></p>";
+
+Lines.clear;
+$m = Grammar.parse('%p.foo.bar Some content', :rule<tag>, :$actions);
+ok Lines.entries.elems == 1;
+$tag = Lines.entries.first;
+ok $tag.open eq "<p class='foo bar'>";
+ok $tag.close eq '</p>';
+ok $tag.full eq "<p class='foo bar'>Some content</p>";

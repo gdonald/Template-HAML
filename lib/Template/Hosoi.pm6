@@ -1,4 +1,0 @@
-
-class Hosoi is export {
-
-}
