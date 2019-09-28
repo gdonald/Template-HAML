@@ -14,8 +14,9 @@
     "Test::META"
   ],
   "provides": {
+    "Template::Hosoi": "lib/Template/Hosoi.pm6",
     "Template::Hosoi::Grammar": "lib/Template/Hosoi/Grammar.pm6",
-    "Template::Hosoi::Render": "lib/Template/Hosoi/Render.pm6"
+    "Template::Hosoi::Renderer": "lib/Template/Hosoi/Renderer.pm6"
   },
   "resources": [],
   "support": {

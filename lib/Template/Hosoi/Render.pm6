@@ -1,4 +1,0 @@
-
-class Render is export {
-
-}
