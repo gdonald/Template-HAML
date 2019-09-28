@@ -1,8 +1,0 @@
-
-use Template::Hosoi;
-use Test;
-
-plan 1;
-
-my $hosoi;
-ok Hosoi.new;

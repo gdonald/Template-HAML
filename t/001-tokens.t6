@@ -1,0 +1,23 @@
+
+use v6.d;
+use lib 'lib';
+use Template::Hosoi::Grammar;
+use Test;
+
+plan 10;
+
+my $m;
+
+ok Grammar.parse('"', :rule<double-quote>);
+nok Grammar.parse("'", :rule<double-quote>);
+
+ok Grammar.parse("'", :rule<single-quote>);
+nok Grammar.parse('"', :rule<single-quote>);
+
+ok Grammar.parse('name', :rule<name>);
+nok Grammar.parse('.name', :rule<name>);
+nok Grammar.parse('name x', :rule<name>);
+nok Grammar.parse('x name', :rule<name>);
+
+ok Grammar.parse('1', :rule<number>);
+ok Grammar.parse('123', :rule<number>);
