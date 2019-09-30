@@ -1,12 +1,12 @@
 
-### Template::Hosoi
+### Template::Haml
 
-Template Language for Perl 6
+HTML Abstraction Markup Language for Raku.  A shameless rip-off of Ruby HAML.
 
 #### Install using zef
 
 ```
-zef install Template::Hosoi
+zef install Template::Haml
 ```
 
 #### Run Tests
@@ -17,11 +17,11 @@ $ prove6
 
 #### Status
 
-[![Build Status](https://travis-ci.org/rakuist/Template-Hosoi.svg?branch=master)](https://travis-ci.org/rakuist/Template-Hosoi)
+[![Build Status](https://travis-ci.org/rakuist/Template-Haml.svg?branch=master)](https://travis-ci.org/rakuist/Template-Haml)
 
 #### License
 
-Template::Hosoi is released under the [Artistic License 2.0](https://opensource.org/licenses/Artistic-2.0)
+Template::Haml is released under the [Artistic License 2.0](https://opensource.org/licenses/Artistic-2.0)
 
 #### TODO
 
