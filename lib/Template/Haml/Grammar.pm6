@@ -32,10 +32,5 @@ grammar Grammar is export {
     ]*
   }
 
-  rule TOP {
-    <lines>
-    {
-      Renderer.new;
-    }
-  }
+  rule TOP { <lines> }
 }

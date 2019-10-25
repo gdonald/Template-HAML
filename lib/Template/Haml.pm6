@@ -1,17 +1,14 @@
 
+use Template::Haml::Actions;
 use Template::Haml::Grammar;
 use Template::Haml::Lines;
 use Template::Haml::Renderer;
 
 class Haml is export {
-
-  submethod BUILD() {
-
-  }
-
-  method parse(Str:D :$in) {
+  method parse(Str:D :$haml) {
     Lines.clear;
-    Grammar.parse($in);
+    my $actions = Actions.new;
+    Grammar.parse($haml, :$actions);
     Renderer.render;
   }
 }

@@ -1,0 +1,14 @@
+
+use v6.d;
+use lib 'lib';
+use Template::Haml;
+use Test;
+
+plan 1;
+
+my $haml = qq:to/HAML/;
+%section.container
+HAML
+
+my $html = Haml.parse(:$haml);
+ok $html eq "<section class='container'></section>";

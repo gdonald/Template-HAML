@@ -34,7 +34,7 @@ class Tag is export {
 
   method build-attrs {
     self.merge-classes;
-    my $attrs = %!params.keys.map({ $_ ~ "='" ~ %!params{$_} ~ "'" }).join(' ');
+    my $attrs = %!params.keys.map({ $_ ~ "='" ~ %!params{$_} ~ "'" }).join: ' ';
     $attrs.chars ?? ' ' ~ $attrs !! '';
   }
 
@@ -42,11 +42,11 @@ class Tag is export {
     return unless @!classes.elems;
 
     if %!params<class> {
-      my $klasses = %!params<class>.split(' ');
+      my $klasses = %!params<class>.split: ' ';
       for @!classes { $klasses ~= ' ' ~ $_ }
       %!params<class> = $klasses.unique;
     } else {
-      %!params<class> = @!classes.join(' ');
+      %!params<class> = @!classes.join: ' ';
     }
   }
 
