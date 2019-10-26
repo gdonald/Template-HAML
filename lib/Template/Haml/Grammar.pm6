@@ -1,13 +1,16 @@
 
 use Template::Haml::Lines;
 use Template::Haml::Renderer;
-use Template::Haml::Tag;
+use Template::Haml::Line;
 
 grammar Grammar is export {
 
+  token ws { \h* }
+  token indent { ^^ \h* }
+  token eol { $$ \n* }
+
   token word { \w+ }
   token number { \d+ }
-  token indent { \s+ }
   token sigil { <[%.#]>**1 }
   token op { <[=\-]>**1 }
 
@@ -20,17 +23,15 @@ grammar Grammar is export {
   rule param-value { [ <quoted-string> | <symbol> ] }
   rule param { <param-key> <param-value> }
   rule params { <param> [ ',' <param> ]* }
-  rule params-hash { '{' <params> '}' }
-  rule tag-type { <sigil><word> }
+  rule params-hash { '{' <params>? '}' }
+  rule line-type { <sigil><word> }
   rule css-class { '.' <word> }
   rule css-classes { <css-class> [ <css-class> ]* }
-  rule tag { <indent>? <tag-type><css-classes>?<params-hash>? <phrase>? }
 
-  rule lines {
-    [
-      | <tag>
-    ]*
+  token line { <indent><line-type><css-classes>?<params-hash>? <phrase>? <.eol> }
+
+  rule TOP {
+    <line>*
+    $
   }
-
-  rule TOP { <lines> }
 }

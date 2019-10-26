@@ -1,21 +1,21 @@
 
 use Template::Haml::Lines;
-use Template::Haml::Tag;
+use Template::Haml::Line;
 use Template::Haml::X;
 
 class Actions is export {
   method TOP($/) {}
 
-  method tag($/) {
-    my $indent = $/<indent>.made || 0;
-    my $name = $/<tag-type><word>.Str;
+  method line($/) {
+    my $indent = $/<indent>.made;
+    my $name = $/<line-type><word>.Str;
     my $params = $/<params-hash>.made || {};
     my $content = $/<phrase>.Str.trim || '';
-    my $sigil = $/<tag-type><sigil>.Str;
+    my $sigil = $/<line-type><sigil>.Str;
     my $classes = $/<css-classes>.made || [];
 
-    my $obj = Tag.new(:$indent, :$sigil, :$name, :$params, :$content, :$classes);
-    Lines.push(:$obj);
+    my $line = Line.new(:$indent, :$sigil, :$name, :$params, :$content, :$classes);
+    Lines.push(:$line);
   }
 
   method indent($/) {

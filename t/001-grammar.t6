@@ -13,6 +13,7 @@ my $m;
 my $tag;
 my $tags;
 my $classes;
+my $haml;
 
 # <sigil>
 $m = Grammar.parse('%', :rule<sigil>, :$actions);
@@ -171,30 +172,30 @@ ok $classes.grep: $m.made[1];
 ok $classes.grep: $m.made[2];
 
 
-# <tag>
+# <line>
 Lines.clear;
-$m = Grammar.parse('%p', :rule<tag>, :$actions);
+$m = Grammar.parse("%p\n", :rule<line>, :$actions);
 ok Lines.entries.elems == 1;
 $tag = Lines.entries.first;
 ok $tag.open eq '<p>';
 ok $tag.close eq '</p>';
 
 Lines.clear;
-$m = Grammar.parse('%p{}', :rule<tag>, :$actions);
+$m = Grammar.parse('%p{}' ~ "\n", :rule<line>, :$actions);
 ok Lines.entries.elems == 1;
 $tag = Lines.entries.first;
 ok $tag.open eq '<p>';
 ok $tag.close eq '</p>';
 
 Lines.clear;
-$m = Grammar.parse('%p{ class: "foo" }', :rule<tag>, :$actions);
+$m = Grammar.parse('%p{ class: "foo" }' ~ "\n", :rule<line>, :$actions);
 ok Lines.entries.elems == 1;
 $tag = Lines.entries.first;
 ok $tag.open eq "<p class='foo'>";
 ok $tag.close eq '</p>';
 
 Lines.clear;
-$m = Grammar.parse('%p{ class: "foo", id: :foo_1 }', :rule<tag>, :$actions);
+$m = Grammar.parse('%p{ class: "foo", id: :foo_1 }' ~ "\n", :rule<line>, :$actions);
 ok Lines.entries.elems == 1;
 $tag = Lines.entries.first;
 $tags = ["<p class='foo' id='foo_1'>", "<p id='foo_1' class='foo'>"];
@@ -202,16 +203,7 @@ ok $tags.grep: $tag.open;
 ok $tag.close eq '</p>';
 
 Lines.clear;
-$m = Grammar.parse('  %p{ class: "foo", id: :foo_1 } Some content', :rule<tag>, :$actions);
-ok Lines.entries.elems == 1;
-$tag = Lines.entries.first;
-$tags = ["<p class='foo' id='foo_1'>", "<p id='foo_1' class='foo'>"];
-ok $tags.grep: $tag.open;
-ok $tag.content eq 'Some content';
-ok $tag.close eq '</p>';
-
-Lines.clear;
-$m = Grammar.parse('  %p{ class: "foo", id: :foo_1 } Some content ', :rule<tag>, :$actions);
+$m = Grammar.parse('  %p{ class: "foo", id: :foo_1 } Some content' ~ "\n", :rule<line>, :$actions);
 ok Lines.entries.elems == 1;
 $tag = Lines.entries.first;
 $tags = ["<p class='foo' id='foo_1'>", "<p id='foo_1' class='foo'>"];
@@ -220,7 +212,16 @@ ok $tag.content eq 'Some content';
 ok $tag.close eq '</p>';
 
 Lines.clear;
-$m = Grammar.parse('%p.foo{ id: "bar" }', :rule<tag>, :$actions);
+$m = Grammar.parse('  %p{ class: "foo", id: :foo_1 } Some content ' ~ "\n", :rule<line>, :$actions);
+ok Lines.entries.elems == 1;
+$tag = Lines.entries.first;
+$tags = ["<p class='foo' id='foo_1'>", "<p id='foo_1' class='foo'>"];
+ok $tags.grep: $tag.open;
+ok $tag.content eq 'Some content';
+ok $tag.close eq '</p>';
+
+Lines.clear;
+$m = Grammar.parse('%p.foo{ id: "bar" }' ~ "\n", :rule<line>, :$actions);
 ok Lines.entries.elems == 1;
 $tag = Lines.entries.first;
 $tags = ["<p class='foo' id='bar'>", "<p id='bar' class='foo'>"];
@@ -228,7 +229,7 @@ ok $tags.grep: $tag.open;
 ok $tag.close eq '</p>';
 
 Lines.clear;
-$m = Grammar.parse('%p.foo.bar', :rule<tag>, :$actions);
+$m = Grammar.parse('%p.foo.bar' ~ "\n", :rule<line>, :$actions);
 ok Lines.entries.elems == 1;
 $tag = Lines.entries.first;
 ok $tag.open eq "<p class='foo bar'>";
@@ -236,7 +237,7 @@ ok $tag.close eq '</p>';
 ok $tag.full eq "<p class='foo bar'></p>";
 
 Lines.clear;
-$m = Grammar.parse('%p.foo.bar Some content', :rule<tag>, :$actions);
+$m = Grammar.parse('%p.foo.bar Some content' ~ "\n", :rule<line>, :$actions);
 ok Lines.entries.elems == 1;
 $tag = Lines.entries.first;
 ok $tag.open eq "<p class='foo bar'>";

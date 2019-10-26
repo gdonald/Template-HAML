@@ -1,7 +1,7 @@
 
 use Template::Haml::X;
 
-class Tag is export {
+class Line is export {
   has Int $.indent;
   has Str $.name;
   has Str $.sigil;

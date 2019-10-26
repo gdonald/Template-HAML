@@ -6,9 +6,6 @@ use Test;
 
 plan 1;
 
-my $haml = qq:to/HAML/;
-%section.container
-HAML
-
+my $haml = "%section.container\n  %h1 Title\n  %h2 Subtitle\n";
 my $html = Haml.parse(:$haml);
-ok $html eq "<section class='container'></section>";
+ok $html eq "<section class='container'><h1>Title</h1><h2>Subtitle</h2></section>";

@@ -2,8 +2,8 @@
 class Lines is export {
   my @.entries;
 
-  method push(Mu:D :$obj) {
-    @.entries.push: $obj;
+  method push(Mu:D :$line) {
+    @.entries.push: $line;
   }
 
   method clear {
