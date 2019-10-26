@@ -25,17 +25,21 @@ class Line is export {
 
   method build-open {
     my $attrs = self.build-attrs;
-    $!open = '<' ~ $!name ~ $attrs ~ '>';
+    $!open = self.get-indent ~ '<' ~ $!name ~ $attrs ~ '>';
   }
 
   method close {
-    '</' ~ $!name ~ '>';
+    '</' ~ $!name ~ '>' ~ "\n";
   }
 
   method build-attrs {
     self.merge-classes;
     my $attrs = %!params.keys.map({ $_ ~ "='" ~ %!params{$_} ~ "'" }).join: ' ';
     $attrs.chars ?? ' ' ~ $attrs !! '';
+  }
+
+  method get-indent {
+    ' ' x $!indent;
   }
 
   method merge-classes {

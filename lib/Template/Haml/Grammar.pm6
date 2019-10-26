@@ -1,6 +1,6 @@
 
 use Template::Haml::Lines;
-use Template::Haml::Renderer;
+use Template::Haml::Compiler;
 use Template::Haml::Line;
 
 grammar Grammar is export {

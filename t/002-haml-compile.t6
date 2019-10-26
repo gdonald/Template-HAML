@@ -1,0 +1,28 @@
+
+use v6.d;
+use lib 'lib';
+use Template::Haml;
+use Test;
+
+plan 1;
+
+my $haml;
+my $html;
+my $result;
+
+$haml = qq:to/HAML/;
+%section.container
+  %h1 Title
+  %h2 Subtitle
+HAML
+
+$html = Haml.compile(:$haml);
+
+$result = qq:to/HTML/;
+<section class='container'>
+  <h1>Title</h1>
+  <h2>Subtitle</h2>
+</section>
+HTML
+
+ok $html eq $result;

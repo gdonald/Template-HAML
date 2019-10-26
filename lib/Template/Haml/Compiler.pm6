@@ -1,13 +1,13 @@
 
 use Template::Haml::Lines;
 
-class Renderer is export {
-  method render {
+class Compiler is export {
+  method compile {
     my @lines = Lines.entries;
-    self.render-line(@lines, 0);
+    self.compile-line(@lines, 0);
   }
 
-  method render-line(@lines, $cur) {
+  method compile-line(@lines, $cur) {
     my $closed = False;
     my $current-line = @lines[$cur];
     my $next-line = @lines[$cur + 1];
@@ -19,16 +19,16 @@ class Renderer is export {
         $out ~= $current-line.content;
         $out ~= $current-line.close;
         $closed = True;
-        $out ~= self.render-line(@lines, $cur + 1);
+        $out ~= self.compile-line(@lines, $cur + 1);
       } else {
-        $out ~= self.render-line(@lines, $cur + 1);
+        $out ~= "\n";
+        $out ~= self.compile-line(@lines, $cur + 1);
       }
     } else {
       $out ~= $current-line.content;
     }
 
     $out ~= $current-line.close unless $closed;
-
     $out;
   }
 }

@@ -16,10 +16,10 @@
   "provides": {
     "Template::Haml": "lib/Template/Haml.pm6",
     "Template::Haml::Actions": "lib/Template/Haml/Actions.pm6",
+    "Template::Haml::Compiler": "lib/Template/Haml/Compiler.pm6",
     "Template::Haml::Grammar": "lib/Template/Haml/Grammar.pm6",
     "Template::Haml::Line": "lib/Template/Haml/Line.pm6",
     "Template::Haml::Lines": "lib/Template/Haml/Lines.pm6",
-    "Template::Haml::Renderer": "lib/Template/Haml/Renderer.pm6",
     "Template::Haml::X": "lib/Template/Haml/X.pm6"
   },
   "resources": [],
