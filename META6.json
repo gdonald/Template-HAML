@@ -17,6 +17,7 @@
     "Template::Haml": "lib/Template/Haml.pm6",
     "Template::Haml::Actions": "lib/Template/Haml/Actions.pm6",
     "Template::Haml::Grammar": "lib/Template/Haml/Grammar.pm6",
+    "Template::Haml::Node": "lib/Template/Haml/Node.pm6",
     "Template::Haml::Renderer": "lib/Template/Haml/Renderer.pm6",
     "Template::Haml::Tag": "lib/Template/Haml/Tag.pm6",
     "Template::Haml::X": "lib/Template/Haml/X.pm6"
