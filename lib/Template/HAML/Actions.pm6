@@ -1,9 +1,9 @@
 
 use Data::Dump::Tree;
 
-use Template::Haml::Node;
-use Template::Haml::Tag;
-use Template::Haml::X;
+use Template::HAML::Node;
+use Template::HAML::Tag;
+use Template::HAML::X;
 
 class Actions is export {
   has Node $.tree;

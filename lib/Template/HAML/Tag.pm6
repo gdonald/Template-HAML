@@ -1,5 +1,5 @@
 
-use Template::Haml::X;
+use Template::HAML::X;
 
 class Tag is export {
   has Int $.indent;

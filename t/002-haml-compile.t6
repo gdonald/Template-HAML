@@ -1,7 +1,7 @@
 
 use v6.d;
 use lib 'lib';
-use Template::Haml;
+use Template::HAML;
 use Test;
 
 plan 2;
@@ -16,7 +16,7 @@ $haml = qq:to/HAML/;
   %h2 Subtitle
 HAML
 
-$rendered = Haml.render(:$haml);
+$rendered = HAML.render(:$haml);
 
 $expected = qq:to/HTML/;
 <section class='container'>
@@ -38,7 +38,7 @@ $haml = qq:to/HAML/;
       %p Content
 HAML
 
-$rendered = Haml.render(:$haml);
+$rendered = HAML.render(:$haml);
 
 $expected = qq:to/HTML/;
 <html>

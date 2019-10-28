@@ -1,5 +1,5 @@
 {
-  "name": "Template::Haml",
+  "name": "Template::HAML",
   "description": "HTML Template Parser for Raku",
   "version": "0.0.1",
   "perl": "6.d",
@@ -14,17 +14,17 @@
     "Test::META"
   ],
   "provides": {
-    "Template::Haml": "lib/Template/Haml.pm6",
-    "Template::Haml::Actions": "lib/Template/Haml/Actions.pm6",
-    "Template::Haml::Grammar": "lib/Template/Haml/Grammar.pm6",
-    "Template::Haml::Node": "lib/Template/Haml/Node.pm6",
-    "Template::Haml::Renderer": "lib/Template/Haml/Renderer.pm6",
-    "Template::Haml::Tag": "lib/Template/Haml/Tag.pm6",
-    "Template::Haml::X": "lib/Template/Haml/X.pm6"
+    "Template::HAML": "lib/Template/HAML.pm6",
+    "Template::HAML::Actions": "lib/Template/HAML/Actions.pm6",
+    "Template::HAML::Grammar": "lib/Template/HAML/Grammar.pm6",
+    "Template::HAML::Node": "lib/Template/HAML/Node.pm6",
+    "Template::HAML::Renderer": "lib/Template/HAML/Renderer.pm6",
+    "Template::HAML::Tag": "lib/Template/HAML/Tag.pm6",
+    "Template::HAML::X": "lib/Template/HAML/X.pm6"
   },
   "resources": [],
   "support": {
-    "source": "https://github.com/rakuist/Template-Haml/issues"
+    "source": "https://github.com/rakuist/Template-HAML/issues"
   },
   "license": "Artistic-2.0",
   "tags": [
@@ -33,5 +33,5 @@
     "Template",
     "Parser"
   ],
-  "source-url": "git://github.com/rakuist/Template-Haml.git"
+  "source-url": "git://github.com/rakuist/Template-HAML.git"
 }

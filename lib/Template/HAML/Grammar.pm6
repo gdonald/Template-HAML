@@ -1,6 +1,6 @@
 
-use Template::Haml::Renderer;
-use Template::Haml::Tag;
+use Template::HAML::Renderer;
+use Template::HAML::Tag;
 
 grammar Grammar is export {
   my class NEW_INDENT {}

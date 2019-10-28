@@ -1,5 +1,5 @@
 
-use Template::Haml::Node;
+use Template::HAML::Node;
 
 class Renderer is export {
   method render(Node:D $tree) {

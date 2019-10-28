@@ -1,9 +1,9 @@
 
-use Template::Haml::Actions;
-use Template::Haml::Renderer;
-use Template::Haml::Grammar;
+use Template::HAML::Actions;
+use Template::HAML::Renderer;
+use Template::HAML::Grammar;
 
-class Haml is export {
+class HAML is export {
   method render(Str:D :$haml) {
     my $actions = Actions.new;
     Grammar.parse($haml, :$actions);

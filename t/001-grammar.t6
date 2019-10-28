@@ -1,8 +1,8 @@
 
 use v6.d;
 use lib 'lib';
-use Template::Haml::Actions;
-use Template::Haml::Grammar;
+use Template::HAML::Actions;
+use Template::HAML::Grammar;
 use Test;
 
 plan 64;
