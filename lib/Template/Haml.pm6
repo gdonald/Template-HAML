@@ -1,14 +1,12 @@
 
 use Template::Haml::Actions;
+use Template::Haml::Renderer;
 use Template::Haml::Grammar;
-use Template::Haml::Lines;
-use Template::Haml::Compiler;
 
 class Haml is export {
-  method compile(Str:D :$haml) {
-    Lines.clear;
+  method render(Str:D :$haml) {
     my $actions = Actions.new;
     Grammar.parse($haml, :$actions);
-    Compiler.compile;
+    Renderer.render($actions.tree);
   }
 }
