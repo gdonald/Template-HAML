@@ -1,6 +1,4 @@
 
-use Data::Dump::Tree;
-
 use Template::HAML::Node;
 use Template::HAML::Tag;
 use Template::HAML::X;
