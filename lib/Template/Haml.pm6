@@ -1,14 +1,16 @@
 
+use Data::Dump::Tree;
+
 use Template::Haml::Actions;
-use Template::Haml::Grammar;
-use Template::Haml::Lines;
 use Template::Haml::Compiler;
+use Template::Haml::Grammar;
+use Template::Haml::Tree;
 
 class Haml is export {
-  method compile(Str:D :$haml) {
-    Lines.clear;
+  method render(Str:D :$haml) {
     my $actions = Actions.new;
     Grammar.parse($haml, :$actions);
+    ddt $actions.tree;
     Compiler.compile;
   }
 }

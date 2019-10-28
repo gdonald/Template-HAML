@@ -1,21 +1,45 @@
 
-use Template::Haml::Lines;
-use Template::Haml::Line;
+use Template::Haml::Node;
+use Template::Haml::Tag;
+use Template::Haml::Tree;
 use Template::Haml::X;
 
 class Actions is export {
+  has Tree $.tree = Tree.new;
+  has Node $.current = $!tree.root;
+
   method TOP($/) {}
 
-  method line($/) {
+  method tag($/) {
     my $indent = $/<indent>.made;
-    my $name = $/<line-type><word>.Str;
+    my $name = $/<tag-type><word>.Str;
     my $params = $/<params-hash>.made || {};
     my $content = $/<phrase>.Str.trim || '';
-    my $sigil = $/<line-type><sigil>.Str;
+    my $sigil = $/<tag-type><sigil>.Str;
     my $classes = $/<css-classes>.made || [];
 
-    my $line = Line.new(:$indent, :$sigil, :$name, :$params, :$content, :$classes);
-    Lines.push(:$line);
+    my $object = Tag.new(:$indent, :$sigil, :$name, :$params, :$content, :$classes);
+    self.add-node($object);
+  }
+
+  method add-node($object) {
+    my Node $new = Node.new(:$object);
+    my $current-indent = $!current.object ?? $!current.object.indent !! 0;
+
+    dd $object.indent;
+
+    if $object.indent > $current-indent {
+      $!current.add-child: $new;
+      $!current = $new;
+    } elsif $object.indent == $current-indent {
+      $!current.add-sibling: $new;
+      $!current = $new;
+    }
+
+#    elsif $object.indent < $current-indent {
+#      $!tree.current.parent.parent.add-child: $new;
+#      $!tree.current = $new;
+#    }
   }
 
   method indent($/) {
