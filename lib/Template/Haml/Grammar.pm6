@@ -1,9 +1,9 @@
 
-use Template::Haml::Lines;
-use Template::Haml::Compiler;
-use Template::Haml::Line;
+use Template::Haml::Renderer;
+use Template::Haml::Tag;
 
 grammar Grammar is export {
+  my class NEW_INDENT {}
 
   token ws { \h* }
   token indent { ^^ \h* }
@@ -24,14 +24,14 @@ grammar Grammar is export {
   rule param { <param-key> <param-value> }
   rule params { <param> [ ',' <param> ]* }
   rule params-hash { '{' <params>? '}' }
-  rule line-type { <sigil><word> }
+  rule tag-type { <sigil><word> }
   rule css-class { '.' <word> }
   rule css-classes { <css-class> [ <css-class> ]* }
 
-  token line { <indent><line-type><css-classes>?<params-hash>? <phrase>? <.eol> }
+  token tag { <indent><tag-type><css-classes>?<params-hash>? <phrase>? <.eol> }
 
   rule TOP {
-    <line>*
+    <tag>*
     $
   }
 }

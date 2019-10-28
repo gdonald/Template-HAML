@@ -4,11 +4,11 @@ use lib 'lib';
 use Template::Haml;
 use Test;
 
-plan 1;
+plan 2;
 
 my $haml;
-my $html;
-my $result;
+my $rendered;
+my $expected;
 
 $haml = qq:to/HAML/;
 %section.container
@@ -16,13 +16,43 @@ $haml = qq:to/HAML/;
   %h2 Subtitle
 HAML
 
-$html = Haml.compile(:$haml);
+$rendered = Haml.render(:$haml);
 
-$result = qq:to/HTML/;
+$expected = qq:to/HTML/;
 <section class='container'>
   <h1>Title</h1>
   <h2>Subtitle</h2>
 </section>
 HTML
 
-ok $html eq $result;
+ok $expected eq $rendered;
+
+$haml = qq:to/HAML/;
+%html
+  %head
+    %title Page Title
+  %body
+    %section.container
+      %h1 Title
+      %h2 Subtitle
+      %p Content
+HAML
+
+$rendered = Haml.render(:$haml);
+
+$expected = qq:to/HTML/;
+<html>
+  <head>
+    <title>Page Title</title>
+  </head>
+  <body>
+    <section class='container'>
+      <h1>Title</h1>
+      <h2>Subtitle</h2>
+      <p>Content</p>
+    </section>
+  </body>
+</html>
+HTML
+
+ok $expected eq $rendered;
