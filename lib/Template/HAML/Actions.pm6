@@ -33,22 +33,27 @@ class Actions is export {
     my Node $new = Node.new(:$object);
     my $current-indent = $!current.object ?? $!current.object.indent !! 0;
 
-    if $object.indent == $current-indent {
-      $!current.add-sibling: $new;
-    } elsif $object.indent > $current-indent {
+    if $object.indent > $current-indent {
       $!current.add-child: $new;
     } elsif $object.indent < $current-indent {
-      my $offset = $current-indent - $object.indent;
-      my $parent = $!current.parent;
-
-      while $offset >= $object.indent {
-        $parent = $parent.parent;
-        $offset -= 2;
-      }
-      $parent.add-child($new);
+      self.get-parent($current-indent, $object.indent).add-child($new);
+    } else {
+      $!current.add-sibling: $new;
     }
 
     $!current = $new;
+  }
+
+  method get-parent($current-indent, $object-indent) {
+    my $offset = $current-indent - $object-indent;
+    my $parent = $!current.parent;
+
+    while $offset >= $object-indent {
+      $parent .= parent;
+      $offset -= 2;
+    }
+
+    $parent;
   }
 
   method indent($/) {
