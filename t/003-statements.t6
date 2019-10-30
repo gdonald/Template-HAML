@@ -1,0 +1,21 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML::Actions;
+use Template::HAML::Grammar;
+use Template::HAML::Node;
+use Test;
+
+use Data::Dump::Tree;
+
+plan 1;
+
+my $tree = Node.new;
+my $root-node = Node.new;
+$tree.add-child($root-node);
+
+my $actions = Actions.new(:$tree);
+my $m;
+
+Grammar.parse("- if True", :rule<statement>, :$actions);
+ddt $tree.children[1].object;

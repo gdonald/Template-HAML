@@ -6,17 +6,17 @@ use Test;
 
 plan 2;
 
-my $haml;
+my $src;
 my $rendered;
 my $expected;
 
-$haml = qq:to/HAML/;
+$src = qq:to/HAML/;
 %section.container
   %h1 Title
   %h2 Subtitle
 HAML
 
-$rendered = HAML.render(:$haml);
+$rendered = HAML.render(:$src);
 
 $expected = qq:to/HTML/;
 <section class='container'>
@@ -27,7 +27,7 @@ HTML
 
 ok $expected eq $rendered;
 
-$haml = qq:to/HAML/;
+$src = qq:to/HAML/;
 %html
   %head
     %title Page Title
@@ -36,9 +36,14 @@ $haml = qq:to/HAML/;
       %h1 Title
       %h2 Subtitle
       %p Content
+      %ul
+        %li Foo
+        %li Bar
+    %section.container
+      %div More
 HAML
 
-$rendered = HAML.render(:$haml);
+$rendered = HAML.render(:$src);
 
 $expected = qq:to/HTML/;
 <html>
@@ -50,9 +55,19 @@ $expected = qq:to/HTML/;
       <h1>Title</h1>
       <h2>Subtitle</h2>
       <p>Content</p>
+      <ul>
+        <li>Foo</li>
+        <li>Bar</li>
+      </ul>
+    </section>
+    <section class='container'>
+      <div>More</div>
     </section>
   </body>
 </html>
 HTML
+
+dd $expected;
+dd $rendered;
 
 ok $expected eq $rendered;

@@ -1,0 +1,23 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML::Actions;
+use Template::HAML::Grammar;
+use Template::HAML::Node;
+use Template::HAML::Renderer;
+use Test;
+
+use Data::Dump::Tree;
+
+plan 1;
+
+my $tree = Node.new;
+$tree.add-child(Node.new);
+my $actions = Actions.new(:$tree);
+my $expected;
+my $rendered;
+
+Grammar.parse("%section.container", :rule<tag>, :$actions);
+$rendered = Renderer.render($actions.tree);
+$expected = "<section class='container'></section>\n";
+ok $expected eq $rendered;
