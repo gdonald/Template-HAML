@@ -19,6 +19,7 @@
     "Template::HAML::Grammar": "lib/Template/HAML/Grammar.pm6",
     "Template::HAML::Node": "lib/Template/HAML/Node.pm6",
     "Template::HAML::Renderer": "lib/Template/HAML/Renderer.pm6",
+    "Template::HAML::Statement": "lib/Template/HAML/Statement.pm6",
     "Template::HAML::Tag": "lib/Template/HAML/Tag.pm6",
     "Template::HAML::X": "lib/Template/HAML/X.pm6"
   },

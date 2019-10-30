@@ -1,7 +1,10 @@
 
 use Template::HAML::Node;
+use Template::HAML::Statement;
 use Template::HAML::Tag;
 use Template::HAML::X;
+
+use Data::Dump::Tree;
 
 class Actions is export {
   has Node $.tree;
@@ -26,6 +29,15 @@ class Actions is export {
     my $classes = $/<css-classes>.made || [];
 
     my $object = Tag.new(:$indent, :$sigil, :$name, :$params, :$content, :$classes);
+    self.add-node($object);
+  }
+
+  method statement($/) {
+    my $indent = $/<indent>.made;
+    my $op = $/<op>.Str;
+    my $cond = $/<cond>.Str;
+
+    my $object = Statement.new(:$indent, :$op, :$cond);
     self.add-node($object);
   }
 

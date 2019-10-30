@@ -1,0 +1,21 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML::Actions;
+use Template::HAML::Grammar;
+use Test;
+
+use Data::Dump::Tree;
+
+plan 1;
+
+my $actions = Actions.new;
+my $m;
+my $tag;
+my $tags;
+my $classes;
+my $haml;
+
+# <tag>
+$m = Grammar.parse("%section.container", :rule<tag>, :$actions);
+dd $m;

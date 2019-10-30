@@ -1,10 +1,7 @@
 
 use Template::HAML::Renderer;
-use Template::HAML::Tag;
 
 grammar Grammar is export {
-  my class NEW_INDENT {}
-
   token ws { \h* }
   token indent { ^^ \h* }
   token eol { $$ \n* }
@@ -13,6 +10,8 @@ grammar Grammar is export {
   token number { \d+ }
   token sigil { <[%.#]>**1 }
   token op { <[=\-]>**1 }
+  token if { if }
+  token cond { .* }
 
   rule param-key { <word> ':' }
   rule symbol { ':' <word> }
@@ -29,6 +28,7 @@ grammar Grammar is export {
   rule css-classes { <css-class> [ <css-class> ]* }
 
   token tag { <indent><tag-type><css-classes>?<params-hash>? <phrase>? <.eol> }
+  token statement { <indent><op><.ws><if><.ws><cond> <.eol> }
 
   rule TOP {
     <tag>*
