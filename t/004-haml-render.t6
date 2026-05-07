@@ -67,7 +67,4 @@ $expected = qq:to/HTML/;
 </html>
 HTML
 
-dd $expected;
-dd $rendered;
-
 ok $expected eq $rendered;

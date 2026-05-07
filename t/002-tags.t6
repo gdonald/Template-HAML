@@ -7,8 +7,6 @@ use Template::HAML::Node;
 use Template::HAML::Renderer;
 use Test;
 
-use Data::Dump::Tree;
-
 plan 1;
 
 my $tree = Node.new;

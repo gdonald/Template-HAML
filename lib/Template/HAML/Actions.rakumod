@@ -4,8 +4,6 @@ use Template::HAML::Statement;
 use Template::HAML::Tag;
 use Template::HAML::X;
 
-use Data::Dump::Tree;
-
 class Actions is export {
   has Node $.tree;
   has Node $!current-node;
@@ -56,7 +54,7 @@ class Actions is export {
     my $offset = $current-indent - $object-indent;
     my $parent = $!current-node.parent;
 
-    while $offset >= $object-indent {
+    while $offset > 0 {
       $parent .= parent;
       $offset -= 2;
     }

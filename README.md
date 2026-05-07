@@ -12,7 +12,7 @@ zef install Template::HAML
 #### Run Tests
 
 ```bash
-$ prove6
+$ zef test .
 ```
 
 #### Status

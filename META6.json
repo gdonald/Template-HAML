@@ -3,36 +3,26 @@
   "description": "HTML Template Parser for Raku",
   "version": "0.0.1",
   "perl": "6.d",
-  "authors": [
-    "Greg Donald"
-  ],
-  "auth": "github:rakuist",
+  "authors": ["Greg Donald"],
+  "auth": "github:gdonald",
   "depends": [],
   "build-depends": [],
-  "test-depends": [
-    "Test",
-    "Test::META"
-  ],
+  "test-depends": ["Test", "Test::META"],
   "provides": {
-    "Template::HAML": "lib/Template/HAML.pm6",
-    "Template::HAML::Actions": "lib/Template/HAML/Actions.pm6",
-    "Template::HAML::Grammar": "lib/Template/HAML/Grammar.pm6",
-    "Template::HAML::Node": "lib/Template/HAML/Node.pm6",
-    "Template::HAML::Renderer": "lib/Template/HAML/Renderer.pm6",
-    "Template::HAML::Statement": "lib/Template/HAML/Statement.pm6",
-    "Template::HAML::Tag": "lib/Template/HAML/Tag.pm6",
-    "Template::HAML::X": "lib/Template/HAML/X.pm6"
+    "Template::HAML": "lib/Template/HAML.rakumod",
+    "Template::HAML::Actions": "lib/Template/HAML/Actions.rakumod",
+    "Template::HAML::Grammar": "lib/Template/HAML/Grammar.rakumod",
+    "Template::HAML::Node": "lib/Template/HAML/Node.rakumod",
+    "Template::HAML::Renderer": "lib/Template/HAML/Renderer.rakumod",
+    "Template::HAML::Statement": "lib/Template/HAML/Statement.rakumod",
+    "Template::HAML::Tag": "lib/Template/HAML/Tag.rakumod",
+    "Template::HAML::X": "lib/Template/HAML/X.rakumod"
   },
   "resources": [],
   "support": {
-    "source": "https://github.com/rakuist/Template-HAML/issues"
+    "source": "https://github.com/gdonald/Template-HAML/issues"
   },
   "license": "Artistic-2.0",
-  "tags": [
-    "HAML",
-    "HTML",
-    "Template",
-    "Parser"
-  ],
-  "source-url": "git://github.com/rakuist/Template-HAML.git"
+  "tags": ["HAML", "HTML", "Template", "Parser"],
+  "source-url": "git://github.com/gdonald/Template-HAML.git"
 }
