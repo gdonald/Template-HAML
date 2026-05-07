@@ -1,0 +1,21 @@
+site_name: Template::HAML
+site_url: https://gdonald.github.io/Template-HAML/
+repo_url: https://github.com/gdonald/Template-HAML
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Syntax:
+    - Tags: syntax/tags.md
+    - Attributes: syntax/attributes.md
+    - Indentation: syntax/indentation.md
+  - API: api.md
+  - Tests: testing.md
+theme:
+  name: 'material'
+markdown_extensions:
+  - pymdownx.highlight:
+      linenums: true
+  - pymdownx.superfences
+  - admonition
+  - toc:
+      permalink: true

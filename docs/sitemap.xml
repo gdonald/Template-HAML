@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+         <loc>https://gdonald.github.io/Template-HAML/</loc>
+         <lastmod>2026-05-07</lastmod>
+    </url>
+    <url>
+         <loc>https://gdonald.github.io/Template-HAML/api/</loc>
+         <lastmod>2026-05-07</lastmod>
+    </url>
+    <url>
+         <loc>https://gdonald.github.io/Template-HAML/getting-started/</loc>
+         <lastmod>2026-05-07</lastmod>
+    </url>
+    <url>
+         <loc>https://gdonald.github.io/Template-HAML/testing/</loc>
+         <lastmod>2026-05-07</lastmod>
+    </url>
+    <url>
+         <loc>https://gdonald.github.io/Template-HAML/syntax/attributes/</loc>
+         <lastmod>2026-05-07</lastmod>
+    </url>
+    <url>
+         <loc>https://gdonald.github.io/Template-HAML/syntax/indentation/</loc>
+         <lastmod>2026-05-07</lastmod>
+    </url>
+    <url>
+         <loc>https://gdonald.github.io/Template-HAML/syntax/tags/</loc>
+         <lastmod>2026-05-07</lastmod>
+    </url>
+</urlset>
