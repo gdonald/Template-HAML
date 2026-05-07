@@ -3,11 +3,16 @@ use v6.d;
 use lib 'lib';
 use Template::HAML::Actions;
 use Template::HAML::Grammar;
+use Template::HAML::Node;
 use Test;
 
 plan 64;
 
-my $actions = Actions.new;
+my $tree = Node.new;
+my $root-node = Node.new;
+$tree.add-child($root-node);
+
+my $actions = Actions.new(:$tree);
 my $m;
 my $tag;
 my $tags;

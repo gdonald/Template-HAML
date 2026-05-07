@@ -12,8 +12,12 @@ zef install Template::HAML
 #### Run Tests
 
 ```bash
-$ prove6
+$ zef test .
 ```
+
+#### Status
+
+[![CI](https://github.com/gdonald/Template-HAML/actions/workflows/ci.yml/badge.svg)](https://github.com/gdonald/Template-HAML/actions/workflows/ci.yml)
 
 #### License
 

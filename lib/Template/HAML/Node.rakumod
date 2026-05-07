@@ -6,12 +6,12 @@ class Node is export {
 
   submethod BUILD(:$!parent = Nil, :$!object = Nil) {}
 
-  method add-child(Node $node) {
+  method add-child(Node:D $node) {
     $node.parent = self;
     @!children.push: $node;
   }
 
-  method add-sibling(Node $node) {
+  method add-sibling(Node:D $node) {
     self.parent.add-child($node) if self.parent;
   }
 }

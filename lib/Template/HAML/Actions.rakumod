@@ -1,18 +1,15 @@
 
 use Template::HAML::Node;
+use Template::HAML::Statement;
 use Template::HAML::Tag;
 use Template::HAML::X;
 
 class Actions is export {
   has Node $.tree;
-  has Node $!root;
-  has Node $!current;
+  has Node $!current-node;
 
-  submethod BUILD {
-    $!tree = Node.new;
-    $!root = Node.new;
-    $!tree.add-child($!root);
-    $!current = $!root;
+  submethod BUILD(Node:D :$!tree) {
+    $!current-node = $!tree.children.first;
   }
 
   method TOP($/) {}
@@ -29,26 +26,35 @@ class Actions is export {
     self.add-node($object);
   }
 
+  method statement($/) {
+    my $indent = $/<indent>.made;
+    my $op = $/<op>.Str;
+    my $cond = $/<cond>.Str;
+
+    my $object = Statement.new(:$indent, :$op, :$cond);
+    self.add-node($object);
+  }
+
   method add-node($object) {
     my Node $new = Node.new(:$object);
-    my $current-indent = $!current.object ?? $!current.object.indent !! 0;
+    my $current-indent = $!current-node.object ?? $!current-node.object.indent !! 0;
 
     if $object.indent > $current-indent {
-      $!current.add-child: $new;
+      $!current-node.add-child: $new;
     } elsif $object.indent < $current-indent {
       self.get-parent($current-indent, $object.indent).add-child($new);
     } else {
-      $!current.add-sibling: $new;
+      $!current-node.add-sibling: $new;
     }
 
-    $!current = $new;
+    $!current-node = $new;
   }
 
   method get-parent($current-indent, $object-indent) {
     my $offset = $current-indent - $object-indent;
-    my $parent = $!current.parent;
+    my $parent = $!current-node.parent;
 
-    while $offset >= $object-indent {
+    while $offset > 0 {
       $parent .= parent;
       $offset -= 2;
     }
