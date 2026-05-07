@@ -20,7 +20,8 @@
   },
   "resources": [],
   "support": {
-    "source": "https://github.com/gdonald/Template-HAML/issues"
+    "source": "https://github.com/gdonald/Template-HAML.git",
+    "bugtracker": "https://github.com/gdonald/Template-HAML/issues"
   },
   "license": "Artistic-2.0",
   "tags": ["HAML", "HTML", "Template", "Parser"],
