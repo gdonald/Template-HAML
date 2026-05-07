@@ -17,7 +17,7 @@ $ zef test .
 
 #### Status
 
-[![Build Status](https://travis-ci.org/rakuist/Template-HAML.svg?branch=master)](https://travis-ci.org/rakuist/Template-HAML)
+[![CI](https://github.com/gdonald/Template-HAML/actions/workflows/ci.yml/badge.svg)](https://github.com/gdonald/Template-HAML/actions/workflows/ci.yml)
 
 #### License
 
