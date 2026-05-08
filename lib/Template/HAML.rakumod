@@ -10,7 +10,9 @@ class HAML is export {
     $tree.add-child(Node.new);
     my $actions = Actions.new(:$tree);
 
-    Grammar.parse($src, :$actions);
+    my $normalized = $src.subst(:global, /\r\n/, "\n").subst(:global, /\r/, "\n");
+
+    Grammar.parse($normalized, :$actions);
     Renderer.render($actions.tree);
   }
 }

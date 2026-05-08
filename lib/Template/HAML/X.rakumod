@@ -1,10 +1,49 @@
 
-class X::IllegalIndent is Exception {}
-sub illegal-indent is export {
-  die X::IllegalIndent.new: payload => 'Illegal indentation';
+class X::HAML is Exception {
+  has Int $.line;
+  has Int $.column;
+  has Str $.file;
+
+  method loc {
+    '[HAML ' ~ ($!file // 'source') ~ ':' ~ ($!line // '?') ~ ':' ~ ($!column // '?') ~ ']';
+  }
 }
 
-class X::DuplicateId is Exception {}
-sub duplicate-id is export {
-  die X::DuplicateId.new: payload => 'Duplicate ID attribute';
+class X::HAML::IllegalIndent is X::HAML {
+  method message { self.loc ~ ' illegal indentation' }
+}
+
+class X::HAML::IndentMixed is X::HAML {
+  method message { self.loc ~ ' mixed tabs and spaces in indent' }
+}
+
+class X::HAML::IndentInconsistent is X::HAML {
+  has Int $.unit;
+  has Int $.got;
+  method message {
+    self.loc ~ " indent of $!got chars, expected a multiple of $!unit"
+  }
+}
+
+class X::HAML::DuplicateId is X::HAML {
+  method message { self.loc ~ ' duplicate id attribute' }
+}
+
+class X::IllegalIndent is X::HAML::IllegalIndent { }
+class X::DuplicateId  is X::HAML::DuplicateId   { }
+
+sub illegal-indent(Int :$line, Int :$column, Str :$file) is export {
+  die X::HAML::IllegalIndent.new(:$line, :$column, :$file);
+}
+
+sub duplicate-id(Int :$line, Int :$column, Str :$file) is export {
+  die X::HAML::DuplicateId.new(:$line, :$column, :$file);
+}
+
+sub indent-mixed(Int :$line, Int :$column, Str :$file) is export {
+  die X::HAML::IndentMixed.new(:$line, :$column, :$file);
+}
+
+sub indent-inconsistent(Int :$line, Int :$column, Str :$file, Int :$unit, Int :$got) is export {
+  die X::HAML::IndentInconsistent.new(:$line, :$column, :$file, :$unit, :$got);
 }

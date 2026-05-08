@@ -3,6 +3,9 @@ use Template::HAML::X;
 
 class Tag is export {
   has Int $.indent;
+  has Int $.output-indent-width = 2;
+  has Int $.line;
+  has Int $.column;
   has Str $.name;
   has Str $.sigil;
   has %.params;
@@ -10,7 +13,11 @@ class Tag is export {
   has @.classes of Str;
   has Str $.open;
 
-  submethod BUILD(:$!indent, :$!sigil, :$!name, :%!params, :$!content, :@!classes) {
+  submethod BUILD(
+    :$!indent, :$!sigil, :$!name, :%!params, :$!content, :@!classes,
+    Int :$!output-indent-width = 2,
+    Int :$!line, Int :$!column,
+  ) {
     given $!sigil {
       when '.' { self.name-to-class }
       when '#' { self.name-to-id }
@@ -39,7 +46,7 @@ class Tag is export {
   }
 
   method get-indent {
-    ' ' x $!indent;
+    ' ' x ($!indent * $!output-indent-width);
   }
 
   method merge-classes {
@@ -66,7 +73,7 @@ class Tag is export {
   }
 
   method name-to-id {
-    duplicate-id if %!params<id>;
+    duplicate-id(:$!line, :$!column) if %!params<id>;
 
     %!params<id> = $!name;
     $!name = 'div';

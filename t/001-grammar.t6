@@ -1,12 +1,14 @@
 
 use v6.d;
 use lib 'lib';
+use Template::HAML;
 use Template::HAML::Actions;
 use Template::HAML::Grammar;
 use Template::HAML::Node;
+use Template::HAML::X;
 use Test;
 
-plan 64;
+plan 65;
 
 my $tree = Node.new;
 my $root-node = Node.new;
@@ -153,7 +155,11 @@ ok $m.made == 2;
 $m = Grammar.parse('    ', :rule<indent>, :$actions);
 ok $m.made == 4;
 
-dies-ok { Grammar.parse(' ', :rule<indent>, :$actions) };
+throws-like { HAML.render(:src("\t %h1 hi\n")) }, X::HAML::IndentMixed,
+  'mixed tabs and spaces in indent dies';
+
+throws-like { HAML.render(:src("%h1\n  %p\n   %x\n")) }, X::HAML::IndentInconsistent,
+  'indent that is not a multiple of unit dies';
 
 
 # <css-class>

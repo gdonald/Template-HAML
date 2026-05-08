@@ -1,0 +1,29 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML::Actions;
+use Template::HAML::Grammar;
+use Template::HAML::Node;
+use Test;
+
+my @line-types = <
+  blank
+  comment
+  doctype
+  filter
+  plain
+  silent-comment
+  statement
+  tag
+>;
+
+plan @line-types.elems;
+
+for @line-types -> $name {
+  my $src = "t/fixtures/lines/$name.haml".IO.slurp;
+  my $tree = Node.new;
+  $tree.add-child(Node.new);
+  my $actions = Actions.new(:$tree);
+  my $m = Grammar.parse($src, :$actions);
+  ok $m.defined, "$name fixture parses";
+}
