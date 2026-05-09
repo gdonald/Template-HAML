@@ -8,15 +8,11 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        raku-version: ['latest']
     steps:
       - uses: actions/checkout@v4
       - uses: Raku/setup-raku@v1
         with:
-          raku-version: ${{ matrix.raku-version }}
+          raku-version: 'latest'
       - name: Raku version
         run: raku --version
       - name: Install dependencies

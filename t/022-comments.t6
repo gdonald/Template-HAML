@@ -1,0 +1,116 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Test;
+
+plan 13;
+
+# 7.1.1 single-line HTML comment
+is HAML.render(:src("/ Hello\n")),
+   "<!-- Hello -->\n",
+   '7.1.1: single-line HTML comment';
+
+# 7.1.1 single-line HTML comment with no text
+is HAML.render(:src("/\n")),
+   "<!---->\n",
+   '7.1.1: HTML comment with no text and no children';
+
+# 7.1.2 block HTML comment with children
+my $src1 = q:to/HAML/;
+/
+  %p hi
+HAML
+
+is HAML.render(:src($src1)),
+   "<!--\n  <p>hi</p>\n-->\n",
+   '7.1.2: block HTML comment wraps children';
+
+# 7.1.2 deeper indent and multiple children
+my $src2 = q:to/HAML/;
+%div
+  /
+    %p hi
+    %p bye
+HAML
+
+is HAML.render(:src($src2)),
+   "<div>\n  <!--\n    <p>hi</p>\n    <p>bye</p>\n  -->\n</div>\n",
+   '7.1.2: nested block comment with multiple children';
+
+# 7.2.1 conditional comment
+is HAML.render(:src("/[if IE] text\n")),
+   "<!--[if IE]>text<![endif]-->\n",
+   '7.2.1: inline conditional comment';
+
+# 7.2.1 conditional comment block
+my $src3 = q:to/HAML/;
+/[if IE]
+  %p ie only
+HAML
+
+is HAML.render(:src($src3)),
+   "<!--[if IE]>\n  <p>ie only</p>\n<![endif]-->\n",
+   '7.2.1: block conditional comment';
+
+# 7.2.2 negated condition
+is HAML.render(:src("/[if !IE] text\n")),
+   "<!--[if !IE]>text<![endif]-->\n",
+   '7.2.2: negated conditional';
+
+# 7.2.3 revealed conditional
+is HAML.render(:src("/![if !IE] text\n")),
+   "<!--[if !IE]><!-->text<!--<![endif]-->\n",
+   '7.2.3: revealed conditional comment';
+
+# 7.3.1 silent comment - no output
+is HAML.render(:src("-# silent\n")),
+   "",
+   '7.3.1: silent comment produces no output';
+
+# 7.3.1 silent comment with children - no output
+my $src4 = q:to/HAML/;
+-# silent
+  some text
+  more text
+HAML
+
+is HAML.render(:src($src4)),
+   "",
+   '7.3.1: silent comment with indented body produces no output';
+
+# 7.3.1 silent comment between tags
+my $src5 = q:to/HAML/;
+%p hi
+-# this is a note
+%p bye
+HAML
+
+is HAML.render(:src($src5)),
+   "<p>hi</p>\n<p>bye</p>\n",
+   '7.3.1: silent comment between siblings does not interfere';
+
+# 7.3.2 silent body is opaque - free-form text that would otherwise fail to parse
+my $src6 = q:to/HAML/;
+%div
+  -# notes:
+    arbitrary text $^&* not valid HAML
+    !!! also opaque
+  %p hi
+HAML
+
+is HAML.render(:src($src6)),
+   "<div>\n  <p>hi</p>\n</div>\n",
+   '7.3.2: silent comment body is opaque text, not parsed';
+
+# silent comment with blank lines inside body
+my $src7 = q:to/HAML/;
+-# header
+  body line
+
+  body line two
+HAML
+
+is HAML.render(:src($src7)),
+   "",
+   '7.3.1: silent comment body may contain blank lines';

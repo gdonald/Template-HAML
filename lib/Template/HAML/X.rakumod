@@ -41,6 +41,19 @@ class X::HAML::ParseFail is X::HAML {
   }
 }
 
+class X::HAML::UnknownDoctype is X::HAML {
+  has Str $.arg;
+  method message {
+    self.loc ~ " unknown doctype '$!arg'; expected one of: 5 1.1 Strict Frameset Mobile RDFa Basic XML"
+  }
+}
+
+class X::HAML::DoctypeNotFirst is X::HAML {
+  method message {
+    self.loc ~ ' doctype must be the first non-blank line of the template'
+  }
+}
+
 class X::IllegalIndent is X::HAML::IllegalIndent { }
 class X::DuplicateId  is X::HAML::DuplicateId   { }
 

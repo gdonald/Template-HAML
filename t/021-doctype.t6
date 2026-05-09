@@ -1,0 +1,73 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Template::HAML::X;
+use Test;
+
+plan 13;
+
+# 8.2.2 — `!!! 5`
+is HAML.render(:src("!!! 5\n")),
+   "<!DOCTYPE html>\n",
+   '8.2.2: !!! 5 → HTML5 doctype';
+
+# 8.2.1 — `!!!` no arg defaults to format-default (HTML5 today)
+is HAML.render(:src("!!!\n")),
+   "<!DOCTYPE html>\n",
+   '8.2.1: !!! with no arg defaults to HTML5 doctype';
+
+# 8.2.3
+is HAML.render(:src("!!! 1.1\n")),
+   '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">' ~ "\n",
+   '8.2.3: !!! 1.1 → XHTML 1.1';
+
+# 8.2.4
+is HAML.render(:src("!!! Strict\n")),
+   '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">' ~ "\n",
+   '8.2.4: !!! Strict → XHTML 1.0 Strict';
+
+# 8.2.5
+is HAML.render(:src("!!! Frameset\n")),
+   '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">' ~ "\n",
+   '8.2.5: !!! Frameset → XHTML 1.0 Frameset';
+
+# 8.2.6
+is HAML.render(:src("!!! Mobile\n")),
+   '<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.2//EN" "http://www.openmobilealliance.org/tech/DTD/xhtml-mobile12.dtd">' ~ "\n",
+   '8.2.6: !!! Mobile → XHTML Mobile 1.2';
+
+# 8.2.7
+is HAML.render(:src("!!! RDFa\n")),
+   '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML+RDFa 1.0//EN" "http://www.w3.org/MarkUp/DTD/xhtml-rdfa-1.dtd">' ~ "\n",
+   '8.2.7: !!! RDFa → XHTML+RDFa 1.0';
+
+# 8.2.8
+is HAML.render(:src("!!! Basic\n")),
+   '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML Basic 1.1//EN" "http://www.w3.org/TR/xhtml-basic/xhtml-basic11.dtd">' ~ "\n",
+   '8.2.8: !!! Basic → XHTML Basic 1.1';
+
+# 8.2.9
+is HAML.render(:src("!!! XML\n")),
+   "<?xml version='1.0' encoding='utf-8' ?>\n",
+   '8.2.9: !!! XML → utf-8 default';
+
+# 8.2.10
+is HAML.render(:src("!!! XML iso-8859-1\n")),
+   "<?xml version='1.0' encoding='iso-8859-1' ?>\n",
+   '8.2.10: !!! XML iso-8859-1 → custom encoding';
+
+# Doctype precedes a tag
+is HAML.render(:src("!!! 5\n%html\n")),
+   "<!DOCTYPE html>\n<html></html>\n",
+   'doctype renders before the first tag';
+
+# 8.4.1 — unknown variant raises X::HAML::UnknownDoctype
+throws-like { HAML.render(:src("!!! Bogus\n")) },
+   X::HAML::UnknownDoctype,
+   '8.4.1: unknown doctype variant raises X::HAML::UnknownDoctype';
+
+# 8.1.1 — doctype only as first non-blank line; later doctype errors
+throws-like { HAML.render(:src("%p hi\n!!! 5\n")) },
+   X::HAML::DoctypeNotFirst,
+   '8.1.1: doctype after content raises X::HAML::DoctypeNotFirst';

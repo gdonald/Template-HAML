@@ -1,0 +1,159 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Template::HAML::Actions;
+use Template::HAML::Grammar;
+use Template::HAML::Node;
+use Test;
+
+plan 14;
+
+my $src1 = q:to/HAML/;
+%a{
+  href: '/',
+  title: 'home'
+}
+HAML
+
+is HAML.render(:src($src1)),
+   "<a href='/' title='home'></a>\n",
+   '3.6.1: hash-style attrs split across multiple lines';
+
+my $src2 = q:to/HAML/;
+%a{href: '/',
+   title: 'home'}
+HAML
+
+is HAML.render(:src($src2)),
+   "<a href='/' title='home'></a>\n",
+   '3.6.1: hash-style attrs continuing on second line';
+
+my $src3 = q:to/HAML/;
+%a{
+  href: '/',
+  data: {
+    id: 1,
+    role: 'main'
+  }
+}
+HAML
+
+is HAML.render(:src($src3)),
+   "<a href='/' data-id='1' data-role='main'></a>\n",
+   '3.6.1: nested hash spanning multiple lines';
+
+my $src4 = q:to/HAML/;
+%a{
+  class: [
+    'foo',
+    'bar'
+  ]
+}
+HAML
+
+is HAML.render(:src($src4)),
+   "<a class='foo bar'></a>\n",
+   '3.6.1: array value spanning multiple lines';
+
+my $src5 = q:to/HAML/;
+%a(
+  href='/'
+  title='home'
+)
+HAML
+
+is HAML.render(:src($src5)),
+   "<a href='/' title='home'></a>\n",
+   '3.6.1: HTML-style attrs split across multiple lines';
+
+my $src6 = q:to/HAML/;
+%a{
+  'data-id' => 42,
+  :title => 'home'
+}
+HAML
+
+is HAML.render(:src($src6)),
+   "<a data-id='42' title='home'></a>\n",
+   '3.6.1: rocket pairs split across multiple lines';
+
+my $src7 = q:to/HAML/;
+%a{
+  href: '/'
+} hello
+HAML
+
+is HAML.render(:src($src7)),
+   "<a href='/'>hello</a>\n",
+   '3.6.1: content after closing brace on new line';
+
+my $src8 = q:to/HAML/;
+%ul{
+  class: 'list'
+}
+  %li one
+  %li two
+HAML
+
+is HAML.render(:src($src8)),
+   "<ul class='list'>\n  <li>one</li>\n  <li>two</li>\n</ul>\n",
+   '3.6.1: children after multi-line attr hash';
+
+my $src9 = q:to/HAML/;
+%br{
+  class: 'spacer'
+}/
+HAML
+
+is HAML.render(:src($src9)),
+   "<br class='spacer'>\n",
+   '3.6.1: self-close marker after multi-line attr hash';
+
+my $src10 = q:to/HAML/;
+%a(
+  href='/'
+){title: 'home'}
+HAML
+
+is HAML.render(:src($src10)),
+   "<a href='/' title='home'></a>\n",
+   '3.6.1: HTML-style multi-line then hash-style on next line';
+
+my $src11 = q:to/HAML/;
+%a{
+  href: '/',
+}
+HAML
+
+is HAML.render(:src($src11)),
+   "<a href='/'></a>\n",
+   '3.6.1: trailing comma at end of multi-line hash';
+
+my $src12 = q:to/HAML/;
+%a{ href: '/',
+     title: 'home',
+     class: 'foo' }
+HAML
+
+is HAML.render(:src($src12)),
+   "<a class='foo' href='/' title='home'></a>\n",
+   '3.6.1: continuation across three lines';
+
+# 3.6.2: line numbers are preserved across a multi-line attribute hash
+my $src13 = q:to/HAML/;
+%div{
+  class: 'wrap'
+}
+  %p hi
+HAML
+
+my $tree = Node.new;
+$tree.add-child(Node.new);
+my $actions = Actions.new(:$tree);
+Grammar.parse($src13, :$actions);
+my $div = $actions.tree.children.first({ .object.defined });
+is $div.object.line, 1,
+   '3.6.2: opening tag line number is the line where it starts';
+is $div.children[0].object.line, 4,
+   '3.6.2: child after multi-line hash records the actual source line';

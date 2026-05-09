@@ -1,4 +1,6 @@
 
+use Template::HAML::Comment;
+use Template::HAML::Doctype;
 use Template::HAML::Node;
 use Template::HAML::Statement;
 use Template::HAML::Tag;
@@ -40,6 +42,9 @@ class Actions is export {
   has Int $!indent-unit;
 
   has Int $.output-indent-width = 2;
+  has Str $.format = 'html5';
+
+  has Bool $!seen-content = False;
 
   submethod BUILD(Node:D :$!tree) {
     $!current-node = $!tree.children.first;
@@ -88,6 +93,7 @@ class Actions is export {
       :output-indent-width($!output-indent-width),
     );
     self.add-node($object);
+    $!seen-content = True;
   }
 
   method statement($/) {
@@ -97,6 +103,59 @@ class Actions is export {
     my $expr   = $/<expr>.Str;
 
     my $object = Statement.new(:$indent, :$op, :$expr, :$line, :$column);
+    self.add-node($object);
+    $!seen-content = True;
+  }
+
+  method line:sym<comment>($/) {
+    my ($line, $column) = pos-to-line-col($/);
+    my $indent = self.compute-level($/<head>);
+
+    my $condition = $/<comment-condition>.defined
+      ?? $/<comment-condition><cond>.Str.trim
+      !! '';
+    my $revealed = $/<comment-revealed>.defined;
+    my $text = $/<to-eol>.Str.trim;
+
+    my $object = Comment.new(
+      :$indent, :$line, :$column,
+      :$text, :$condition, :$revealed,
+      :output-indent-width($!output-indent-width),
+    );
+    self.add-node($object);
+    $!seen-content = True;
+  }
+
+  method line:sym<silent-comment>($/) {
+    my ($line, $column) = pos-to-line-col($/);
+    my $indent = self.compute-level($/<head>);
+
+    my $object = Comment.new(
+      :$indent, :$line, :$column, :silent,
+      :output-indent-width($!output-indent-width),
+    );
+    self.add-node($object);
+    $!seen-content = True;
+  }
+
+  method line:sym<doctype>($/) {
+    my ($line, $column) = pos-to-line-col($/);
+    if $!seen-content {
+      X::HAML::DoctypeNotFirst.new(:$line, :$column).throw;
+    }
+
+    my $rest = $/<to-eol>.Str.trim;
+    my ($arg, $encoding) = '', '';
+    if $rest.chars {
+      my @parts = $rest.words;
+      $arg = @parts[0] // '';
+      $encoding = @parts[1] // '';
+    }
+
+    my $object = Doctype.new(
+      :indent(0), :$line, :$column,
+      :$arg, :$encoding, :$!format,
+    );
     self.add-node($object);
   }
 

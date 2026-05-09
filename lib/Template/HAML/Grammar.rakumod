@@ -35,13 +35,13 @@ grammar Grammar is export {
   rule  double-quoted-string { '"' <dq-content> '"' }
   rule  quoted-string        { <single-quoted-string> | <double-quoted-string> }
 
-  rule  symbol      { ':' <word> }
+  token symbol      { ':' <word> }
   token hyphen-name { <[A..Za..z_]> [ <[\w \: \-]> ]* }
 
-  rule  array-value { '[' <value> [ ',' <value> ]* ','? ']' }
-  rule  hash-value  { '{' [ <pair> [ ',' <pair> ]* ','? ]? '}' }
+  token array-value { '[' \s* <value> [ \s* ',' \s* <value> ]* \s* ','? \s* ']' }
+  token hash-value  { '{' \s* [ <pair> [ \s* ',' \s* <pair> ]* \s* ','? \s* ]? '}' }
 
-  rule value {
+  token value {
     | <quoted-string>
     | <number>
     | <bool>
@@ -50,16 +50,16 @@ grammar Grammar is export {
     | <array-value>
   }
 
-  rule  rocket-key  { <quoted-string> | <symbol> | <word> }
-  rule  pair-bare   { <word> ':' <value> }
-  rule  pair-rocket { <rocket-key> '=>' <value> }
-  rule  pair        { <pair-rocket> | <pair-bare> }
+  token rocket-key  { <quoted-string> | <symbol> | <word> }
+  token pair-bare   { <word> \s* ':' \s* <value> }
+  token pair-rocket { <rocket-key> \s* '=>' \s* <value> }
+  token pair        { <pair-rocket> | <pair-bare> }
 
-  rule  params-hash { '{' [ <pair> [ ',' <pair> ]* ','? ]? '}' }
+  token params-hash { '{' \s* [ <pair> [ \s* ',' \s* <pair> ]* \s* ','? \s* ]? '}' }
 
   token html-bool-attr  { <hyphen-name> }
-  rule  html-keyed-attr { <hyphen-name> '=' <quoted-string> }
-  rule  html-attr       { <html-keyed-attr> | <html-bool-attr> }
+  token html-keyed-attr { <hyphen-name> \s* '=' \s* <quoted-string> }
+  token html-attr       { <html-keyed-attr> | <html-bool-attr> }
   token html-attrs      { '(' [ \s* <html-attr> ]+ \s* ')' }
 
   rule param-key   { <word> ':' }
@@ -87,11 +87,24 @@ grammar Grammar is export {
 
   token statement { <indent> <op> <.ws> <if> <.ws> <expr> <.eol> }
 
+  token comment-condition { '[' $<cond>=( <-[ \] ]>+ ) ']' }
+  token comment-revealed  { '!' }
+
   proto token line { * }
   multi token line:sym<blank>          { ^^ \h* $$ \n+ }
   multi token line:sym<doctype>        { ^^ '!!!' <to-eol> <.eol> }
-  multi token line:sym<silent-comment> { ^^ \h* '-#' <to-eol> <.eol> }
-  multi token line:sym<comment>        { ^^ \h* '/' <to-eol> <.eol> }
+  multi token line:sym<silent-comment> {
+    ^^ $<head>=[\h*] '-#' \N* \n
+    [
+      ^^ \h* $$ \n
+      |
+      ^^ $<body>=[\h+] \N* \n
+         <?{ $<body>[*-1].Str.chars > $<head>.chars }>
+    ]*
+  }
+  multi token line:sym<comment>        {
+    ^^ $<head>=[\h*] '/' <comment-revealed>? <comment-condition>? <to-eol> <.eol>
+  }
   multi token line:sym<filter>         { ^^ \h* ':' <word> <.eol> }
   multi token line:sym<statement>      { <statement> }
   multi token line:sym<tag>            { <tag> }

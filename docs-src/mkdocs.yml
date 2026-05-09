@@ -8,6 +8,8 @@ nav:
     - Tags: syntax/tags.md
     - Attributes: syntax/attributes.md
     - Indentation: syntax/indentation.md
+    - Doctype: syntax/doctype.md
+    - Comments: syntax/comments.md
   - API: api.md
   - Tests: testing.md
 theme:
