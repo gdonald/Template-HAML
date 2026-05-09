@@ -1,5 +1,7 @@
 
 use Template::HAML::Node;
+use Template::HAML::Tag;
+use Template::HAML::X;
 
 class Renderer is export {
   method render(Node:D $tree) {
@@ -11,12 +13,29 @@ class Renderer is export {
   }
 
   method render-object(Node:D $node) {
-    my $out = $node.object.open;
-    $out ~= "\n" if $node.children;
-    $out ~= self.render-children($node);
-    $out ~= $node.object.content;
-    $out ~= $node.object.get-indent if $node.children;
-    $out ~= $node.object.close;
+    my $obj = $node.object;
+
+    if $obj ~~ Tag && $obj.is-void && $node.children.elems {
+      X::HAML::VoidWithChildren.new(
+        :line($obj.line), :column($obj.column), :name($obj.name),
+      ).throw;
+    }
+
+    if $obj ~~ Tag && $obj.self-close {
+      return $obj.open ~ $obj.close;
+    }
+
+    my $out = $obj.open;
+    if $node.children.elems {
+      $out ~= $obj.content if $obj.content;
+      $out ~= "\n";
+      $out ~= self.render-children($node);
+      $out ~= $obj.get-indent;
+    } else {
+      $out ~= $obj.content;
+    }
+    $out ~= $obj.close;
+    $out;
   }
 
   method render-children(Node:D $node) {

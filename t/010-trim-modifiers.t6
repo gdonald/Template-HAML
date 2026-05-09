@@ -1,0 +1,39 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML::Actions;
+use Template::HAML::Grammar;
+use Template::HAML::Node;
+use Test;
+
+plan 7;
+
+my $LT = chr(60);
+my $GT = chr(62);
+
+sub parse-tag(Str $src) {
+  my $tree = Node.new;
+  $tree.add-child(Node.new);
+  my $actions = Actions.new(:$tree);
+  Grammar.parse($src, :$actions);
+  $tree.children.first(*.object).object;
+}
+
+my $tag;
+
+$tag = parse-tag("%p$GT\n");
+ok $tag.trim-outer, 'outer trim flag set on %p>';
+nok $tag.trim-inner, 'inner trim flag clear on %p>';
+
+$tag = parse-tag("%p$LT\n");
+ok $tag.trim-inner, 'inner trim flag set on %p<';
+nok $tag.trim-outer, 'outer trim flag clear on %p<';
+
+$tag = parse-tag("%p$LT$GT\n");
+ok $tag.trim-inner && $tag.trim-outer, 'both trims set on %p<>';
+
+$tag = parse-tag("%p$GT$LT\n");
+ok $tag.trim-inner && $tag.trim-outer, 'both trims set on %p><';
+
+$tag = parse-tag("%p\n");
+ok !$tag.trim-inner && !$tag.trim-outer, 'no trims set on plain %p';

@@ -1,0 +1,50 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Test;
+
+plan 8;
+
+sub matches-attrs($html, $tag, %attrs --> Bool) {
+  return False unless $html ~~ /^ '<' $tag '"' || ('<' $tag) /;
+  for %attrs.kv -> $k, $v {
+    my $needle = "$k='$v'";
+    return False unless $html.contains($needle);
+  }
+  True;
+}
+
+is HAML.render(:src(".foo\n")),
+   "<div class='foo'></div>\n",
+   '.foo at line start renders as div with class';
+
+is HAML.render(:src("#bar\n")),
+   "<div id='bar'></div>\n",
+   '#bar at line start renders as div with id';
+
+is HAML.render(:src(".foo.bar\n")),
+   "<div class='foo bar'></div>\n",
+   '.foo.bar merges classes';
+
+is HAML.render(:src(".a.b.c\n")),
+   "<div class='a b c'></div>\n",
+   '.a.b.c merges three classes';
+
+# Combined shorthand: hash key order isn't deterministic so check tag + attrs
+my $r1 = HAML.render(:src(".foo#bar\n"));
+ok $r1.starts-with('<div ') && $r1.ends-with("></div>\n")
+   && $r1.contains("class='foo'") && $r1.contains("id='bar'"),
+   ".foo#bar produces div with class and id";
+
+my $r2 = HAML.render(:src("#bar.foo\n"));
+ok $r2.starts-with('<div ') && $r2.ends-with("></div>\n")
+   && $r2.contains("class='foo'") && $r2.contains("id='bar'"),
+   "#bar.foo produces div with class and id";
+
+# Phase 2.1.4: name-to-class/name-to-id entry points covered
+ok HAML.render(:src(".x\n")).contains("class='x'"),
+   'class shorthand alone populates class';
+
+ok HAML.render(:src("#y\n")).contains("id='y'"),
+   'id shorthand alone populates id';

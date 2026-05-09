@@ -1,0 +1,25 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Test;
+
+plan 5;
+
+is HAML.render(:src("%xml:lang en\n")),
+   "<xml:lang>en</xml:lang>\n",
+   '2.8.1: : in tag name (XML namespacing)';
+
+is HAML.render(:src("%my-component\n")),
+   "<my-component></my-component>\n",
+   '2.8.2: - in tag name (custom elements)';
+
+is HAML.render(:src("%data-grid hi\n")),
+   "<data-grid>hi</data-grid>\n",
+   '2.8.2: - mid-name in tag';
+
+dies-ok { HAML.render(:src("%1abc\n")) },
+   '2.8.3: tag name starting with digit dies';
+
+dies-ok { HAML.render(:src("%9\n")) },
+   '2.8.3: single-digit tag name dies';

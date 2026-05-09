@@ -19,6 +19,15 @@ grammar Grammar is export {
 
   token indent { ^^ \h* }
 
+  token tag-name        { <[A..Za..z_]> [ <[\w \: \-]> ]* }
+  token explicit-tag-name { '%' <tag-name> }
+  token shorthand-class { '.' <word> }
+  token shorthand-id    { '#' <word> }
+  token shorthand       { <shorthand-class> | <shorthand-id> }
+
+  token trim-modifiers  { <[<>]> ** 0..2 }
+  token void-marker     { '/' }
+
   rule param-key            { <word> ':' }
   rule symbol               { ':' <word> }
   rule phrase               { [ <word> ]* }
@@ -33,7 +42,19 @@ grammar Grammar is export {
   rule css-class            { '.' <word> }
   rule css-classes          { <css-class> [ <css-class> ]* }
 
-  token tag       { <indent> <tag-type> <css-classes>? <params-hash>? <to-eol> <.eol> }
+  token tag {
+    <indent>
+    [
+      | <explicit-tag-name> <shorthand>*
+      | <shorthand>+
+    ]
+    <params-hash>?
+    <trim-modifiers>
+    <void-marker>?
+    <to-eol>
+    <.eol>
+  }
+
   token statement { <indent> <op> <.ws> <if> <.ws> <expr> <.eol> }
 
   proto token line { * }

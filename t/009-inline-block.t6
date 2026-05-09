@@ -1,0 +1,37 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Test;
+
+plan 5;
+
+is HAML.render(:src("%p Hello\n")),
+   "<p>Hello</p>\n",
+   '2.5.1: inline content, no children';
+
+is HAML.render(:src("%p\n")),
+   "<p></p>\n",
+   '2.5.3: no content, no children';
+
+is HAML.render(:src("%div\n  %span Inner\n")),
+   "<div>\n  <span>Inner</span>\n</div>\n",
+   'block: only children, no inline content';
+
+# 2.5.2: tag with content AND children — content first, then children
+is HAML.render(:src("%h1 Title\n  %span Sub\n")),
+   "<h1>Title\n  <span>Sub</span>\n</h1>\n",
+   '2.5.2: inline content precedes children';
+
+# Nested deep
+my $src = qq:to/HAML/;
+%html
+  %head
+    %title Page
+  %body
+    %p Hi
+HAML
+
+is HAML.render(:src($src)),
+   "<html>\n  <head>\n    <title>Page</title>\n  </head>\n  <body>\n    <p>Hi</p>\n  </body>\n</html>\n",
+   'nested block layout matches';

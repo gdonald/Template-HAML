@@ -1,0 +1,40 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Template::HAML::X;
+use Test;
+
+plan 8;
+
+is HAML.render(:src("%br/\n")),
+   "<br>\n",
+   'explicit %br/ self-closes (HTML5)';
+
+is HAML.render(:src("%img/\n")),
+   "<img>\n",
+   'explicit %img/ self-closes (HTML5)';
+
+is HAML.render(:src("%br\n")),
+   "<br>\n",
+   '%br auto self-closes (void element)';
+
+is HAML.render(:src("%img\n")),
+   "<img>\n",
+   '%img auto self-closes (void element)';
+
+is HAML.render(:src("%hr\n")),
+   "<hr>\n",
+   '%hr auto self-closes (void element)';
+
+is HAML.render(:src("%input\{type: 'text'\}\n")),
+   "<input type='text'>\n",
+   '%input{type:...} auto self-closes with attrs';
+
+is HAML.render(:src("%div\n")),
+   "<div></div>\n",
+   '%div is NOT void — still gets close tag';
+
+throws-like { HAML.render(:src("%br\n  %span hi\n")) },
+   X::HAML::VoidWithChildren,
+   'void element with children dies';

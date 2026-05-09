@@ -31,15 +31,34 @@ class Actions is export {
 
   method tag($/) {
     my ($line, $column) = pos-to-line-col($/);
-    my $indent   = self.compute-level($/<indent>);
-    my $name     = $/<tag-type><word>.Str;
-    my $params   = $/<params-hash>.made || {};
-    my $content  = $/<to-eol>.defined ?? $/<to-eol>.Str.trim !! '';
-    my $sigil    = $/<tag-type><sigil>.Str;
-    my $classes  = $/<css-classes>.made || [];
+    my $indent  = self.compute-level($/<indent>);
+
+    my $name = $/<explicit-tag-name>.defined
+      ?? $/<explicit-tag-name><tag-name>.Str
+      !! 'div';
+
+    my @classes;
+    my @ids;
+    for ($/<shorthand> // ()).list -> $sh {
+      if $sh<shorthand-class>.defined {
+        @classes.push: $sh<shorthand-class><word>.Str;
+      } elsif $sh<shorthand-id>.defined {
+        @ids.push: $sh<shorthand-id><word>.Str;
+      }
+    }
+
+    my $params  = $/<params-hash>.made || {};
+    my $content = $/<to-eol>.defined ?? $/<to-eol>.Str.trim !! '';
+
+    my $trim    = $/<trim-modifiers>.Str;
+    my $trim-outer = $trim.contains('>');
+    my $trim-inner = $trim.contains('<');
+    my $self-close = $/<void-marker>.defined && $/<void-marker>.Str eq '/';
 
     my $object = Tag.new(
-      :$indent, :$sigil, :$name, :$params, :$content, :$classes,
+      :$indent, :$name, :$params, :$content,
+      :@classes, :@ids,
+      :$self-close, :$trim-outer, :$trim-inner,
       :$line, :$column,
       :output-indent-width($!output-indent-width),
     );

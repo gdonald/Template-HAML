@@ -1,29 +1,45 @@
 
 use Template::HAML::X;
 
+constant @VOID-ELEMENTS = <
+  area base br col embed hr img input link meta param source track wbr
+>;
+
 class Tag is export {
-  has Int $.indent;
-  has Int $.output-indent-width = 2;
-  has Int $.line;
-  has Int $.column;
-  has Str $.name;
-  has Str $.sigil;
-  has %.params;
-  has Str $.content;
-  has @.classes of Str;
-  has Str $.open;
+  has Int  $.indent;
+  has Int  $.output-indent-width = 2;
+  has Int  $.line;
+  has Int  $.column;
+  has Str  $.name           is rw;
+  has %.params              is rw;
+  has Str  $.content;
+  has @.classes             of Str;
+  has @.ids                 of Str;
+  has Bool $.self-close     is rw = False;
+  has Bool $.trim-outer     = False;
+  has Bool $.trim-inner     = False;
+  has Str  $.open;
 
   submethod BUILD(
-    :$!indent, :$!sigil, :$!name, :%!params, :$!content, :@!classes,
-    Int :$!output-indent-width = 2,
-    Int :$!line, Int :$!column,
+    :$!indent, :$!name, :%!params, :$!content,
+    :@!classes, :@!ids,
+    Bool :$!self-close = False,
+    Bool :$!trim-outer = False,
+    Bool :$!trim-inner = False,
+    Int  :$!output-indent-width = 2,
+    Int  :$!line, Int :$!column,
   ) {
-    given $!sigil {
-      when '.' { self.name-to-class }
-      when '#' { self.name-to-id }
+    self.merge-shorthands;
+
+    if !$!self-close && self.is-void && $!content.chars == 0 {
+      $!self-close = True;
     }
 
     self.build-open;
+  }
+
+  method is-void {
+    $!name (elem) @VOID-ELEMENTS;
   }
 
   method full {
@@ -36,11 +52,11 @@ class Tag is export {
   }
 
   method close {
+    return "\n" if $!self-close;
     '</' ~ $!name ~ '>' ~ "\n";
   }
 
   method build-attrs {
-    self.merge-classes;
     my $attrs = %!params.keys.map({ $_ ~ "='" ~ %!params{$_} ~ "'" }).join: ' ';
     $attrs.chars ?? ' ' ~ $attrs !! '';
   }
@@ -49,33 +65,22 @@ class Tag is export {
     ' ' x ($!indent * $!output-indent-width);
   }
 
-  method merge-classes {
-    return unless @!classes.elems;
-
-    if %!params<class> {
-      my $klasses = %!params<class>.split: ' ';
-      for @!classes { $klasses ~= ' ' ~ $_ }
-      %!params<class> = $klasses.unique;
-    } else {
-      %!params<class> = @!classes.join: ' ';
-    }
-  }
-
-  method name-to-class {
-    if %!params<class> {
-      my $class = %!params<class>.chars ?? ' ' ~ $!name !! $!name;
-      %!params<class> ~= $class;
-    } else {
-      %!params<class> = $!name;
+  method merge-shorthands {
+    if @!ids.elems {
+      if %!params<id> {
+        %!params<id> = (@!ids, %!params<id>).flat.join('_');
+      } else {
+        %!params<id> = @!ids.join('_');
+      }
     }
 
-    $!name = 'div';
-  }
-
-  method name-to-id {
-    duplicate-id(:$!line, :$!column) if %!params<id>;
-
-    %!params<id> = $!name;
-    $!name = 'div';
+    if @!classes.elems {
+      if %!params<class> {
+        my @existing = %!params<class>.split(' ');
+        %!params<class> = (|@existing, |@!classes).unique.join(' ');
+      } else {
+        %!params<class> = @!classes.unique.join(' ');
+      }
+    }
   }
 }

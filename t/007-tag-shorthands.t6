@@ -1,0 +1,56 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Test;
+
+plan 12;
+
+is HAML.render(:src("%tag.class\n")),
+   "<tag class='class'></tag>\n",
+   '%tag.class';
+
+my $r;
+
+$r = HAML.render(:src("%tag#id\n"));
+ok $r.starts-with('<tag ') && $r.ends-with("></tag>\n") && $r.contains("id='id'"),
+   '%tag#id';
+
+$r = HAML.render(:src("%a.cls#main\n"));
+ok $r.starts-with('<a ') && $r.contains("class='cls'") && $r.contains("id='main'"),
+   '%tag.class#id';
+
+$r = HAML.render(:src("%a#main.cls\n"));
+ok $r.starts-with('<a ') && $r.contains("class='cls'") && $r.contains("id='main'"),
+   '%tag#id.class';
+
+$r = HAML.render(:src("%a.x.y.z#main\n"));
+ok $r.contains("class='x y z'") && $r.contains("id='main'"),
+   '%tag.a.b.c#main';
+
+$r = HAML.render(:src("%a.x\{class: 'y'\}\n"));
+ok $r.contains("class='y x'") || $r.contains("class='x y'"),
+   'class shorthand merges with attribute hash class';
+
+$r = HAML.render(:src("%a.x.y\{class: 'z'\}\n"));
+ok $r.contains("class=") && $r.contains('x') && $r.contains('y') && $r.contains('z'),
+   'multiple class shorthands merge with hash class';
+
+$r = HAML.render(:src("%a#one#two\n"));
+ok $r.contains("id='one_two'"),
+   'multiple #id shorthands concatenate with underscore';
+
+$r = HAML.render(:src("%a#one\{id: 'two'\}\n"));
+ok $r.contains("id='one_two'"),
+   'shorthand id and hash id concatenate with underscore';
+
+lives-ok { HAML.render(:src("%div#a#b\n")) },
+   'multiple ids do not raise duplicate-id';
+
+$r = HAML.render(:src("%a.x.x\n"));
+ok $r.contains("class='x'") && !$r.contains("x x"),
+   'duplicate classes are merged';
+
+is HAML.render(:src("%h1.title Hello\n")),
+   "<h1 class='title'>Hello</h1>\n",
+   '%h1.title with content';
