@@ -1,10 +1,4 @@
-name: CI
-
-on:
-  push:
-    branches: [main]
-  pull_request:
-
+on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -19,5 +13,5 @@ jobs:
         run: zef install --deps-only --/test --test-depends .
       - name: Install prove6
         run: zef install --/test App::Prove6
-      - name: Run tests
-        run: prove6 -Ilib t/
+      - name: Run tests and specs
+        run: ./test.raku
