@@ -136,16 +136,18 @@ ok $m.made<id> eq 'foo_1';
 ok $m.made<style> eq 'bar';
 
 $m = Grammar.parse("\{ class: :foo, id: 'foo_1', style: 'bar' \}", :rule<params-hash>, :$actions);
-ok $m.made ~~ Hash:D;
-ok $m.made<class> eq 'foo';
-ok $m.made<id> eq 'foo_1';
-ok $m.made<style> eq 'bar';
+my %h1 = $m.made.list.map({ .key => .value });
+ok %h1 ~~ Hash:D;
+ok %h1<class> eq 'foo';
+ok %h1<id> eq 'foo_1';
+ok %h1<style> eq 'bar';
 
 $m = Grammar.parse('{ class: :foo, id: "foo_1", style: "bar" }', :rule<params-hash>, :$actions);
-ok $m.made ~~ Hash:D;
-ok $m.made<class> eq 'foo';
-ok $m.made<id> eq 'foo_1';
-ok $m.made<style> eq 'bar';
+my %h2 = $m.made.list.map({ .key => .value });
+ok %h2 ~~ Hash:D;
+ok %h2<class> eq 'foo';
+ok %h2<id> eq 'foo_1';
+ok %h2<style> eq 'bar';
 
 
 # <indent>

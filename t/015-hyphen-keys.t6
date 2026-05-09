@@ -1,0 +1,19 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Test;
+
+plan 3;
+
+is HAML.render(:src(Q[%a{'data-id' => 1}] ~ "\n")),
+   "<a data-id='1'></a>\n",
+   '3.4.1: hyphenated string key with rocket';
+
+is HAML.render(:src(Q[%a{"aria-label" => "x"}] ~ "\n")),
+   "<a aria-label='x'></a>\n",
+   '3.4.1: hyphenated double-quoted string key';
+
+my $r = HAML.render(:src(Q[%a{data-id: 1}] ~ "\n"));
+nok $r.contains("data-id='1'"),
+   '3.4.2: bareword data-id is not parsed as an attribute';

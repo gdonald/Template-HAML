@@ -10,7 +10,8 @@ grammar Grammar is export {
   token eol { $$ \n? }
 
   token word    { \w+ }
-  token number  { \d+ }
+  token number  { '-'? \d+ [ '.' \d+ ]? }
+  token bool    { 'True' | 'False' | 'true' | 'false' | 'Nil' }
   token to-eol  { \N* }
   token expr    { \N* }
   token sigil   { <[%.#]> }
@@ -28,19 +29,47 @@ grammar Grammar is export {
   token trim-modifiers  { <[<>]> ** 0..2 }
   token void-marker     { '/' }
 
-  rule param-key            { <word> ':' }
-  rule symbol               { ':' <word> }
-  rule phrase               { [ <word> ]* }
-  rule single-quoted-string { "'" <phrase> "'" }
-  rule double-quoted-string { '"' <phrase> '"' }
-  rule quoted-string        { [ <single-quoted-string> | <double-quoted-string> ] }
-  rule param-value          { [ <quoted-string> | <symbol> ] }
-  rule param                { <param-key> <param-value> }
-  rule params               { <param> [ ',' <param> ]* }
-  rule params-hash          { '{' <params>? '}' }
-  rule tag-type             { <sigil><word> }
-  rule css-class            { '.' <word> }
-  rule css-classes          { <css-class> [ <css-class> ]* }
+  token sq-content { [ \\ . | <-[\\ ']> ]* }
+  token dq-content { [ \\ . | <-[\\ "]> ]* }
+  rule  single-quoted-string { "'" <sq-content> "'" }
+  rule  double-quoted-string { '"' <dq-content> '"' }
+  rule  quoted-string        { <single-quoted-string> | <double-quoted-string> }
+
+  rule  symbol      { ':' <word> }
+  token hyphen-name { <[A..Za..z_]> [ <[\w \: \-]> ]* }
+
+  rule  array-value { '[' <value> [ ',' <value> ]* ','? ']' }
+  rule  hash-value  { '{' [ <pair> [ ',' <pair> ]* ','? ]? '}' }
+
+  rule value {
+    | <quoted-string>
+    | <number>
+    | <bool>
+    | <symbol>
+    | <hash-value>
+    | <array-value>
+  }
+
+  rule  rocket-key  { <quoted-string> | <symbol> | <word> }
+  rule  pair-bare   { <word> ':' <value> }
+  rule  pair-rocket { <rocket-key> '=>' <value> }
+  rule  pair        { <pair-rocket> | <pair-bare> }
+
+  rule  params-hash { '{' [ <pair> [ ',' <pair> ]* ','? ]? '}' }
+
+  token html-bool-attr  { <hyphen-name> }
+  rule  html-keyed-attr { <hyphen-name> '=' <quoted-string> }
+  rule  html-attr       { <html-keyed-attr> | <html-bool-attr> }
+  token html-attrs      { '(' [ \s* <html-attr> ]+ \s* ')' }
+
+  rule param-key   { <word> ':' }
+  rule param-value { <value> }
+  rule param       { <pair-bare> }
+  rule params      { <pair> [ ',' <pair> ]* ','? }
+  rule css-class   { '.' <word> }
+  rule css-classes { <css-class> [ <css-class> ]* }
+  rule tag-type    { <sigil><word> }
+  rule phrase      { [ <word> ]* }
 
   token tag {
     <indent>
@@ -48,6 +77,7 @@ grammar Grammar is export {
       | <explicit-tag-name> <shorthand>*
       | <shorthand>+
     ]
+    <html-attrs>?
     <params-hash>?
     <trim-modifiers>
     <void-marker>?

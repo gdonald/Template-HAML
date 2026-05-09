@@ -1,0 +1,31 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Test;
+
+plan 6;
+
+is HAML.render(:src(Q[%a(href='/')] ~ "\n")),
+   "<a href='/'></a>\n",
+   '3.2.1: HTML-style single-quoted value';
+
+is HAML.render(:src(Q[%a(href="/")] ~ "\n")),
+   "<a href='/'></a>\n",
+   '3.2.2: HTML-style double-quoted value';
+
+is HAML.render(:src(Q[%input(disabled)] ~ "\n")),
+   "<input disabled>\n",
+   '3.2.3: bool attr (no value) renders bare in HTML5';
+
+is HAML.render(:src(Q<%a(href='/'){title: 'home'}> ~ "\n")),
+   "<a href='/' title='home'></a>\n",
+   '3.2.4: combine ()-attrs and {}-attrs';
+
+is HAML.render(:src(Q[%a(href='/' title='home')] ~ "\n")),
+   "<a href='/' title='home'></a>\n",
+   '3.2.1: multiple HTML attrs in parens';
+
+is HAML.render(:src(Q[%a(data-id='42')] ~ "\n")),
+   "<a data-id='42'></a>\n",
+   '3.2.1: hyphenated HTML attr name';

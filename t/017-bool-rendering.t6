@@ -1,0 +1,35 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Test;
+
+plan 6;
+
+# 3.7.1: True → bare attribute (HTML5)
+is HAML.render(:src(Q<%input{disabled: True}> ~ "\n")),
+   "<input disabled>\n",
+   '3.7.1: True renders as bare attribute';
+
+is HAML.render(:src(Q<%input{checked: true}> ~ "\n")),
+   "<input checked>\n",
+   '3.7.1: lowercase true renders as bare attribute';
+
+# 3.7.2: False → omit
+is HAML.render(:src(Q<%input{disabled: False}> ~ "\n")),
+   "<input>\n",
+   '3.7.2: False omits the attribute';
+
+is HAML.render(:src(Q<%input{disabled: false, checked: True}> ~ "\n")),
+   "<input checked>\n",
+   '3.7.2: False omitted, True kept';
+
+# 3.7.2: Nil → omit
+is HAML.render(:src(Q<%input{title: Nil}> ~ "\n")),
+   "<input>\n",
+   '3.7.2: Nil omits the attribute';
+
+# 3.7.3: Empty string → name=""
+is HAML.render(:src(Q<%input{title: ''}> ~ "\n")),
+   "<input title=''>\n",
+   '3.7.3: empty string renders as empty value';

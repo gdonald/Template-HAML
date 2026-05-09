@@ -14,6 +14,24 @@ sub pos-to-line-col($/) {
   ($line, $column);
 }
 
+sub decode-sq(Str $s --> Str) {
+  $s.subst(/'\\' (.)/, -> $/ { $0.Str }, :g);
+}
+
+sub decode-dq(Str $s --> Str) {
+  $s.subst(/'\\' (.)/, -> $/ {
+    given $0.Str {
+      when 'n'  { "\n" }
+      when 't'  { "\t" }
+      when 'r'  { "\r" }
+      when '\\' { '\\' }
+      when '"'  { '"' }
+      when "'"  { "'" }
+      default   { '\\' ~ $0.Str }
+    }
+  }, :g);
+}
+
 class Actions is export {
   has Node $.tree;
   has Node $!current-node;
@@ -47,7 +65,14 @@ class Actions is export {
       }
     }
 
-    my $params  = $/<params-hash>.made || {};
+    my @attrs;
+    if $/<html-attrs>.defined {
+      @attrs.append: $/<html-attrs>.made.list;
+    }
+    if $/<params-hash>.defined {
+      @attrs.append: $/<params-hash>.made.list;
+    }
+
     my $content = $/<to-eol>.defined ?? $/<to-eol>.Str.trim !! '';
 
     my $trim    = $/<trim-modifiers>.Str;
@@ -56,7 +81,7 @@ class Actions is export {
     my $self-close = $/<void-marker>.defined && $/<void-marker>.Str eq '/';
 
     my $object = Tag.new(
-      :$indent, :$name, :$params, :$content,
+      :$indent, :$name, :@attrs, :$content,
       :@classes, :@ids,
       :$self-close, :$trim-outer, :$trim-inner,
       :$line, :$column,
@@ -133,43 +158,110 @@ class Actions is export {
     make $/.Str.chars;
   }
 
+  method sq-content($/) { make decode-sq($/.Str) }
+  method dq-content($/) { make decode-dq($/.Str) }
+
+  method single-quoted-string($/) { make $/<sq-content>.made }
+  method double-quoted-string($/) { make $/<dq-content>.made }
+
   method quoted-string($/) {
-    if $/<double-quoted-string> {
-      make $/<double-quoted-string>.Str.subst(:global, /\"/, '');
-    } elsif $/<single-quoted-string> {
-      make $/<single-quoted-string>.Str.subst(:global, /\'/, '');
+    if $/<single-quoted-string> {
+      make $/<single-quoted-string>.made;
+    } else {
+      make $/<double-quoted-string>.made;
     }
   }
 
-  method param-value($/) {
-    if $/<quoted-string> {
-      make $/<quoted-string>.made.trim;
-    } elsif $/<symbol> {
-      make $/<symbol>.Str.subst(:global, /\:/, '').trim;
+  method bool($/) {
+    given $/.Str {
+      when 'True'  | 'true'  { make True  }
+      when 'False' | 'false' { make False }
+      when 'Nil'             { make Nil   }
     }
   }
 
-  method param-key($/) {
+  method number($/) {
+    make $/.Str.Numeric;
+  }
+
+  method symbol($/) {
     make $/<word>.Str;
   }
 
-  method param($/) {
-    make Pair.new: $/<param-key>.made, $/<param-value>.made;
+  method array-value($/) {
+    make $/<value>.map({ .made }).list;
   }
 
+  method hash-value($/) {
+    make ($/<pair> // ()).list.map({ .made }).list;
+  }
+
+  method value($/) {
+    for <quoted-string number bool symbol hash-value array-value> -> $k {
+      if $/{$k}.defined {
+        make $/{$k}.made;
+        return;
+      }
+    }
+  }
+
+  method rocket-key($/) {
+    if $/<quoted-string>.defined {
+      make $/<quoted-string>.made;
+    } elsif $/<symbol>.defined {
+      make $/<symbol>.made;
+    } else {
+      make $/<word>.Str;
+    }
+  }
+
+  method pair-bare($/)   { make Pair.new($/<word>.Str,        $/<value>.made) }
+  method pair-rocket($/) { make Pair.new($/<rocket-key>.made, $/<value>.made) }
+
+  method pair($/) {
+    if $/<pair-rocket>.defined {
+      make $/<pair-rocket>.made;
+    } else {
+      make $/<pair-bare>.made;
+    }
+  }
+
+  method param-value($/) { make $/<value>.made }
+  method param-key($/)   { make $/<word>.Str }
+  method param($/)       { make $/<pair-bare>.made }
+
   method params($/) {
-    make Hash.new: $/<param>.map({ .made });
+    my %h;
+    for ($/<pair> // ()).list -> $p {
+      %h{$p.made.key} = $p.made.value;
+    }
+    make %h;
   }
 
   method params-hash($/) {
-    make $/<params>.made;
+    make ($/<pair> // ()).list.map({ .made }).list;
   }
 
-  method css-class($/) {
-    make $/.Str.subst(/\./, '').trim;
+  method html-bool-attr($/) {
+    make Pair.new($/<hyphen-name>.Str, True);
   }
 
-  method css-classes($/) {
-    make $/<css-class>.map({ .made });
+  method html-keyed-attr($/) {
+    make Pair.new($/<hyphen-name>.Str, $/<quoted-string>.made);
   }
+
+  method html-attr($/) {
+    if $/<html-keyed-attr>.defined {
+      make $/<html-keyed-attr>.made;
+    } else {
+      make $/<html-bool-attr>.made;
+    }
+  }
+
+  method html-attrs($/) {
+    make $/<html-attr>.map({ .made }).list;
+  }
+
+  method css-class($/)   { make $/.Str.subst(/\./, '').trim }
+  method css-classes($/) { make $/<css-class>.map({ .made }) }
 }

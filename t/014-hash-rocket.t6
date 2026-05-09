@@ -1,0 +1,23 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Test;
+
+plan 4;
+
+is HAML.render(:src(Q[%a{:href => '/'}] ~ "\n")),
+   "<a href='/'></a>\n",
+   '3.3.1: hash rocket with symbol key';
+
+is HAML.render(:src(Q[%a{'href' => '/'}] ~ "\n")),
+   "<a href='/'></a>\n",
+   '3.3.1: hash rocket with single-quoted key';
+
+is HAML.render(:src(Q[%a{"href" => "/"}] ~ "\n")),
+   "<a href='/'></a>\n",
+   '3.3.1: hash rocket with double-quoted key';
+
+is HAML.render(:src(Q[%a{href: '/', :title => 'home'}] ~ "\n")),
+   "<a href='/' title='home'></a>\n",
+   '3.3: bare and rocket pairs in same hash';

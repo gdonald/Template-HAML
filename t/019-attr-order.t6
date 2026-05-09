@@ -1,0 +1,27 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Test;
+
+plan 4;
+
+# 3.10.3: id then class first regardless of source order
+is HAML.render(:src(Q<%a{title: 't', class: 'c', id: 'i', href: '/'}> ~ "\n")),
+   "<a id='i' class='c' title='t' href='/'></a>\n",
+   '3.10.3: id, class first; rest in insertion order';
+
+# 3.10.2: stable insertion order for non-id/class attrs
+is HAML.render(:src(Q<%a{c: 3, a: 1, b: 2}> ~ "\n")),
+   "<a c='3' a='1' b='2'></a>\n",
+   '3.10.2: insertion order preserved';
+
+# id from shorthand combined with hash attrs (id still first)
+is HAML.render(:src(Q<%a#main{href: '/', class: 'cls'}> ~ "\n")),
+   "<a id='main' class='cls' href='/'></a>\n",
+   '3.10: id from shorthand still emitted first';
+
+# Class from shorthand merged then ordered
+is HAML.render(:src(Q<%a.foo{href: '/', id: 'm'}> ~ "\n")),
+   "<a id='m' class='foo' href='/'></a>\n",
+   '3.10: class from shorthand still after id';
