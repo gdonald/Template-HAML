@@ -12,7 +12,7 @@ A line beginning with `!!!` declares the document's doctype. It must be the firs
 <!DOCTYPE html>
 ```
 
-With no argument, `!!!` emits the format-default doctype. The default format is HTML5 today; configurable formats arrive in Phase 10.
+With no argument, `!!!` emits the format-default doctype. The default format is HTML5; other formats are not yet configurable.
 
 ## Named variants
 

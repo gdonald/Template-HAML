@@ -1,0 +1,220 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Template::HAML::Filters;
+use Template::HAML::X;
+use Test;
+
+plan 35;
+
+is HAML.render(:src(q:to/HAML/)),
+:plain
+  Hello world
+  Goodbye
+HAML
+   "Hello world\nGoodbye\n",
+   ':plain emits raw text';
+
+is HAML.render(:src(q:to/HAML/)),
+:plain
+  %p not a tag
+HAML
+   "%p not a tag\n",
+   ':plain does not parse sigils';
+
+is HAML.render(:src(q:to/HAML/)),
+:plain
+  <b>raw html</b>
+HAML
+   "<b>raw html</b>\n",
+   ':plain does not escape';
+
+is HAML.render(:src(q:to/HAML/)),
+:escaped
+  <b>raw</b> & "stuff"
+HAML
+   "&lt;b&gt;raw&lt;/b&gt; &amp; &quot;stuff&quot;\n",
+   ':escaped HTML-escapes';
+
+is HAML.render(:src(q:to/HAML/)),
+:javascript
+  alert('hi');
+HAML
+   "<script>\n  alert('hi');\n</script>\n",
+   ':javascript wraps in <script>';
+
+is HAML.render(:src(q:to/HAML/)),
+:javascript
+  var x = 1;
+  var y = 2;
+HAML
+   "<script>\n  var x = 1;\n  var y = 2;\n</script>\n",
+   ':javascript multi-line';
+
+is HAML.render(:src(q:to/HAML/)),
+:css
+  body { color: red; }
+HAML
+   "<style>\n  body \{ color: red; \}\n</style>\n",
+   ':css wraps in <style>';
+
+is HAML.render(:src(q:to/HAML/)),
+:cdata
+  some data
+HAML
+   "<![CDATA[\n  some data\n]]>\n",
+   ':cdata wraps in CDATA';
+
+is HAML.render(:src(q:to/HAML/)),
+:preserve
+  line1
+  line2
+HAML
+   "line1&#x000A;line2\n",
+   ':preserve replaces \\n';
+
+is HAML.render(:src(q:to/HAML/)),
+:raku
+  1 + 2
+HAML
+   "3\n",
+   ':raku evals body';
+
+is HAML.render(:src(q:to/HAML/), :locals(%(x => 10))),
+:raku
+  $x * 2
+HAML
+   "20\n",
+   ':raku sees locals';
+
+is HAML.render(:src(q:to/HAML/), :locals(%(name => 'World'))),
+:plain
+  Hello, #{$name}!
+HAML
+   "Hello, World!\n",
+   ':plain interpolates #{}';
+
+is HAML.render(:src(q:to/HAML/), :locals(%(n => 5))),
+:javascript
+  var n = #{$n};
+HAML
+   "<script>\n  var n = 5;\n</script>\n",
+   ':javascript interpolates';
+
+is HAML.render(:src(q:to/HAML/), :locals(%(c => 'red'))),
+:css
+  body { color: #{$c}; }
+HAML
+   "<style>\n  body \{ color: red; \}\n</style>\n",
+   ':css interpolates';
+
+is HAML.render(:src(q:to/HAML/), :locals(%(s => 'hi'))),
+:escaped
+  #{$s} <b>x</b>
+HAML
+   "hi &lt;b&gt;x&lt;/b&gt;\n",
+   ':escaped interpolates and escapes whole';
+
+is HAML.render(:src(q:to/HAML/), :locals(%(v => 'hello'))),
+:cdata
+  data: #{$v}
+HAML
+   "<![CDATA[\n  data: hello\n]]>\n",
+   ':cdata interpolates';
+
+is HAML.render(:src(q:to/HAML/), :locals(%(x => 7))),
+:raku
+  $x + 1
+HAML
+   "8\n",
+   ':raku body is code, not interpolated';
+
+throws-like { HAML.render(:src(q:to/HAML/)) },
+:nope
+  body
+HAML
+   X::HAML::UnknownFilter,
+   :name<nope>,
+   'unknown filter raises X::HAML::UnknownFilter';
+
+register-filter :name<upper>, :handler(-> Str $body, %locals --> Str {
+  $body.uc;
+});
+
+is HAML.render(:src(q:to/HAML/)),
+:upper
+  hello
+HAML
+   "HELLO\n",
+   'custom filter via register-filter';
+
+is HAML.render(:src(q:to/HAML/)),
+:upper
+  one
+  two
+HAML
+   "ONE\nTWO\n",
+   'custom filter multi-line';
+
+is HAML.render(:src(q:to/HAML/)),
+%div
+  :javascript
+    alert(1);
+HAML
+   "<div>\n  <script>\n    alert(1);\n  </script>\n</div>\n",
+   'filter nested under tag indents output';
+
+is HAML.render(:src(q:to/HAML/)),
+%div
+  :plain
+    raw
+HAML
+   "<div>\n  raw\n</div>\n",
+   'filter :plain nested under tag';
+
+is HAML.render(:src(q:to/HAML/)),
+:plain
+  outer
+    inner
+HAML
+   "outer\n  inner\n",
+   ':plain preserves relative indent in body';
+
+is HAML.render(:src(q:to/HAML/)),
+:plain
+  one
+
+  two
+HAML
+   "one\n\ntwo\n",
+   ':plain preserves internal blank line';
+
+is HAML.render(:src(q:to/HAML/)),
+:plain
+  filtered
+%p after
+HAML
+   "filtered\n<p>after</p>\n",
+   'filter followed by sibling tag';
+
+is HAML.render(:src(q:to/HAML/)),
+%p first
+:javascript
+  go();
+%p last
+HAML
+   "<p>first</p>\n<script>\n  go();\n</script>\n<p>last</p>\n",
+   'filter between tags';
+
+ok has-filter('plain'),       'has-filter built-in :plain';
+ok has-filter('escaped'),     'has-filter built-in :escaped';
+ok has-filter('javascript'),  'has-filter built-in :javascript';
+ok has-filter('css'),         'has-filter built-in :css';
+ok has-filter('cdata'),       'has-filter built-in :cdata';
+ok has-filter('preserve'),    'has-filter built-in :preserve';
+ok has-filter('raku'),        'has-filter built-in :raku';
+
+nok has-filter('does-not-exist'), 'has-filter false for unknown';
+
+ok lookup-filter('plain') ~~ Callable, 'lookup-filter returns Callable';

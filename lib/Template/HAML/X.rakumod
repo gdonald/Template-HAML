@@ -69,6 +69,13 @@ class X::HAML::OrphanElse is X::HAML {
   }
 }
 
+class X::HAML::UnknownFilter is X::HAML {
+  has Str $.name;
+  method message {
+    self.loc ~ " unknown filter ':$!name'"
+  }
+}
+
 class X::IllegalIndent is X::HAML::IllegalIndent { }
 class X::DuplicateId  is X::HAML::DuplicateId   { }
 

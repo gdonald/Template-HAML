@@ -13,6 +13,7 @@ nav:
     - Embedded code: syntax/embedded-code.md
     - Plain text: syntax/plain-text.md
     - Control flow: syntax/control-flow.md
+    - Filters: syntax/filters.md
   - API: api.md
   - Tests: testing.md
 theme:

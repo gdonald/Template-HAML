@@ -42,7 +42,6 @@ ok $r2.starts-with('<div ') && $r2.ends-with("></div>\n")
    && $r2.contains("class='foo'") && $r2.contains("id='bar'"),
    "#bar.foo produces div with class and id";
 
-# Phase 2.1.4: name-to-class/name-to-id entry points covered
 ok HAML.render(:src(".x\n")).contains("class='x'"),
    'class shorthand alone populates class';
 

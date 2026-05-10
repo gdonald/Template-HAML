@@ -1,6 +1,7 @@
 
 use Template::HAML::Comment;
 use Template::HAML::Doctype;
+use Template::HAML::Filter;
 use Template::HAML::Interpolation;
 use Template::HAML::Node;
 use Template::HAML::Plain;
@@ -20,6 +21,29 @@ sub pos-to-line-col($/) {
 
 sub decode-sq(Str $s --> Str) {
   $s.subst(/'\\' (.)/, -> $/ { $0.Str }, :g);
+}
+
+sub blank-line(Str $s --> Bool) {
+  so $s ~~ /^ \h* $/;
+}
+
+sub leading-ws(Str $s --> Int) {
+  $s.chars - $s.subst(/^ \h+/, '').chars;
+}
+
+sub dedent-filter-body(@raw) {
+  my @lines = @raw;
+
+  while @lines.elems && blank-line(@lines[*-1]) {
+    @lines.pop;
+  }
+
+  return @lines unless @lines.elems;
+
+  my @widths = @lines.grep({ !blank-line($_) }).map({ leading-ws($_) });
+  my $min = @widths ?? @widths.min !! 0;
+
+  @lines.map({ blank-line($_) ?? '' !! .substr($min) }).Array;
 }
 
 sub parse-control(Str $op, Str $expr) {
@@ -183,6 +207,32 @@ class Actions is export {
     my $object = Plain.new(
       :$indent, :$line, :$column,
       :text($raw),
+      :output-indent-width($!output-indent-width),
+    );
+    self.add-node($object);
+    $!seen-content = True;
+  }
+
+  method line:sym<filter>($/) {
+    my ($line, $column) = pos-to-line-col($/);
+    my $indent = self.compute-level($/<head>);
+    my $name   = $/<word>.Str;
+
+    my @raw;
+    if $/<body-line> {
+      for $/<body-line>.list -> $bl {
+        my $s = $bl.Str;
+        $s = $s.substr(0, $s.chars - 1) if $s.ends-with("\n");
+        @raw.push: $s;
+      }
+    }
+
+    @raw = dedent-filter-body(@raw);
+
+    my $body = @raw.join("\n");
+
+    my $object = Filter.new(
+      :$indent, :$name, :$body, :$line, :$column,
       :output-indent-width($!output-indent-width),
     );
     self.add-node($object);

@@ -104,7 +104,20 @@ grammar Grammar is export {
   multi token line:sym<comment>        {
     ^^ $<head>=[\h*] '/' <comment-revealed>? <comment-condition>? <to-eol> <.eol>
   }
-  multi token line:sym<filter>         { ^^ \h* ':' <word> <.eol> }
+  multi token line:sym<filter> {
+    ^^ $<head>=[\h*] ':' <word> \h* <.eol>
+    [
+      | ^^ $<body-line>=[ \h* \n ]
+      | ^^ $<body-line>=[ \h+ \N* [ \n | $ ] ]
+          <?{
+            my $bl   = ($<body-line>[*-1] // '').Str;
+            my $head = ($<head> // '').Str;
+            my $m    = $bl ~~ /^ \h+/;
+            my $bws  = $m ?? $m.Str.chars !! 0;
+            $bws > $head.chars;
+          }>
+    ]*
+  }
   multi token line:sym<statement>      { <statement> }
   multi token line:sym<tag>            { <tag> }
   multi token line:sym<plain> {

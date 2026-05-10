@@ -24,6 +24,26 @@ Returns the rendered HTML as a `Str`.
 
 `HAML` is exported as a class from the `Template::HAML` module. There is no instance state today; `HAML.render` is effectively a class method.
 
+## `register-filter`
+
+```raku
+use Template::HAML::Filters;
+
+register-filter :name<upper>, :handler(-> Str $body, %locals --> Str {
+  $body.uc;
+});
+```
+
+Registers a custom filter handler. The handler signature is
+`(Str $body, %locals --> Str)`. `$body` is the filter's indented block
+dedented to column zero; the handler returns the rendered text. The renderer
+applies the filter's own source indent to each line of the result.
+
+`Template::HAML::Filters` also exports `lookup-filter(Str $name)`,
+`has-filter(Str $name)`, and `filter-names()`.
+
+See [filters](syntax/filters.md) for the built-in handlers.
+
 ## Internal modules
 
 The implementation is split across several modules under `lib/Template/HAML/`. These are not part of the stable public API yet, but documented here for contributors:
@@ -37,6 +57,8 @@ The implementation is split across several modules under `lib/Template/HAML/`. T
 | `Template::HAML::Statement`  | AST node representing an embedded-code line (`=`, `-`, `!=`, `&=`). |
 | `Template::HAML::Eval`       | EVALs embedded Raku expressions with caching.                 |
 | `Template::HAML::Renderer`   | Walks the parse tree and emits HTML.                          |
+| `Template::HAML::Filter`     | AST node representing a filter line and its dedented body.    |
+| `Template::HAML::Filters`    | Filter registry plus the built-in filter handlers.            |
 | `Template::HAML::X`          | Exception types raised by the parser.                         |
 
 ## Exceptions
@@ -52,3 +74,4 @@ The implementation is split across several modules under `lib/Template/HAML/`. T
 | `X::HAML::UnknownDoctype`    | `!!! foo` named a doctype variant that is not recognized.  |
 | `X::HAML::DoctypeNotFirst`   | A `!!!` line appeared after non-blank content.             |
 | `X::HAML::Eval`              | An embedded `=`/`-`/`!=`/`&=` expression failed to compile or run. |
+| `X::HAML::UnknownFilter`     | A `:name` line referenced a filter that is not registered. |

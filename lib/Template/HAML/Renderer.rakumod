@@ -2,6 +2,8 @@
 use Template::HAML::Comment;
 use Template::HAML::Doctype;
 use Template::HAML::Eval;
+use Template::HAML::Filter;
+use Template::HAML::Filters;
 use Template::HAML::Interpolation;
 use Template::HAML::Node;
 use Template::HAML::Plain;
@@ -61,6 +63,10 @@ class Renderer is export {
       return self.render-plain($node, %locals, $offset);
     }
 
+    if $obj ~~ Filter {
+      return self.render-filter($node, %locals, $offset);
+    }
+
     if $obj ~~ Tag && $obj.is-void && $node.children.elems {
       X::HAML::VoidWithChildren.new(
         :line($obj.line), :column($obj.column), :name($obj.name),
@@ -93,6 +99,21 @@ class Renderer is export {
       $obj.content, %locals,
       :line($obj.line), :column($obj.column),
     );
+  }
+
+  method render-filter(Node:D $node, %locals, Int $offset) {
+    my $obj = $node.object;
+    unless has-filter($obj.name) {
+      X::HAML::UnknownFilter.new(
+        :line($obj.line), :column($obj.column), :name($obj.name),
+      ).throw;
+    }
+    my &handler = lookup-filter($obj.name);
+    my $rendered = handler($obj.body, %locals);
+    return '' unless $rendered.defined && $rendered.chars;
+
+    my $indent = $obj.get-indent(:$offset);
+    $rendered.lines.map({ $indent ~ $_ ~ "\n" }).join;
   }
 
   method render-plain(Node:D $node, %locals, Int $offset) {

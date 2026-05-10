@@ -8,31 +8,28 @@ plan 7;
 
 is HAML.render(:src("%a\{tabindex: 1\}\n")),
    "<a tabindex='1'></a>\n",
-   '3.1.1: bare number value';
+   'bare number value';
 
 is HAML.render(:src("%a\{n: -3\}\n")),
    "<a n='-3'></a>\n",
-   '3.1.1: negative number';
+   'negative number';
 
 is HAML.render(:src("%a\{x: 1.5\}\n")),
    "<a x='1.5'></a>\n",
-   '3.1.1: decimal number';
+   'decimal number';
 
-# Phase 3.1.4: array values for class:
 is HAML.render(:src("%a\{class: ['foo', 'bar']\}\n")),
    "<a class='foo bar'></a>\n",
-   '3.1.4: array values for class join with space';
+   'array values for class join with space';
 
-# Phase 3.1.5: array values for id:
 is HAML.render(:src("%a\{id: ['one', 'two']\}\n")),
    "<a id='one_two'></a>\n",
-   '3.1.5: array values for id join with underscore';
+   'array values for id join with underscore';
 
-# Phase 3.1.7: string escapes in double-quoted strings
 is HAML.render(:src("%a\{title: \"line\\nbreak\"\}\n")),
    "<a title='line\nbreak'></a>\n",
-   '3.1.7: \\n in double-quoted decodes to newline';
+   '\\n in double-quoted decodes to newline';
 
 is HAML.render(:src("%a\{title: 'a\\\\b'\}\n")),
    "<a title='a\\b'></a>\n",
-   '3.1.7: \\\\ decodes to single backslash';
+   '\\\\ decodes to single backslash';

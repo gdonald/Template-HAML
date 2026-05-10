@@ -8,20 +8,20 @@ plan 5;
 
 is HAML.render(:src(Q[%a{title: 'tom & jerry'}] ~ "\n")),
    "<a title='tom &amp; jerry'></a>\n",
-   '3.8.1: & is escaped';
+   '& is escaped';
 
 is HAML.render(:src(Q[%a{title: '<script>'}] ~ "\n")),
    "<a title='&lt;script&gt;'></a>\n",
-   '3.8.1: < and > are escaped';
+   '< and > are escaped';
 
 is HAML.render(:src(Q[%a{title: "don't"}] ~ "\n")),
    "<a title='don&#39;t'></a>\n",
-   '3.9.2: single quote inside value escaped to &#39;';
+   'single quote inside value escaped to &#39;';
 
 is HAML.render(:src(Q[%a{title: 'a "quoted" word'}] ~ "\n")),
    "<a title='a &quot;quoted&quot; word'></a>\n",
-   '3.8.1: double quote escaped to &quot;';
+   'double quote escaped to &quot;';
 
 is HAML.render(:src(Q[%a{title: 'a & b < c'}] ~ "\n")),
    "<a title='a &amp; b &lt; c'></a>\n",
-   '3.8.1: combined escaping';
+   'combined escaping';
