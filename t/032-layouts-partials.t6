@@ -1,0 +1,168 @@
+
+use Test;
+
+use Template::HAML;
+use Template::HAML::Config;
+use Template::HAML::X;
+
+my $tmp = $*TMPDIR.add('haml-phase13-' ~ $*PID);
+$tmp.mkdir;
+
+sub rm-rf(IO::Path $p) {
+  return unless $p.e;
+  for $p.dir -> $c {
+    $c.d ?? rm-rf($c) !! $c.unlink;
+  }
+  $p.rmdir;
+}
+
+LEAVE { rm-rf($tmp); }
+
+sub spit(Str $rel, Str $body) {
+  my $f = $tmp.add($rel);
+  $f.dirname.IO.mkdir;
+  $f.spurt($body);
+  $f.Str;
+}
+
+subtest 'resolve-template with .haml extension', {
+  spit('foo.haml', "%p hi\n");
+  my $haml = HAML.new(:search-paths($tmp.Str));
+  my $path = $haml.resolve-template('foo');
+  is $path.IO.basename, 'foo.haml', 'resolves bare name';
+}
+
+subtest 'resolve-template with .html.haml extension', {
+  spit('bar.html.haml', "%p there\n");
+  my $haml = HAML.new(:search-paths($tmp.Str));
+  my $path = $haml.resolve-template('bar');
+  is $path.IO.basename, 'bar.html.haml', 'resolves to .html.haml';
+}
+
+subtest 'render :file from search path', {
+  spit('hello.html.haml', "%p hello\n");
+  my $haml = HAML.new(:search-paths($tmp.Str));
+  my $out  = $haml.render(:file<hello>);
+  like $out, /'<p>hello</p>'/, 'file rendered';
+}
+
+subtest 'render missing file throws', {
+  my $haml = HAML.new(:search-paths($tmp.Str));
+  throws-like { $haml.render(:file<nope>) },
+    X::HAML::TemplateNotFound,
+    'template not found throws';
+}
+
+subtest 'render with layout', {
+  spit('layouts/app.html.haml', q:to/END/);
+  %html
+    %body
+      = yield
+  END
+  spit('inner.html.haml', "%h1 Inner\n");
+
+  my $haml = HAML.new(:search-paths($tmp.Str));
+  my $out  = $haml.render(:file<inner>, :layout<layouts/app>);
+
+  like $out, /'<html>'/,  'layout html tag';
+  like $out, /'<body>'/,  'layout body tag';
+  like $out, /'<h1>Inner</h1>'/, 'inner content yielded';
+}
+
+subtest 'content-for / yield :name', {
+  spit('layouts/named.html.haml', q:to/END/);
+  %html
+    %head
+      %title
+        != yield(:name<title>)
+    %body
+      = yield
+  END
+  spit('with-title.html.haml', q:to/END/);
+  - content-for('title', { 'My Page' })
+  %p Body content
+  END
+
+  my $haml = HAML.new(:search-paths($tmp.Str));
+  my $out  = $haml.render(:file<with-title>, :layout<layouts/named>);
+
+  like $out, /'<title>'/,        'title open tag';
+  like $out, /'My Page'/,        'named yield filled';
+  like $out, /'<p>Body content</p>'/,    'default yield filled';
+}
+
+subtest 'render :partial', {
+  spit('_header.html.haml', "%h1 Header\n");
+  spit('page.html.haml', q:to/END/);
+  %div
+    != render(:partial<header>)
+  END
+
+  my $haml = HAML.new(:search-paths($tmp.Str));
+  my $out  = $haml.render(:file<page>);
+  like $out, /'<h1>Header</h1>'/, 'partial rendered';
+}
+
+subtest 'render :partial with locals', {
+  spit('_greeting.html.haml', q:to/END/);
+  %p Hello, #{$name}!
+  END
+  spit('greet.html.haml', q:to/END/);
+  %div
+    != render(:partial<greeting>, :locals(%(name => 'World')))
+  END
+
+  my $haml = HAML.new(:search-paths($tmp.Str));
+  my $out  = $haml.render(:file<greet>);
+  like $out, /'Hello, World!'/, 'partial locals passed';
+}
+
+subtest 'render :partial with collection / :as', {
+  spit('_row.html.haml', q:to/END/);
+  %li #{$item}
+  END
+  spit('list.html.haml', q:to/END/);
+  %ul
+    != render(:partial<row>, :collection(<a b c>), :as<item>)
+  END
+
+  my $haml = HAML.new(:search-paths($tmp.Str));
+  my $out  = $haml.render(:file<list>);
+  like $out, /'<li>a</li>'/, 'first';
+  like $out, /'<li>b</li>'/, 'second';
+  like $out, /'<li>c</li>'/, 'third';
+}
+
+subtest 'partial recursion depth limit', {
+  spit('_loop.html.haml', q:to/END/);
+  != render(:partial<loop>)
+  END
+
+  my $haml = HAML.new(:search-paths($tmp.Str));
+  throws-like { $haml.render(:file<loop>) },
+    X::HAML::PartialDepthExceeded,
+    'recursion limit triggered';
+}
+
+subtest 'compile-file cache hit on identical mtime', {
+  my $path = spit('cached.html.haml', "%p cached\n");
+  my $haml = HAML.new(:search-paths($tmp.Str));
+
+  my $t1 = $haml.compile-file($path);
+  my $t2 = $haml.compile-file($path);
+  ok $t1 === $t2, 'compile-file returns cached tree';
+
+  $haml.clear-cache;
+  my $t3 = $haml.compile-file($path);
+  ok !($t1 === $t3), 'after clear-cache, compile yields fresh tree';
+}
+
+subtest 'cache disabled with :!cache', {
+  my $path = spit('nocache.html.haml', "%p x\n");
+  my $haml = HAML.new(:search-paths($tmp.Str), :!cache);
+  my $t1 = $haml.compile-file($path);
+  my $t2 = $haml.compile-file($path);
+  ok !($t1 === $t2), 'cache disabled produces fresh trees';
+}
+
+done-testing;

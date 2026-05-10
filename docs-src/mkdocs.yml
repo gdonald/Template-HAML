@@ -16,6 +16,7 @@ nav:
     - Filters: syntax/filters.md
     - Whitespace: syntax/whitespace.md
     - Helpers: syntax/helpers.md
+    - Layouts and partials: syntax/layouts-partials.md
     - Configuration: syntax/config.md
   - API: api.md
   - Tests: testing.md

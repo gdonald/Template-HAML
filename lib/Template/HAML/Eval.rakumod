@@ -39,7 +39,7 @@ sub eval-haml(Str $code, %locals, Int :$line = 0, Int :$column = 0) is export {
   my @args = @keys.map({ %locals{$_} });
 
   CATCH {
-    when X::HAML::Eval { .rethrow }
+    when X::HAML { .rethrow }
     default {
       X::HAML::Eval.new(
         :$line, :$column, :$code, :reason(.message),

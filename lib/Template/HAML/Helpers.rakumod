@@ -1,4 +1,6 @@
 
+use Template::HAML::X;
+
 unit module Template::HAML::Helpers;
 
 class SafeString is export {
@@ -14,6 +16,67 @@ class SafeString is export {
 
 sub html-safe(Str() $s --> SafeString) is export {
   SafeString.new($s);
+}
+
+sub current-ctx() {
+  try { $*HAML-CTX } // Nil;
+}
+
+our sub yield(Str :$name = 'default' --> SafeString) is export {
+  my $ctx = current-ctx();
+  unless $ctx.defined {
+    X::HAML::YieldOutsideLayout.new(:line(0), :column(0)).throw;
+  }
+  if $name eq 'default' {
+    SafeString.new($ctx.yield-content // '');
+  } else {
+    SafeString.new($ctx.get-content($name));
+  }
+}
+
+sub content-for(Str() $name, &block --> Str) is export {
+  my $ctx = current-ctx();
+  return '' unless $ctx.defined;
+  my $body = block-result(&block);
+  $ctx.set-content($name, $body);
+  '';
+}
+
+sub render(:$partial, :%locals, :$collection, Str :$as --> SafeString) is export {
+  my $ctx = current-ctx();
+  die "render() requires :partial" unless $partial.defined;
+  die "render() requires a HAML context" unless $ctx.defined && $ctx.haml.defined;
+
+  my $haml = $ctx.haml;
+  my $path = $haml.resolve-template($partial.Str);
+
+  if $ctx.partial-depth >= $ctx.partial-depth-limit {
+    X::HAML::PartialDepthExceeded.new(
+      :line(0), :column(0),
+      :name($partial.Str), :limit($ctx.partial-depth-limit),
+    ).throw;
+  }
+
+  $ctx.partial-depth = $ctx.partial-depth + 1;
+  my $prev-dir = $ctx.current-dir;
+  $ctx.current-dir = $path.IO.dirname;
+
+  my $out = '';
+  if $collection.defined {
+    my $var = $as // 'item';
+    for $collection.list -> $item {
+      my %sub = %locals.clone;
+      %sub{$var} = $item;
+      $out ~= $haml.render-compiled-file($path, %sub);
+    }
+  } else {
+    $out = $haml.render-compiled-file($path, %locals);
+  }
+
+  $ctx.partial-depth = $ctx.partial-depth - 1;
+  $ctx.current-dir   = $prev-dir;
+
+  SafeString.new($out);
 }
 
 sub html-escape(Str $s --> Str) {

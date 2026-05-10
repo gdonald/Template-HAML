@@ -76,6 +76,31 @@ class X::HAML::UnknownFilter is X::HAML {
   }
 }
 
+class X::HAML::TemplateNotFound is X::HAML {
+  has Str $.name;
+  has @.search-paths;
+  method message {
+    my $paths = @!search-paths.elems
+      ?? @!search-paths.join(', ')
+      !! '(no search paths configured)';
+    self.loc ~ " template '$!name' not found in: $paths"
+  }
+}
+
+class X::HAML::PartialDepthExceeded is X::HAML {
+  has Str $.name;
+  has Int $.limit;
+  method message {
+    self.loc ~ " partial '$!name' exceeded recursion depth $!limit"
+  }
+}
+
+class X::HAML::YieldOutsideLayout is X::HAML {
+  method message {
+    self.loc ~ ' yield() called outside of a layout rendering context'
+  }
+}
+
 class X::IllegalIndent is X::HAML::IllegalIndent { }
 class X::DuplicateId  is X::HAML::DuplicateId   { }
 
