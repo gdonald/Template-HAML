@@ -62,6 +62,13 @@ class X::HAML::Eval is X::HAML {
   }
 }
 
+class X::HAML::UnbalancedExpression is X::HAML {
+  has Str $.code;
+  method message {
+    self.loc ~ " expression spans end of input without balancing: `$!code`"
+  }
+}
+
 class X::HAML::OrphanElse is X::HAML {
   has Str $.kind;
   method message {

@@ -8,13 +8,13 @@
       
       
       
-        <link rel="canonical" href="https://gdonald.github.io/Template-HAML/syntax/attributes/">
+        <link rel="canonical" href="https://gdonald.github.io/Template-HAML/syntax/layouts-partials/">
       
       
-        <link rel="prev" href="../tags/">
+        <link rel="prev" href="../helpers/">
       
       
-        <link rel="next" href="../indentation/">
+        <link rel="next" href="../config/">
       
       
         
@@ -25,7 +25,7 @@
     
     
       
-        <title>Attributes - Template::HAML</title>
+        <title>Layouts and partials - Template::HAML</title>
       
     
     
@@ -66,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#attributes" class="md-skip">
+        <a href="#layouts-and-partials" class="md-skip">
           Skip to content
         </a>
       
@@ -102,7 +102,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Attributes
+              Layouts and partials
             
           </span>
         </div>
@@ -350,37 +350,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Attributes
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../attributes/" class="md-nav__link">
         
   
   
@@ -396,70 +369,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#value-types" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Value types
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#multiple-attributes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Multiple attributes
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#class-shorthand-merges-with-class" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Class shorthand merges with class:
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#multi-line-attribute-hashes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Multi-line attribute hashes
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -721,10 +630,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../layouts-partials/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Layouts and partials
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -740,6 +676,137 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#search-paths" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Search paths
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#file-rendering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        File rendering
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#layouts-and-yield" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Layouts and yield
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Layouts and yield">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#named-content-blocks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Named content blocks
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#partials" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Partials
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Partials">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#locals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Locals
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#collections" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Collections
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recursion-limit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recursion limit
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#compilation-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compilation cache
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -861,10 +928,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#value-types" class="md-nav__link">
+  <a href="#search-paths" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Value types
+        Search paths
       
     </span>
   </a>
@@ -872,10 +939,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#multiple-attributes" class="md-nav__link">
+  <a href="#file-rendering" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Multiple attributes
+        File rendering
       
     </span>
   </a>
@@ -883,21 +950,88 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#class-shorthand-merges-with-class" class="md-nav__link">
+  <a href="#layouts-and-yield" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Class shorthand merges with class:
+        Layouts and yield
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Layouts and yield">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#named-content-blocks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Named content blocks
       
     </span>
   </a>
   
 </li>
+        
+      </ul>
+    </nav>
+  
+</li>
       
         <li class="md-nav__item">
-  <a href="#multi-line-attribute-hashes" class="md-nav__link">
+  <a href="#partials" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Multi-line attribute hashes
+        Partials
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Partials">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#locals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Locals
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#collections" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Collections
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recursion-limit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recursion limit
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#compilation-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compilation cache
       
     </span>
   </a>
@@ -924,95 +1058,142 @@
   
 
 
-<h1 id="attributes">Attributes<a class="headerlink" href="#attributes" title="Permanent link">&para;</a></h1>
-<p>Template::HAML supports a Ruby-style attribute hash on any tag:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">%a</span><span class="p">{</span><span class="ss">href</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;/about&#39;</span><span class="p">,</span><span class="w"> </span><span class="ss">title</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;About us&#39;</span><span class="p">}</span> About
-</code></pre></div></td></tr></table></div>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&#39;/about&#39;</span> <span class="na">title</span><span class="o">=</span><span class="s">&#39;About us&#39;</span><span class="p">&gt;</span>About<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
-</code></pre></div></td></tr></table></div>
-<h2 id="value-types">Value types<a class="headerlink" href="#value-types" title="Permanent link">&para;</a></h2>
-<p>Today the supported value types inside <code>{ ... }</code> are:</p>
-<ul>
-<li>Single-quoted strings: <code>'value'</code></li>
-<li>Double-quoted strings: <code>"value"</code></li>
-<li>Symbols (treated as strings): <code>:value</code></li>
-</ul>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">%input</span><span class="p">{</span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="ss">:text</span><span class="p">,</span><span class="w"> </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;email&#39;</span><span class="p">}</span>
-<span class="nt">%a</span><span class="p">{</span><span class="ss">href</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">class</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;home&#39;</span><span class="p">}</span> Home
-</code></pre></div></td></tr></table></div>
-<h2 id="multiple-attributes">Multiple attributes<a class="headerlink" href="#multiple-attributes" title="Permanent link">&para;</a></h2>
-<p>Separate attributes with commas:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">%a</span><span class="p">{</span><span class="ss">href</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;/&#39;</span><span class="p">,</span><span class="w"> </span><span class="ss">class</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;home&#39;</span><span class="p">,</span><span class="w"> </span><span class="nb">id</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;home-link&#39;</span><span class="p">}</span> Home
-</code></pre></div></td></tr></table></div>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&#39;/&#39;</span> <span class="na">class</span><span class="o">=</span><span class="s">&#39;home&#39;</span> <span class="na">id</span><span class="o">=</span><span class="s">&#39;home-link&#39;</span><span class="p">&gt;</span>Home<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
-</code></pre></div></td></tr></table></div>
-<h2 id="class-shorthand-merges-with-class">Class shorthand merges with <code>class:</code><a class="headerlink" href="#class-shorthand-merges-with-class" title="Permanent link">&para;</a></h2>
-<p>The <code>.classname</code> shorthand on a tag merges with any <code>class:</code> entry in the attribute hash. The two forms compose:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">%p</span><span class="nc">.lead</span><span class="p">{</span><span class="ss">class</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;intro&#39;</span><span class="p">}</span> Welcome
-</code></pre></div></td></tr></table></div>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">&lt;</span><span class="nt">p</span> <span class="na">class</span><span class="o">=</span><span class="s">&#39;lead intro&#39;</span><span class="p">&gt;</span>Welcome<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
-</code></pre></div></td></tr></table></div>
-<h2 id="multi-line-attribute-hashes">Multi-line attribute hashes<a class="headerlink" href="#multi-line-attribute-hashes" title="Permanent link">&para;</a></h2>
-<p>An attribute hash, an HTML-style attribute list, an array value, or a nested hash may span multiple lines. The tag does not close until the matching <code>}</code> (or <code>)</code>) is seen.</p>
+<h1 id="layouts-and-partials">Layouts and Partials<a class="headerlink" href="#layouts-and-partials" title="Permanent link">&para;</a></h1>
+<p>Template::HAML supports rendering templates from disk, composing them into
+layouts, and re-using fragments via partials. These features build on a
+small instance API on <code>HAML</code>:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
-<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">%a</span>{
-<span class="w">  </span>href: &#39;/&#39;,
-<span class="w">  </span>title: &#39;home&#39;
-}
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">Template::HAML</span>;
+
+<span class="k">my</span> <span class="nv">$haml</span> = <span class="n">HAML</span>.<span class="nb">new</span>(:<span class="n">search-paths</span>(<span class="s">&#39;app/views&#39;</span>));
+<span class="nb">say</span> <span class="nv">$haml</span>.<span class="n">render</span>(:<span class="n">file</span><span class="s">&lt;home/index&gt;</span>, :<span class="n">layout</span><span class="s">&lt;layouts/app&gt;</span>);
 </code></pre></div></td></tr></table></div>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&#39;/&#39;</span> <span class="na">title</span><span class="o">=</span><span class="s">&#39;home&#39;</span><span class="p">&gt;&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
+<h2 id="search-paths">Search paths<a class="headerlink" href="#search-paths" title="Permanent link">&para;</a></h2>
+<p><code>HAML.new(:@search-paths)</code> configures the directories that are searched
+when resolving a template by name. The list is ordered: the first match
+wins.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$haml</span> = <span class="n">HAML</span>.<span class="nb">new</span>(:<span class="n">search-paths</span>(<span class="s">&#39;app/views&#39;</span>, <span class="s">&#39;shared/views&#39;</span>));
 </code></pre></div></td></tr></table></div>
-<p>Nested hashes and arrays may also span lines:</p>
+<p>A single string is accepted as a convenience for the common one-path
+case:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$haml</span> = <span class="n">HAML</span>.<span class="nb">new</span>(:<span class="n">search-paths</span>(<span class="s">&#39;app/views&#39;</span>));
+</code></pre></div></td></tr></table></div>
+<p>When no search paths are given the current working directory is used.</p>
+<h2 id="file-rendering">File rendering<a class="headerlink" href="#file-rendering" title="Permanent link">&para;</a></h2>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$haml</span>.<span class="n">render</span>(:<span class="n">file</span><span class="s">&lt;home/index&gt;</span>);
+</code></pre></div></td></tr></table></div>
+<p>The template name is resolved against every search path, trying the
+following filename variants in order:</p>
+<ol>
+<li>exact name (<code>home/index</code>)</li>
+<li><code>&lt;name&gt;.haml</code></li>
+<li><code>&lt;name&gt;.html.haml</code></li>
+<li>partial form: <code>&lt;dir&gt;/_&lt;basename&gt;</code> (and its <code>.haml</code> / <code>.html.haml</code> variants)</li>
+</ol>
+<p><code>$haml.render(:file&lt;...&gt;)</code> looks up and renders one file. <code>$haml.render(:src&lt;...&gt;)</code>
+still works for inline source. Absolute paths are honored as-is.</p>
+<p>A missing template raises <code>X::HAML::TemplateNotFound</code>, which carries the
+attempted name and the configured search paths.</p>
+<h2 id="layouts-and-yield">Layouts and <code>yield</code><a class="headerlink" href="#layouts-and-yield" title="Permanent link">&para;</a></h2>
+<p>A layout is a template that contains <code>= yield</code> somewhere in its body.
+When you call <code>render(:file, :layout)</code>, the inner template is rendered
+first; its output is then substituted for <code>yield</code> in the layout.</p>
+<p><code>app/views/layouts/app.html.haml</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">%html</span>
+<span class="w">  </span><span class="nt">%body</span>
+<span class="w">    </span><span class="p">=</span><span class="w"> </span><span class="k">yield</span>
+</code></pre></div></td></tr></table></div>
+<p><code>app/views/home/index.html.haml</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">%h1</span> Hello
+</code></pre></div></td></tr></table></div>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$haml</span>.<span class="n">render</span>(:<span class="n">file</span><span class="s">&lt;home/index&gt;</span>, :<span class="n">layout</span><span class="s">&lt;layouts/app&gt;</span>);
+</code></pre></div></td></tr></table></div>
+<p>renders:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
 <span class="normal">4</span>
 <span class="normal">5</span>
-<span class="normal">6</span>
-<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">%a</span>{
-<span class="w">  </span>class: [&#39;foo&#39;, &#39;bar&#39;],
-<span class="w">  </span>data: {
-<span class="w">    </span>id: 1,
-<span class="w">    </span>role: &#39;main&#39;
-<span class="w">  </span>}
-}
+<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">&lt;</span><span class="nt">html</span><span class="p">&gt;</span>
+  <span class="p">&lt;</span><span class="nt">body</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">h1</span><span class="p">&gt;</span>Hello<span class="p">&lt;/</span><span class="nt">h1</span><span class="p">&gt;</span>
+
+  <span class="p">&lt;/</span><span class="nt">body</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">html</span><span class="p">&gt;</span>
 </code></pre></div></td></tr></table></div>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">&lt;</span><span class="nt">a</span> <span class="na">class</span><span class="o">=</span><span class="s">&#39;foo bar&#39;</span> <span class="na">data-id</span><span class="o">=</span><span class="s">&#39;1&#39;</span> <span class="na">data-role</span><span class="o">=</span><span class="s">&#39;main&#39;</span><span class="p">&gt;&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
-</code></pre></div></td></tr></table></div>
-<p>HTML-style attributes may also be split across lines:</p>
+<h3 id="named-content-blocks">Named content blocks<a class="headerlink" href="#named-content-blocks" title="Permanent link">&para;</a></h3>
+<p>Inner templates can fill <em>named</em> slots in a layout with <code>content-for</code>.
+The layout retrieves them via <code>yield(:name&lt;...&gt;)</code>:</p>
+<p>Inner:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">%a</span>(
-  <span class="na">href=</span><span class="s">&#39;/&#39;</span>
-  <span class="na">title=</span><span class="s">&#39;home&#39;</span>
-)
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">-</span><span class="w"> </span><span class="n">content</span><span class="o">-</span><span class="k">for</span><span class="p">(</span><span class="s1">&#39;title&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s1">&#39;My Page&#39;</span><span class="w"> </span><span class="p">})</span>
+<span class="nt">%p</span> body
 </code></pre></div></td></tr></table></div>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&#39;/&#39;</span> <span class="na">title</span><span class="o">=</span><span class="s">&#39;home&#39;</span><span class="p">&gt;&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
-</code></pre></div></td></tr></table></div>
-<p>Content and child indentation pick up after the closing brace:</p>
+<p>Layout:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
 <span class="normal">4</span>
-<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">%ul</span>{
-<span class="w">  </span>class: &#39;list&#39;
-}
-<span class="w">  </span><span class="nt">%li</span> one
-<span class="w">  </span><span class="nt">%li</span> two
+<span class="normal">5</span>
+<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">%html</span>
+<span class="w">  </span><span class="nt">%head</span>
+<span class="w">    </span><span class="nt">%title</span>
+<span class="w">      </span><span class="p">!=</span><span class="w"> </span><span class="k">yield</span><span class="p">(</span><span class="ss">:name</span><span class="o">&lt;</span><span class="n">title</span><span class="o">&gt;</span><span class="p">)</span>
+<span class="w">  </span><span class="nt">%body</span>
+<span class="w">    </span><span class="p">=</span><span class="w"> </span><span class="k">yield</span>
 </code></pre></div></td></tr></table></div>
+<p><code>yield</code> and <code>content-for</code> are exported by <code>Template::HAML::Helpers</code> and are
+visible to every embedded expression. <code>yield</code> returns a <code>SafeString</code>, so
+its result is not double-escaped by the renderer.</p>
+<h2 id="partials">Partials<a class="headerlink" href="#partials" title="Permanent link">&para;</a></h2>
+<p>A partial is a fragment that is rendered inline from another template.
+By convention partial filenames begin with an underscore (<code>_header.haml</code>);
+the leading underscore is added automatically by the lookup logic, so the
+call site just names the partial:</p>
+<p><code>_header.html.haml</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">%h1</span> Welcome
+</code></pre></div></td></tr></table></div>
+<p>In a parent template:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">%div</span>
+<span class="w">  </span><span class="p">!=</span><span class="w"> </span><span class="n">render</span><span class="p">(</span><span class="ss">:partial</span><span class="o">&lt;</span><span class="n">header</span><span class="o">&gt;</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+<h3 id="locals">Locals<a class="headerlink" href="#locals" title="Permanent link">&para;</a></h3>
+<p>Pass per-partial locals through <code>:locals</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">!=</span><span class="w"> </span><span class="n">render</span><span class="p">(</span><span class="ss">:partial</span><span class="o">&lt;</span><span class="n">greeting</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="ss">:locals</span><span class="p">(</span><span class="sx">%(name =&gt; &#39;World&#39;)</span><span class="p">))</span>
+</code></pre></div></td></tr></table></div>
+<p>Inside <code>_greeting.haml</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">%p</span> Hello, <span class="si">#{</span><span class="vg">$name</span><span class="si">}</span>!
+</code></pre></div></td></tr></table></div>
+<h3 id="collections">Collections<a class="headerlink" href="#collections" title="Permanent link">&para;</a></h3>
+<p><code>:collection</code> renders the partial once per element. The element is
+exposed under the name given by <code>:as</code> (defaults to <code>item</code>):</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">%ul</span>
+<span class="w">  </span><span class="p">!=</span><span class="w"> </span><span class="n">render</span><span class="p">(</span><span class="ss">:partial</span><span class="o">&lt;</span><span class="n">row</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="ss">:collection</span><span class="p">(</span><span class="vi">@items</span><span class="p">),</span><span class="w"> </span><span class="ss">:as</span><span class="o">&lt;</span><span class="n">row</span><span class="o">&gt;</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+<p>Inside <code>_row.haml</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">%li</span> <span class="si">#{</span><span class="vg">$row</span><span class="o">.</span><span class="n">name</span><span class="si">}</span>
+</code></pre></div></td></tr></table></div>
+<h3 id="recursion-limit">Recursion limit<a class="headerlink" href="#recursion-limit" title="Permanent link">&para;</a></h3>
+<p>Partials may recurse, but the depth is bounded by the rendering context
+(default 100). Exceeding the limit raises
+<code>X::HAML::PartialDepthExceeded</code>.</p>
+<h2 id="compilation-cache">Compilation cache<a class="headerlink" href="#compilation-cache" title="Permanent link">&para;</a></h2>
+<p>Templates loaded by <code>compile-file</code> (used internally by <code>:file</code> and
+<code>:partial</code> lookups) are cached per <code>HAML</code> instance, keyed on absolute
+path and <code>mtime</code>. Edits to a template are picked up automatically on the
+next render.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">&lt;</span><span class="nt">ul</span> <span class="na">class</span><span class="o">=</span><span class="s">&#39;list&#39;</span><span class="p">&gt;</span>
-  <span class="p">&lt;</span><span class="nt">li</span><span class="p">&gt;</span>one<span class="p">&lt;/</span><span class="nt">li</span><span class="p">&gt;</span>
-  <span class="p">&lt;</span><span class="nt">li</span><span class="p">&gt;</span>two<span class="p">&lt;/</span><span class="nt">li</span><span class="p">&gt;</span>
-<span class="p">&lt;/</span><span class="nt">ul</span><span class="p">&gt;</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$haml</span> = <span class="n">HAML</span>.<span class="nb">new</span>(:<span class="n">search-paths</span>(<span class="s">&#39;app/views&#39;</span>));        <span class="c1"># cache on</span>
+<span class="k">my</span> <span class="nv">$dev</span>  = <span class="n">HAML</span>.<span class="nb">new</span>(:<span class="n">search-paths</span>(<span class="s">&#39;app/views&#39;</span>), :!<span class="nb">cache</span>); <span class="c1"># cache off</span>
+<span class="nv">$haml</span>.<span class="n">clear-cache</span>;
 </code></pre></div></td></tr></table></div>
-<p>Source line numbers are preserved across multi-line hashes, so children render and report at their actual line in the source.</p>
 
 
 

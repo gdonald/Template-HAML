@@ -8,13 +8,13 @@
       
       
       
-        <link rel="canonical" href="https://gdonald.github.io/Template-HAML/syntax/tags/">
+        <link rel="canonical" href="https://gdonald.github.io/Template-HAML/syntax/filters/">
       
       
-        <link rel="prev" href="../../getting-started/">
+        <link rel="prev" href="../control-flow/">
       
       
-        <link rel="next" href="../attributes/">
+        <link rel="next" href="../whitespace/">
       
       
         
@@ -25,7 +25,7 @@
     
     
       
-        <title>Tags - Template::HAML</title>
+        <title>Filters - Template::HAML</title>
       
     
     
@@ -66,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#tags" class="md-skip">
+        <a href="#filters" class="md-skip">
           Skip to content
         </a>
       
@@ -102,7 +102,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Tags
+              Filters
             
           </span>
         </div>
@@ -322,37 +322,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Tags
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../tags/" class="md-nav__link">
         
   
   
@@ -368,70 +341,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#element-names" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Element names
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#class-shorthand" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Class shorthand
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#id-shorthand" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Id shorthand
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#combining-shorthand-and-attributes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Combining shorthand and attributes
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -637,10 +546,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../filters/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Filters
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -656,6 +592,164 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#built-in-filters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Built-in filters
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Built-in filters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#plain" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        :plain
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#escaped" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        :escaped
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#javascript" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        :javascript
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#css" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        :css
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cdata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        :cdata
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#preserve" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        :preserve
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#raku" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        :raku
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#custom-filters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Custom filters
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interpolation-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interpolation summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#indentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Indentation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -861,10 +955,104 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#element-names" class="md-nav__link">
+  <a href="#built-in-filters" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Element names
+        Built-in filters
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Built-in filters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#plain" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        :plain
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#escaped" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        :escaped
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#javascript" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        :javascript
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#css" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        :css
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cdata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        :cdata
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#preserve" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        :preserve
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#raku" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        :raku
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#custom-filters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Custom filters
       
     </span>
   </a>
@@ -872,10 +1060,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#class-shorthand" class="md-nav__link">
+  <a href="#interpolation-summary" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Class shorthand
+        Interpolation summary
       
     </span>
   </a>
@@ -883,10 +1071,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#id-shorthand" class="md-nav__link">
+  <a href="#indentation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Id shorthand
+        Indentation
       
     </span>
   </a>
@@ -894,10 +1082,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#combining-shorthand-and-attributes" class="md-nav__link">
+  <a href="#errors" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Combining shorthand and attributes
+        Errors
       
     </span>
   </a>
@@ -924,68 +1112,152 @@
   
 
 
-<h1 id="tags">Tags<a class="headerlink" href="#tags" title="Permanent link">&para;</a></h1>
-<p>A tag in HAML is introduced by a sigil at the start of a line:</p>
-<table>
-<thead>
-<tr>
-<th>Sigil</th>
-<th>Meaning</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>%</code></td>
-<td>Element name (<code>%p</code>, <code>%div</code>, <code>%h1</code>)</td>
-</tr>
-<tr>
-<td><code>.</code></td>
-<td>Class on a <code>&lt;div&gt;</code> (<code>.container</code>)</td>
-</tr>
-<tr>
-<td><code>#</code></td>
-<td>Id on a <code>&lt;div&gt;</code> (<code>#main</code>)</td>
-</tr>
-</tbody>
-</table>
-<h2 id="element-names">Element names<a class="headerlink" href="#element-names" title="Permanent link">&para;</a></h2>
+<h1 id="filters">Filters<a class="headerlink" href="#filters" title="Permanent link">&para;</a></h1>
+<p>A filter line begins with <code>:</code> followed by the filter name. The filter's body
+is the indented block beneath it. Each filter passes its body through a
+handler that returns rendered text.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">%p</span> Hello
-<span class="nt">%div</span> A block
-<span class="nt">%h1</span> Title
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">:javascript</span>
+<span class="w">  </span><span class="nd">alert(&#39;hi&#39;);</span>
 </code></pre></div></td></tr></table></div>
 <p>renders to:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
-<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>Hello<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
-<span class="p">&lt;</span><span class="nt">div</span><span class="p">&gt;</span>A block<span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
-<span class="p">&lt;</span><span class="nt">h1</span><span class="p">&gt;</span>Title<span class="p">&lt;/</span><span class="nt">h1</span><span class="p">&gt;</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">&lt;</span><span class="nt">script</span><span class="p">&gt;</span>
+<span class="w">  </span><span class="nx">alert</span><span class="p">(</span><span class="s1">&#39;hi&#39;</span><span class="p">);</span>
+<span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
 </code></pre></div></td></tr></table></div>
-<h2 id="class-shorthand">Class shorthand<a class="headerlink" href="#class-shorthand" title="Permanent link">&para;</a></h2>
-<p><code>%tag.classname</code> adds a class to an element:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">%p</span><span class="nc">.lead</span> Welcome
+<h2 id="built-in-filters">Built-in filters<a class="headerlink" href="#built-in-filters" title="Permanent link">&para;</a></h2>
+<h3 id="plain"><code>:plain</code><a class="headerlink" href="#plain" title="Permanent link">&para;</a></h3>
+<p>Emits the body verbatim with no sigil parsing and no HTML escaping.
+Interpolates <code>#{ ... }</code> expressions.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">:plain</span>
+<span class="w">  </span><span class="nd">Hello, </span><span class="si">#{</span><span class="vg">$name</span><span class="si">}</span><span class="nd">!</span>
+<span class="w">  </span><span class="nd">&lt;b&gt;raw html stays raw&lt;/b&gt;</span>
 </code></pre></div></td></tr></table></div>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">&lt;</span><span class="nt">p</span> <span class="na">class</span><span class="o">=</span><span class="s">&#39;lead&#39;</span><span class="p">&gt;</span>Welcome<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+<h3 id="escaped"><code>:escaped</code><a class="headerlink" href="#escaped" title="Permanent link">&para;</a></h3>
+<p>HTML-escapes the body (after interpolation), then emits.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">:escaped</span>
+<span class="w">  </span><span class="nd">&lt;b&gt;raw&lt;/b&gt; &amp; &quot;stuff&quot;</span>
 </code></pre></div></td></tr></table></div>
-<p>You can chain multiple classes:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">%p</span><span class="nc">.lead.intro</span> Welcome
+<p>renders to:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="ni">&amp;lt;</span>b<span class="ni">&amp;gt;</span>raw<span class="ni">&amp;lt;</span>/b<span class="ni">&amp;gt;</span> <span class="ni">&amp;amp;</span> <span class="ni">&amp;quot;</span>stuff<span class="ni">&amp;quot;</span>
 </code></pre></div></td></tr></table></div>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">&lt;</span><span class="nt">p</span> <span class="na">class</span><span class="o">=</span><span class="s">&#39;lead intro&#39;</span><span class="p">&gt;</span>Welcome<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+<h3 id="javascript"><code>:javascript</code><a class="headerlink" href="#javascript" title="Permanent link">&para;</a></h3>
+<p>Wraps the body in <code>&lt;script&gt; ... &lt;/script&gt;</code>. Interpolates <code>#{ ... }</code>.</p>
+<h3 id="css"><code>:css</code><a class="headerlink" href="#css" title="Permanent link">&para;</a></h3>
+<p>Wraps the body in <code>&lt;style&gt; ... &lt;/style&gt;</code>. Interpolates <code>#{ ... }</code>.</p>
+<h3 id="cdata"><code>:cdata</code><a class="headerlink" href="#cdata" title="Permanent link">&para;</a></h3>
+<p>Wraps the body in <code>&lt;![CDATA[ ... ]]&gt;</code>. Interpolates <code>#{ ... }</code>.</p>
+<h3 id="preserve"><code>:preserve</code><a class="headerlink" href="#preserve" title="Permanent link">&para;</a></h3>
+<p>Replaces newlines in the body with <code>&amp;#x000A;</code> so the output stays on a single
+line. Useful for preserving whitespace inside a tag without inflating the
+parent indentation. Interpolates <code>#{ ... }</code>.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">:preserve</span>
+<span class="w">  </span><span class="nd">line1</span>
+<span class="w">  </span><span class="nd">line2</span>
 </code></pre></div></td></tr></table></div>
-<h2 id="id-shorthand">Id shorthand<a class="headerlink" href="#id-shorthand" title="Permanent link">&para;</a></h2>
-<p><code>%tag#name</code> sets the element's id:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">%section</span><span class="nf">#main</span>
+<p>renders to:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>line1<span class="ni">&amp;#x000A;</span>line2
 </code></pre></div></td></tr></table></div>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">&lt;</span><span class="nt">section</span> <span class="na">id</span><span class="o">=</span><span class="s">&#39;main&#39;</span><span class="p">&gt;&lt;/</span><span class="nt">section</span><span class="p">&gt;</span>
+<h3 id="raku"><code>:raku</code><a class="headerlink" href="#raku" title="Permanent link">&para;</a></h3>
+<p>Evaluates the body as Raku code with the current locals in scope and emits the
+return value as a string. The body is <strong>not</strong> interpolated — it <em>is</em> code.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">:raku</span>
+<span class="w">  </span><span class="nd">$x * 2</span>
 </code></pre></div></td></tr></table></div>
-<h2 id="combining-shorthand-and-attributes">Combining shorthand and attributes<a class="headerlink" href="#combining-shorthand-and-attributes" title="Permanent link">&para;</a></h2>
-<p>The class shorthand merges with a <code>class:</code> attribute hash entry:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">%p</span><span class="nc">.lead</span><span class="p">{</span><span class="ss">class</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;intro&#39;</span><span class="p">}</span> Welcome
+<p>with <code>:locals(%(x =&gt; 10))</code> renders to:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>20
 </code></pre></div></td></tr></table></div>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">&lt;</span><span class="nt">p</span> <span class="na">class</span><span class="o">=</span><span class="s">&#39;lead intro&#39;</span><span class="p">&gt;</span>Welcome<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+<h2 id="custom-filters">Custom filters<a class="headerlink" href="#custom-filters" title="Permanent link">&para;</a></h2>
+<p>Register a filter via <code>register-filter</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span>
+<span class="normal">9</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">Template::HAML</span>;
+<span class="k">use</span> <span class="n">Template::HAML::Filters</span>;
+
+<span class="n">register-filter</span> :<span class="n">name</span><span class="s">&lt;upper&gt;</span>, :<span class="n">handler</span>(-&gt; <span class="nb">Str</span> <span class="nv">$body</span>, <span class="nv">%locals</span> --&gt; <span class="nb">Str</span> {
+  <span class="nv">$body</span>.<span class="nb">uc</span>;
+});
+
+<span class="nb">say</span> <span class="n">HAML</span>.<span class="n">render</span>(:<span class="n">src</span>(<span class="s">&quot;:upper\n  hello\n&quot;</span>));
+<span class="c1"># HELLO</span>
 </code></pre></div></td></tr></table></div>
-<p>See <a href="../attributes/">Attributes</a> for the full attribute hash syntax.</p>
+<p>The handler signature is <code>(Str $body, %locals --&gt; Str)</code>. The <code>$body</code> is the
+filter's indented block dedented to column zero; the handler returns the
+rendered text. The renderer prefixes each output line with the filter's own
+source indent.</p>
+<h2 id="interpolation-summary">Interpolation summary<a class="headerlink" href="#interpolation-summary" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Filter</th>
+<th>Interpolates <code>#{ ... }</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>:plain</code></td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>:escaped</code></td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>:javascript</code></td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>:css</code></td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>:cdata</code></td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>:preserve</code></td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>:raku</code></td>
+<td>no (body is code)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="indentation">Indentation<a class="headerlink" href="#indentation" title="Permanent link">&para;</a></h2>
+<p>Body lines must be indented strictly more than the filter line. The minimum
+indent across all non-blank body lines is stripped, so relative indentation
+inside the body is preserved:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">:plain</span>
+<span class="w">  </span><span class="nd">outer</span>
+<span class="w">    </span><span class="nd">inner</span>
+</code></pre></div></td></tr></table></div>
+<p>renders to:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code>outer
+  inner
+</code></pre></div></td></tr></table></div>
+<p>Internal blank lines inside the body are preserved. Trailing blank lines
+between the filter body and the next sibling are stripped.</p>
+<h2 id="errors">Errors<a class="headerlink" href="#errors" title="Permanent link">&para;</a></h2>
+<p>An unknown filter name raises <code>X::HAML::UnknownFilter</code> at render time, with
+the offending name and source position.</p>
 
 
 

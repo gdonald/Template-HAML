@@ -2,6 +2,7 @@
 use Template::HAML::Actions;
 use Template::HAML::Config;
 use Template::HAML::Context;
+use Template::HAML::Multiline;
 use Template::HAML::Node;
 use Template::HAML::Renderer;
 use Template::HAML::Grammar;
@@ -104,14 +105,15 @@ class HAML is export {
 
   method !compile-source(Str:D $src, Template::HAML::Config $cfg) {
     my $normalized = $src.subst(:global, /\r\n/, "\n").subst(:global, /\r/, "\n");
+    my $joined = preprocess-multiline($normalized);
 
     my $tree = Node.new;
     $tree.add-child(Node.new);
     my $actions = Actions.new(:$tree, :config($cfg));
 
-    my $m = Grammar.parse($normalized, :$actions);
+    my $m = Grammar.parse($joined, :$actions);
     unless $m {
-      X::HAML::ParseFail.new(:line(1), :column(1), :snippet($normalized.lines.first // '')).throw;
+      X::HAML::ParseFail.new(:line(1), :column(1), :snippet($joined.lines.first // '')).throw;
     }
     $actions.tree;
   }

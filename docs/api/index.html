@@ -11,7 +11,7 @@
         <link rel="canonical" href="https://gdonald.github.io/Template-HAML/api/">
       
       
-        <link rel="prev" href="../syntax/indentation/">
+        <link rel="prev" href="../syntax/config/">
       
       
         <link rel="next" href="../testing/">
@@ -400,6 +400,286 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../syntax/doctype/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Doctype
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../syntax/comments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Comments
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../syntax/embedded-code/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Embedded code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../syntax/plain-text/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plain text
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../syntax/control-flow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Control flow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../syntax/filters/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Filters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../syntax/whitespace/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Whitespace
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../syntax/helpers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Helpers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../syntax/layouts-partials/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Layouts and partials
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../syntax/config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -478,6 +758,17 @@
     <span class="md-ellipsis">
       
         HAML.render
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#register-filter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        register-filter
       
     </span>
   </a>
@@ -579,6 +870,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#register-filter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        register-filter
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#internal-modules" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -623,11 +925,29 @@
 <h1 id="api">API<a class="headerlink" href="#api" title="Permanent link">&para;</a></h1>
 <p>The public surface of Template::HAML is small today.</p>
 <h2 id="hamlrender"><code>HAML.render</code><a class="headerlink" href="#hamlrender" title="Permanent link">&para;</a></h2>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">Template::HAML</span>;
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">Template::HAML</span>;
+<span class="k">use</span> <span class="n">Template::HAML::Config</span>;
 
 <span class="k">my</span> <span class="nb">Str</span> <span class="nv">$html</span> = <span class="n">HAML</span>.<span class="n">render</span>(:<span class="n">src</span>(<span class="s">&quot;...&quot;</span>));
+
+<span class="k">my</span> <span class="nb">Str</span> <span class="nv">$html</span> = <span class="n">HAML</span>.<span class="n">render</span>(
+  :<span class="n">src</span>(<span class="s">&quot;= \$name\n&quot;</span>),
+  :<span class="n">locals</span>(%(:<span class="n">name</span><span class="s">&lt;World&gt;</span>)),
+);
+
+<span class="k">my</span> <span class="nv">$cfg</span> = <span class="n">Template::HAML::Config</span>.<span class="nb">new</span>(:<span class="n">format</span><span class="s">&lt;xhtml&gt;</span>);
+<span class="k">my</span> <span class="nb">Str</span> <span class="nv">$html</span> = <span class="n">HAML</span>.<span class="n">render</span>(:<span class="n">src</span>(<span class="s">&quot;%br\n&quot;</span>), :<span class="n">config</span>(<span class="nv">$cfg</span>));
 </code></pre></div></td></tr></table></div>
 <table>
 <thead>
@@ -643,10 +963,41 @@
 <td><code>Str:D</code></td>
 <td>The HAML source to parse and render.</td>
 </tr>
+<tr>
+<td><code>:locals</code></td>
+<td><code>%h</code></td>
+<td>Optional name → value map; each key is bound as a <code>$name</code> lexical visible to embedded Raku in <code>=</code>/<code>-</code>/<code>!=</code>/<code>&amp;=</code> lines.</td>
+</tr>
+<tr>
+<td><code>:config</code></td>
+<td><code>Template::HAML::Config</code></td>
+<td>Optional rendering options. See <a href="../syntax/config/">Configuration</a>.</td>
+</tr>
 </tbody>
 </table>
 <p>Returns the rendered HTML as a <code>Str</code>.</p>
-<p><code>HAML</code> is exported as a class from the <code>Template::HAML</code> module. There is no instance state today; <code>HAML.render</code> is effectively a class method.</p>
+<p><code>HAML.render</code> may be called as either a class method (a fresh default config is
+used) or an instance method (the instance's stored config is used unless
+<code>:config</code> is passed at the call site). Construct an instance via
+<code>HAML.new(:config(...))</code> to reuse the same config across renders.</p>
+<h2 id="register-filter"><code>register-filter</code><a class="headerlink" href="#register-filter" title="Permanent link">&para;</a></h2>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">Template::HAML::Filters</span>;
+
+<span class="n">register-filter</span> :<span class="n">name</span><span class="s">&lt;upper&gt;</span>, :<span class="n">handler</span>(-&gt; <span class="nb">Str</span> <span class="nv">$body</span>, <span class="nv">%locals</span> --&gt; <span class="nb">Str</span> {
+  <span class="nv">$body</span>.<span class="nb">uc</span>;
+});
+</code></pre></div></td></tr></table></div>
+<p>Registers a custom filter handler. The handler signature is
+<code>(Str $body, %locals --&gt; Str)</code>. <code>$body</code> is the filter's indented block
+dedented to column zero; the handler returns the rendered text. The renderer
+applies the filter's own source indent to each line of the result.</p>
+<p><code>Template::HAML::Filters</code> also exports <code>lookup-filter(Str $name)</code>,
+<code>has-filter(Str $name)</code>, and <code>filter-names()</code>.</p>
+<p>See <a href="../syntax/filters/">filters</a> for the built-in handlers.</p>
 <h2 id="internal-modules">Internal modules<a class="headerlink" href="#internal-modules" title="Permanent link">&para;</a></h2>
 <p>The implementation is split across several modules under <code>lib/Template/HAML/</code>. These are not part of the stable public API yet, but documented here for contributors:</p>
 <table>
@@ -675,11 +1026,31 @@
 </tr>
 <tr>
 <td><code>Template::HAML::Statement</code></td>
-<td>AST node representing a control-flow statement.</td>
+<td>AST node representing an embedded-code line (<code>=</code>, <code>-</code>, <code>!=</code>, <code>&amp;=</code>).</td>
+</tr>
+<tr>
+<td><code>Template::HAML::Eval</code></td>
+<td>EVALs embedded Raku expressions with caching.</td>
+</tr>
+<tr>
+<td><code>Template::HAML::Multiline</code></td>
+<td>Pre-grammar pass that joins continued code lines (trailing comma / unbalanced brackets).</td>
 </tr>
 <tr>
 <td><code>Template::HAML::Renderer</code></td>
 <td>Walks the parse tree and emits HTML.</td>
+</tr>
+<tr>
+<td><code>Template::HAML::Filter</code></td>
+<td>AST node representing a filter line and its dedented body.</td>
+</tr>
+<tr>
+<td><code>Template::HAML::Filters</code></td>
+<td>Filter registry plus the built-in filter handlers.</td>
+</tr>
+<tr>
+<td><code>Template::HAML::Config</code></td>
+<td>Per-render configuration: format, escape options, output style, etc.</td>
 </tr>
 <tr>
 <td><code>Template::HAML::X</code></td>
@@ -697,12 +1068,48 @@
 </thead>
 <tbody>
 <tr>
-<td><code>X::IllegalIndent</code></td>
+<td><code>X::HAML::IllegalIndent</code></td>
 <td>A line's leading whitespace isn't a valid indent.</td>
 </tr>
 <tr>
-<td><code>X::DuplicateId</code></td>
+<td><code>X::HAML::IndentMixed</code></td>
+<td>Tabs and spaces are combined in one indent.</td>
+</tr>
+<tr>
+<td><code>X::HAML::IndentInconsistent</code></td>
+<td>Indent isn't a multiple of the first observed unit.</td>
+</tr>
+<tr>
+<td><code>X::HAML::DuplicateId</code></td>
 <td>A tag has both <code>#id</code> shorthand and an <code>id:</code> attr.</td>
+</tr>
+<tr>
+<td><code>X::HAML::VoidWithChildren</code></td>
+<td>A void element (<code>br</code>, <code>img</code>, …) was given child nodes.</td>
+</tr>
+<tr>
+<td><code>X::HAML::ParseFail</code></td>
+<td>The source did not parse.</td>
+</tr>
+<tr>
+<td><code>X::HAML::UnknownDoctype</code></td>
+<td><code>!!! foo</code> named a doctype variant that is not recognized.</td>
+</tr>
+<tr>
+<td><code>X::HAML::DoctypeNotFirst</code></td>
+<td>A <code>!!!</code> line appeared after non-blank content.</td>
+</tr>
+<tr>
+<td><code>X::HAML::Eval</code></td>
+<td>An embedded <code>=</code>/<code>-</code>/<code>!=</code>/<code>&amp;=</code> expression failed to compile or run.</td>
+</tr>
+<tr>
+<td><code>X::HAML::UnbalancedExpression</code></td>
+<td>A multi-line code expression ran to end of source with open brackets or a trailing comma.</td>
+</tr>
+<tr>
+<td><code>X::HAML::UnknownFilter</code></td>
+<td>A <code>:name</code> line referenced a filter that is not registered.</td>
 </tr>
 </tbody>
 </table>

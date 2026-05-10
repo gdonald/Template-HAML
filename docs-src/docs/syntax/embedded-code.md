@@ -56,6 +56,43 @@ text](plain-text.md) for the full interpolation syntax.
 `=` escapes `& < > " '` by default. Use `!=` only when the value is already
 known-safe HTML.
 
+## Multi-line expressions
+
+An embedded code line continues on the next line in two situations:
+
+1. **Trailing comma.** A line whose last non-whitespace character is `,`
+   joins the next line with a single space.
+2. **Unbalanced brackets.** A line that opens more `(`, `[`, or `{` than it
+   closes joins the next line; continuation stops once the brackets balance
+   *and* the line no longer ends with a comma.
+
+Both rules ignore characters that appear inside single- or double-quoted
+strings.
+
+```haml
+= [1,
+   2,
+   3].sum
+
+- my %config = (
+    title => 'Welcome',
+    count => 42,
+  )
+
+= sprintf('%s: %d',
+          $title,
+          $count)
+```
+
+If the source ends while an expression is still unbalanced (open brackets or a
+trailing comma), the parse raises
+[`X::HAML::UnbalancedExpression`](../api.md#exceptions) pointing at the line
+where the expression started.
+
+Filter bodies (`:plain`, `:javascript`, …) and silent-comment bodies (`-#`)
+are opaque text — lines that look like statements inside them are *not*
+joined.
+
 ## Helpers
 
 A handful of helper subroutines (`html-safe`, `escape-once`, `surround`,

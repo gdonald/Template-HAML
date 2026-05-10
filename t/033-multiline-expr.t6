@@ -1,0 +1,143 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Template::HAML::Multiline;
+use Template::HAML::X;
+use Test;
+
+plan 18;
+
+# 4.5.1 — trailing comma continuation on = output
+my $src1 = q:to/HAML/;
+= [1,
+   2,
+   3].sum
+HAML
+is HAML.render(:src($src1)), "6\n",
+   'trailing comma continuation joins array literal';
+
+# 4.5.1 — trailing comma in argument list
+my $src2 = q:to/HAML/;
+= (1,
+   2,
+   3).join('-')
+HAML
+is HAML.render(:src($src2)), "1-2-3\n",
+   'trailing comma continuation joins paren list';
+
+# 4.5.2 — unbalanced paren continuation
+my $src3 = q:to/HAML/;
+= sprintf('%d-%d',
+          10, 20)
+HAML
+is HAML.render(:src($src3)), "10-20\n",
+   'paren continuation joins multi-line argument list';
+
+# 4.5.2 — unbalanced square bracket continuation
+my $src4 = q:to/HAML/;
+= [10,
+   20,
+   30
+  ].elems
+HAML
+is HAML.render(:src($src4)), "3\n",
+   'square-bracket continuation';
+
+# 4.5.2 — unbalanced curly brace continuation
+my $src5 = q:to/HAML/;
+= ({
+    x => 'y'
+  })<x>
+HAML
+is HAML.render(:src($src5)), "y\n",
+   'curly-brace continuation';
+
+# 4.5.2 — nested bracket continuation
+my $src6 = q:to/HAML/;
+= [
+    [1, 2],
+    [3, 4]
+  ].elems
+HAML
+is HAML.render(:src($src6)), "2\n",
+   'nested brackets across multiple lines';
+
+# 4.5.3 — never balances → X::HAML::UnbalancedExpression
+my $src7 = q:to/HAML/;
+= [1,
+HAML
+throws-like { HAML.render(:src($src7)) }, X::HAML::UnbalancedExpression,
+   'unbalanced bracket at EOF raises X::HAML::UnbalancedExpression';
+
+# 4.5.3 — trailing comma at EOF
+my $src8 = "= 1,\n";
+throws-like { HAML.render(:src($src8)) }, X::HAML::UnbalancedExpression,
+   'trailing comma at EOF raises X::HAML::UnbalancedExpression';
+
+# Strings with commas/brackets must NOT trigger continuation
+is HAML.render(:src("= 'hello, world'\n")), "hello, world\n",
+   'comma inside single-quoted string does not continue';
+is HAML.render(:src("= \"a, b, c\"\n")), "a, b, c\n",
+   'comma inside double-quoted string does not continue';
+is HAML.render(:src("= '[unbalanced'\n")), "[unbalanced\n",
+   'bracket inside string does not continue';
+
+# != continuation
+my $src9 = q:to/HAML/;
+!= ['<b>',
+    'hi',
+    '</b>'].join('')
+HAML
+is HAML.render(:src($src9)), "<b>hi</b>\n",
+   '!= continuation works (raw HTML)';
+
+# &= continuation
+my $src10 = q:to/HAML/;
+&= ['<b>',
+    'x'].join(',')
+HAML
+is HAML.render(:src($src10)), "&lt;b&gt;,x\n",
+   '&= continuation works';
+
+# Continuation inside an indented control-flow body
+my $src11 = q:to/HAML/;
+- if True
+  = [1,
+     2,
+     3].sum
+HAML
+is HAML.render(:src($src11)), "6\n",
+   'continuation inside indented block';
+
+# Tags AFTER a multi-line statement still render correctly (line alignment)
+my $src12 = q:to/HAML/;
+= [1,
+   2,
+   3].sum
+%p hi
+HAML
+is HAML.render(:src($src12)), "6\n<p>hi</p>\n",
+   'tags after joined statement still parse';
+
+# Filter bodies must be opaque (not continued)
+my $src13 = q:to/HAML/;
+:plain
+  - this is opaque,
+  not a statement
+%p done
+HAML
+is HAML.render(:src($src13)),
+   "- this is opaque,\nnot a statement\n<p>done</p>\n",
+   'filter body lines that look like statements are not joined';
+
+# code-state helper sanity
+{
+  my %s1 = Template::HAML::Multiline::code-state("foo(1, 2,");
+  ok %s1<bracket-depth> == 1 && %s1<ends-with-comma>,
+     'code-state tracks unbalanced paren + trailing comma';
+
+  my %s2 = Template::HAML::Multiline::code-state("'hello, world'");
+  ok %s2<bracket-depth> == 0 && !%s2<ends-with-comma>,
+     'code-state ignores commas inside strings';
+}

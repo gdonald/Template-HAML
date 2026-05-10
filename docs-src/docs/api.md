@@ -64,6 +64,7 @@ The implementation is split across several modules under `lib/Template/HAML/`. T
 | `Template::HAML::Tag`        | AST node representing a single HAML tag.                      |
 | `Template::HAML::Statement`  | AST node representing an embedded-code line (`=`, `-`, `!=`, `&=`). |
 | `Template::HAML::Eval`       | EVALs embedded Raku expressions with caching.                 |
+| `Template::HAML::Multiline`  | Pre-grammar pass that joins continued code lines (trailing comma / unbalanced brackets). |
 | `Template::HAML::Renderer`   | Walks the parse tree and emits HTML.                          |
 | `Template::HAML::Filter`     | AST node representing a filter line and its dedented body.    |
 | `Template::HAML::Filters`    | Filter registry plus the built-in filter handlers.            |
@@ -83,4 +84,5 @@ The implementation is split across several modules under `lib/Template/HAML/`. T
 | `X::HAML::UnknownDoctype`    | `!!! foo` named a doctype variant that is not recognized.  |
 | `X::HAML::DoctypeNotFirst`   | A `!!!` line appeared after non-blank content.             |
 | `X::HAML::Eval`              | An embedded `=`/`-`/`!=`/`&=` expression failed to compile or run. |
+| `X::HAML::UnbalancedExpression` | A multi-line code expression ran to end of source with open brackets or a trailing comma. |
 | `X::HAML::UnknownFilter`     | A `:name` line referenced a filter that is not registered. |

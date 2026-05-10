@@ -8,28 +8,28 @@
       
       
       
-        <link rel="canonical" href="https://gdonald.github.io/Template-HAML/getting-started/">
+        <link rel="canonical" href="https://gdonald.github.io/Template-HAML/syntax/embedded-code/">
       
       
-        <link rel="prev" href="..">
+        <link rel="prev" href="../comments/">
       
       
-        <link rel="next" href="../syntax/tags/">
+        <link rel="next" href="../plain-text/">
       
       
         
       
       
-      <link rel="icon" href="../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
-        <title>Getting Started - Template::HAML</title>
+        <title>Embedded code - Template::HAML</title>
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
       
 
@@ -48,7 +48,7 @@
       
     
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -66,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#getting-started" class="md-skip">
+        <a href="#embedded-raku-code" class="md-skip">
           Skip to content
         </a>
       
@@ -82,7 +82,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="Template::HAML" class="md-header__button md-logo" aria-label="Template::HAML" data-md-component="logo">
+    <a href="../.." title="Template::HAML" class="md-header__button md-logo" aria-label="Template::HAML" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -102,7 +102,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Getting Started
+              Embedded code
             
           </span>
         </div>
@@ -192,7 +192,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="Template::HAML" class="md-nav__button md-logo" aria-label="Template::HAML" data-md-component="logo">
+    <a href="../.." title="Template::HAML" class="md-nav__button md-logo" aria-label="Template::HAML" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -222,7 +222,7 @@
   
   
     <li class="md-nav__item">
-      <a href=".." class="md-nav__link">
+      <a href="../.." class="md-nav__link">
         
   
   
@@ -246,37 +246,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Getting Started
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../getting-started/" class="md-nav__link">
         
   
   
@@ -292,70 +265,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#project-layout" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Project layout
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#your-first-template" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Your first template
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#rendering-from-a-string" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Rendering from a string
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#where-to-go-next" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Where to go next
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -364,18 +273,20 @@
       
   
   
+    
   
   
+  
     
     
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
           <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
@@ -396,7 +307,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -414,7 +325,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../syntax/tags/" class="md-nav__link">
+      <a href="../tags/" class="md-nav__link">
         
   
   
@@ -442,7 +353,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../syntax/attributes/" class="md-nav__link">
+      <a href="../attributes/" class="md-nav__link">
         
   
   
@@ -470,7 +381,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../syntax/indentation/" class="md-nav__link">
+      <a href="../indentation/" class="md-nav__link">
         
   
   
@@ -498,7 +409,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../syntax/doctype/" class="md-nav__link">
+      <a href="../doctype/" class="md-nav__link">
         
   
   
@@ -526,7 +437,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../syntax/comments/" class="md-nav__link">
+      <a href="../comments/" class="md-nav__link">
         
   
   
@@ -551,10 +462,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../syntax/embedded-code/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Embedded code
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -570,6 +508,92 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#operators" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Operators
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#locals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Locals
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#escaping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Escaping
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#multi-line-expressions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-line expressions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#helpers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Helpers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -582,7 +606,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../syntax/plain-text/" class="md-nav__link">
+      <a href="../plain-text/" class="md-nav__link">
         
   
   
@@ -610,7 +634,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../syntax/control-flow/" class="md-nav__link">
+      <a href="../control-flow/" class="md-nav__link">
         
   
   
@@ -638,7 +662,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../syntax/filters/" class="md-nav__link">
+      <a href="../filters/" class="md-nav__link">
         
   
   
@@ -666,7 +690,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../syntax/whitespace/" class="md-nav__link">
+      <a href="../whitespace/" class="md-nav__link">
         
   
   
@@ -694,7 +718,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../syntax/helpers/" class="md-nav__link">
+      <a href="../helpers/" class="md-nav__link">
         
   
   
@@ -722,7 +746,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../syntax/layouts-partials/" class="md-nav__link">
+      <a href="../layouts-partials/" class="md-nav__link">
         
   
   
@@ -750,7 +774,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../syntax/config/" class="md-nav__link">
+      <a href="../config/" class="md-nav__link">
         
   
   
@@ -785,7 +809,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/" class="md-nav__link">
+      <a href="../../api/" class="md-nav__link">
         
   
   
@@ -812,7 +836,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../testing/" class="md-nav__link">
+      <a href="../../testing/" class="md-nav__link">
         
   
   
@@ -859,10 +883,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#project-layout" class="md-nav__link">
+  <a href="#operators" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Project layout
+        Operators
       
     </span>
   </a>
@@ -870,10 +894,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#your-first-template" class="md-nav__link">
+  <a href="#locals" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Your first template
+        Locals
       
     </span>
   </a>
@@ -881,10 +905,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#rendering-from-a-string" class="md-nav__link">
+  <a href="#escaping" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Rendering from a string
+        Escaping
       
     </span>
   </a>
@@ -892,10 +916,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#where-to-go-next" class="md-nav__link">
+  <a href="#multi-line-expressions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Where to go next
+        Multi-line expressions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#helpers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Helpers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
       
     </span>
   </a>
@@ -922,82 +968,131 @@
   
 
 
-<h1 id="getting-started">Getting Started<a class="headerlink" href="#getting-started" title="Permanent link">&para;</a></h1>
-<h2 id="project-layout">Project layout<a class="headerlink" href="#project-layout" title="Permanent link">&para;</a></h2>
-<p>A typical project that uses Template::HAML keeps its templates under an <code>app/views/</code> (or any other) directory, organized by controller / feature, with the <code>.html.haml</code> extension:</p>
+<h1 id="embedded-raku-code">Embedded Raku code<a class="headerlink" href="#embedded-raku-code" title="Permanent link">&para;</a></h1>
+<p>Template::HAML lets you embed Raku expressions directly in a template. Each
+embedded line begins with an output operator and is followed by a Raku
+expression.</p>
+<h2 id="operators">Operators<a class="headerlink" href="#operators" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Operator</th>
+<th>Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>=</code></td>
+<td>Evaluate the expression, HTML-escape the result, emit it.</td>
+</tr>
+<tr>
+<td><code>!=</code></td>
+<td>Evaluate the expression, emit the result without escaping.</td>
+</tr>
+<tr>
+<td><code>&amp;=</code></td>
+<td>Evaluate the expression, force HTML-escape, emit it.</td>
+</tr>
+<tr>
+<td><code>-</code></td>
+<td>Evaluate the expression for side effects only — emit nothing.</td>
+</tr>
+<tr>
+<td><code>~</code></td>
+<td>Like <code>=</code>, but additionally replace newlines in the result with <code>&amp;#x000A;</code>. See <a href="../whitespace/">Whitespace</a>.</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">2</span>
+<span class="p">-</span><span class="w"> </span><span class="n">my</span><span class="w"> </span><span class="vg">$x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;hello&#39;</span>
+<span class="p">=</span><span class="w"> </span><span class="vg">$x</span>
+<span class="p">!=</span><span class="w"> </span><span class="s1">&#39;&lt;b&gt;raw&lt;/b&gt;&#39;</span>
+</code></pre></div></td></tr></table></div>
+<p>renders to:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code>3
+hello
+<span class="p">&lt;</span><span class="nt">b</span><span class="p">&gt;</span>raw<span class="p">&lt;/</span><span class="nt">b</span><span class="p">&gt;</span>
+</code></pre></div></td></tr></table></div>
+<h2 id="locals">Locals<a class="headerlink" href="#locals" title="Permanent link">&para;</a></h2>
+<p>Pass values into a template with the <code>:locals</code> named argument. Each key is bound
+as a <code>$key</code> lexical visible to embedded expressions.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
 <span class="normal">4</span>
 <span class="normal">5</span>
 <span class="normal">6</span>
-<span class="normal">7</span>
-<span class="normal">8</span>
-<span class="normal">9</span></pre></div></td><td class="code"><div><pre><span></span><code>my-project/
-├── lib/
-│   └── MyApp.rakumod
-└── app/
-    └── views/
-        ├── home/
-        │   └── index.html.haml
-        └── layouts/
-            └── app.html.haml
+<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">HAML</span>.<span class="n">render</span>(
+  :<span class="n">src</span>(<span class="s">q:to/HAML/),</span>
+<span class="s">    %h1= $title</span>
+<span class="s">    %p Visitor count: #{ $count }</span>
+<span class="s">    HAML</span>
+  :<span class="n">locals</span>(%(:<span class="n">title</span><span class="s">&lt;Welcome&gt;</span>, :<span class="n">count</span>(<span class="mi">42</span>))),
+);
 </code></pre></div></td></tr></table></div>
-<h2 id="your-first-template">Your first template<a class="headerlink" href="#your-first-template" title="Permanent link">&para;</a></h2>
-<p>Create <code>hello.haml</code>:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">%html</span>
-<span class="w">  </span><span class="nt">%body</span>
-<span class="w">    </span><span class="nt">%h1</span> Hello, world
-<span class="w">    </span><span class="nt">%p</span><span class="nc">.lead</span> This page was rendered by Template::HAML.
-</code></pre></div></td></tr></table></div>
-<p>Render it from Raku:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">Template::HAML</span>;
+<p>Locals of any type are bound under the <code>$</code> sigil; reach into structured values
+with the usual postfix syntax (<code>$items.elems</code>, <code>$cfg&lt;title&gt;</code>, <code>$user.name</code>).</p>
+<p>Locals are also visible inside <code>#{...}</code> and <code>!{...}</code> interpolations in tag
+content, plain text, and double-quoted attribute strings — see <a href="../plain-text/">Plain
+text</a> for the full interpolation syntax.</p>
+<h2 id="escaping">Escaping<a class="headerlink" href="#escaping" title="Permanent link">&para;</a></h2>
+<p><code>=</code> escapes <code>&amp; &lt; &gt; " '</code> by default. Use <code>!=</code> only when the value is already
+known-safe HTML.</p>
+<h2 id="multi-line-expressions">Multi-line expressions<a class="headerlink" href="#multi-line-expressions" title="Permanent link">&para;</a></h2>
+<p>An embedded code line continues on the next line in two situations:</p>
+<ol>
+<li><strong>Trailing comma.</strong> A line whose last non-whitespace character is <code>,</code>
+   joins the next line with a single space.</li>
+<li><strong>Unbalanced brackets.</strong> A line that opens more <code>(</code>, <code>[</code>, or <code>{</code> than it
+   closes joins the next line; continuation stops once the brackets balance
+   <em>and</em> the line no longer ends with a comma.</li>
+</ol>
+<p>Both rules ignore characters that appear inside single- or double-quoted
+strings.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">=</span><span class="w"> </span><span class="o">[</span><span class="mi">1</span><span class="p">,</span>
+<span class="w">   </span><span class="mi">2</span><span class="p">,</span>
+<span class="w">   </span><span class="mi">3</span><span class="o">].</span><span class="n">sum</span>
 
-<span class="k">my</span> <span class="nv">$html</span> = <span class="n">HAML</span>.<span class="n">render</span>(:<span class="n">src</span>(<span class="nb">slurp</span> <span class="s">&#39;hello.haml&#39;</span>));
-<span class="nb">say</span> <span class="nv">$html</span>;
-</code></pre></div></td></tr></table></div>
-<p>You should see:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span>
-<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">&lt;</span><span class="nt">html</span><span class="p">&gt;</span>
-  <span class="p">&lt;</span><span class="nt">body</span><span class="p">&gt;</span>
-    <span class="p">&lt;</span><span class="nt">h1</span><span class="p">&gt;</span>Hello, world<span class="p">&lt;/</span><span class="nt">h1</span><span class="p">&gt;</span>
-    <span class="p">&lt;</span><span class="nt">p</span> <span class="na">class</span><span class="o">=</span><span class="s">&#39;lead&#39;</span><span class="p">&gt;</span>This page was rendered by Template::HAML.<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
-  <span class="p">&lt;/</span><span class="nt">body</span><span class="p">&gt;</span>
-<span class="p">&lt;/</span><span class="nt">html</span><span class="p">&gt;</span>
-</code></pre></div></td></tr></table></div>
-<h2 id="rendering-from-a-string">Rendering from a string<a class="headerlink" href="#rendering-from-a-string" title="Permanent link">&para;</a></h2>
-<p><code>HAML.render</code> takes any string, so you can also embed templates inline:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span>
-<span class="normal">6</span>
-<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$src</span> = <span class="s">q:to/HAML/;</span>
-<span class="s">%section.container</span>
-<span class="s">  %h1 Title</span>
-<span class="s">  %h2 Subtitle</span>
-<span class="s">HAML</span>
+<span class="p">-</span><span class="w"> </span><span class="n">my</span><span class="w"> </span><span class="o">%</span><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span>title =&gt; &#39;Welcome&#39;,
+<span class="w">    </span>count =&gt; 42,
+<span class="w">  </span>)
 
-<span class="nb">say</span> <span class="n">HAML</span>.<span class="n">render</span>(:<span class="nv">$src</span>);
+<span class="p">=</span><span class="w"> </span><span class="nb">sprintf</span><span class="p">(</span><span class="s1">&#39;%s: %d&#39;</span><span class="p">,</span>
+<span class="w">          </span><span class="vg">$title</span><span class="p">,</span>
+<span class="w">          </span><span class="vg">$count</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
-<h2 id="where-to-go-next">Where to go next<a class="headerlink" href="#where-to-go-next" title="Permanent link">&para;</a></h2>
-<ul>
-<li><a href="../syntax/tags/">Tags</a> — element names, sigils, class and id shorthand</li>
-<li><a href="../syntax/attributes/">Attributes</a> — hash-style attribute syntax</li>
-<li><a href="../syntax/indentation/">Indentation</a> — how nesting works</li>
-<li><a href="../api/">API</a> — the public Raku API</li>
-</ul>
+<p>If the source ends while an expression is still unbalanced (open brackets or a
+trailing comma), the parse raises
+<a href="../../api/#exceptions"><code>X::HAML::UnbalancedExpression</code></a> pointing at the line
+where the expression started.</p>
+<p>Filter bodies (<code>:plain</code>, <code>:javascript</code>, …) and silent-comment bodies (<code>-#</code>)
+are opaque text — lines that look like statements inside them are <em>not</em>
+joined.</p>
+<h2 id="helpers">Helpers<a class="headerlink" href="#helpers" title="Permanent link">&para;</a></h2>
+<p>A handful of helper subroutines (<code>html-safe</code>, <code>escape-once</code>, <code>surround</code>,
+<code>precede</code>, <code>succeed</code>, <code>list-of</code>, <code>find-and-preserve</code>, <code>capture-haml</code>) are
+preloaded into the eval scope. See <a href="../helpers/">Helpers</a>.</p>
+<h2 id="errors">Errors<a class="headerlink" href="#errors" title="Permanent link">&para;</a></h2>
+<p>Compilation or runtime failures inside embedded code are wrapped in
+<a href="../../api/#exceptions"><code>X::HAML::Eval</code></a>, which carries the offending source
+line and column for diagnostics.</p>
 
 
 
@@ -1047,10 +1142,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>
