@@ -5,6 +5,7 @@ use Template::HAML::Doctype;
 use Template::HAML::Eval;
 use Template::HAML::Filter;
 use Template::HAML::Filters;
+use Template::HAML::Helpers;
 use Template::HAML::Interpolation;
 use Template::HAML::Node;
 use Template::HAML::Plain;
@@ -308,8 +309,9 @@ class Renderer is export {
 
     my $own = '';
     if $obj.outputs {
+      my $is-safe = $value ~~ Template::HAML::Helpers::SafeString;
       my $str = $value.defined ?? $value.Str !! '';
-      $str = html-escape($str) if self.should-escape($obj);
+      $str = html-escape($str) if self.should-escape($obj) && !$is-safe;
       if $obj.op eq '~' {
         $str = $str.subst("\n", '&#x000A;', :g);
       }

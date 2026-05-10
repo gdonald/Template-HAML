@@ -1,6 +1,7 @@
 
 use MONKEY-SEE-NO-EVAL;
 
+use Template::HAML::Helpers;
 use Template::HAML::X;
 
 unit module Template::HAML::Eval;

@@ -15,6 +15,7 @@ nav:
     - Control flow: syntax/control-flow.md
     - Filters: syntax/filters.md
     - Whitespace: syntax/whitespace.md
+    - Helpers: syntax/helpers.md
     - Configuration: syntax/config.md
   - API: api.md
   - Tests: testing.md

@@ -1,0 +1,106 @@
+
+use Test;
+
+use Template::HAML;
+use Template::HAML::Config;
+use Template::HAML::Helpers;
+
+subtest 'html-safe / SafeString', {
+  my $s = html-safe('<b>hi</b>');
+  isa-ok $s, Template::HAML::Helpers::SafeString;
+  is $s.Str, '<b>hi</b>', 'preserves raw string';
+
+  my $src = q:to/HAML/;
+  %div
+    = html-safe('<b>x</b>')
+  HAML
+
+  my $out = HAML.render(:src($src));
+  like $out, /'<b>x</b>'/, 'safe string passes through unescaped';
+  unlike $out, /'&lt;'/, 'no escaping applied to safe string';
+}
+
+subtest 'html-safe with escape-html on (default)', {
+  my $src = q:to/HAML/;
+  %p
+    = '<b>plain</b>'
+  HAML
+
+  my $out = HAML.render(:src($src));
+  like $out, /'&lt;b&gt;plain&lt;/b&gt;'/, 'plain string is escaped';
+}
+
+subtest 'escape-once', {
+  is escape-once('<b>'), '&lt;b&gt;', 'plain angle brackets escape';
+  is escape-once('&amp;'), '&amp;', 'already-escaped entity preserved';
+  is escape-once('&#39;'), '&#39;', 'numeric entity preserved';
+  is escape-once('&#x27;'), '&#x27;', 'hex entity preserved';
+  is escape-once('& foo'), '&amp; foo', 'bare ampersand escapes';
+  is escape-once('&amp; & <'), '&amp; &amp; &lt;', 'mixed escape-once';
+}
+
+subtest 'surround / precede / succeed (Raku scope)', {
+  is surround('(', ')', { 'hi' }), '(hi)', 'surround basic';
+  is precede('* ',     { 'hi' }), '* hi', 'precede basic';
+  is succeed('.',      { 'hi' }), 'hi.',  'succeed basic';
+
+  is surround('<', '>', { "  hi  " }), '<hi>', 'surround strips block whitespace';
+}
+
+subtest 'surround in HAML template', {
+  my $src = q:to/HAML/;
+  %p
+    = surround('(', ')', { 'middle' })
+  HAML
+
+  my $out = HAML.render(:src($src));
+  like $out, /'(middle)'/, 'surround output appears in template';
+}
+
+subtest 'list-of', {
+  my $out = list-of(<a b c>, -> $x { $x.uc });
+  is $out, "<li>A</li>\n<li>B</li>\n<li>C</li>", 'list-of wraps each';
+}
+
+subtest 'list-of in HAML template', {
+  my $src = q:to/HAML/;
+  %ul
+    != list-of($items, -> $x { $x.uc })
+  HAML
+
+  my $out = HAML.render(:src($src), :locals(%(items => <a b c>)));
+  like $out, /'<li>A</li>'/, 'first item';
+  like $out, /'<li>B</li>'/, 'second item';
+  like $out, /'<li>C</li>'/, 'third item';
+}
+
+subtest 'find-and-preserve', {
+  my $html = "<pre>line1\nline2</pre>";
+  is find-and-preserve($html), '<pre>line1&#x000A;line2</pre>', 'pre preserved';
+
+  my $html2 = "<textarea>a\nb</textarea>";
+  is find-and-preserve($html2), '<textarea>a&#x000A;b</textarea>', 'textarea preserved';
+
+  my $html3 = "<div>\n  <p>hi</p>\n</div>";
+  is find-and-preserve($html3), $html3, 'non-preserve tags untouched';
+
+  my $html4 = "<pre class='x'>a\nb</pre>";
+  is find-and-preserve($html4), "<pre class='x'>a&#x000A;b</pre>", 'preserves attributes';
+}
+
+subtest 'capture-haml', {
+  my $out = capture-haml({ "%p hi" });
+  like $out, /'<p>hi</p>'/, 'capture-haml renders HAML source';
+}
+
+subtest 'helpers visible inside embedded code', {
+  my $src = q:to/HAML/;
+  %div
+    != surround('[', ']', { 'inner' })
+  HAML
+
+  my $out = HAML.render(:src($src));
+  like $out, /'[inner]'/, 'helper called from = expression';
+}
+
+done-testing;

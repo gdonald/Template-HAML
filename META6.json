@@ -12,6 +12,7 @@
     "Template::HAML": "lib/Template/HAML.rakumod",
     "Template::HAML::Actions": "lib/Template/HAML/Actions.rakumod",
     "Template::HAML::Grammar": "lib/Template/HAML/Grammar.rakumod",
+    "Template::HAML::Helpers": "lib/Template/HAML/Helpers.rakumod",
     "Template::HAML::Node": "lib/Template/HAML/Node.rakumod",
     "Template::HAML::Renderer": "lib/Template/HAML/Renderer.rakumod",
     "Template::HAML::Statement": "lib/Template/HAML/Statement.rakumod",

@@ -56,6 +56,12 @@ text](plain-text.md) for the full interpolation syntax.
 `=` escapes `& < > " '` by default. Use `!=` only when the value is already
 known-safe HTML.
 
+## Helpers
+
+A handful of helper subroutines (`html-safe`, `escape-once`, `surround`,
+`precede`, `succeed`, `list-of`, `find-and-preserve`, `capture-haml`) are
+preloaded into the eval scope. See [Helpers](helpers.md).
+
 ## Errors
 
 Compilation or runtime failures inside embedded code are wrapped in
