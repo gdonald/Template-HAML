@@ -53,8 +53,8 @@ class Tag is export {
 
   method is-void { $!name (elem) @VOID-ELEMENTS }
 
-  method open(Int :$offset = 0) {
-    self.get-indent(:$offset) ~ '<' ~ $!name ~ self.render-attrs ~ '>';
+  method open(Int :$offset = 0, :@attrs = @!attrs) {
+    self.get-indent(:$offset) ~ '<' ~ $!name ~ self.render-attrs(:@attrs) ~ '>';
   }
 
   method close {
@@ -104,28 +104,28 @@ class Tag is export {
     }
   }
 
-  method ordered-attrs {
+  method ordered-attrs(:@attrs = @!attrs) {
     my @out;
     my %seen;
 
-    if (my $id = @!attrs.first({ .key eq 'id' })).defined {
+    if (my $id = @attrs.first({ .key eq 'id' })).defined {
       @out.push: $id;
       %seen<id> = True;
     }
-    if (my $cls = @!attrs.first({ .key eq 'class' })).defined {
+    if (my $cls = @attrs.first({ .key eq 'class' })).defined {
       @out.push: $cls;
       %seen<class> = True;
     }
-    for @!attrs -> $p {
+    for @attrs -> $p {
       next if %seen{$p.key};
       @out.push: $p;
     }
     @out;
   }
 
-  method render-attrs {
+  method render-attrs(:@attrs = @!attrs) {
     my @rendered;
-    for self.ordered-attrs -> $p {
+    for self.ordered-attrs(:@attrs) -> $p {
       my $r = self.render-attr-pair($p.key, $p.value);
       @rendered.push: $r if $r.defined;
     }

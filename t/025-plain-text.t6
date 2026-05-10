@@ -1,0 +1,55 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Test;
+
+plan 12;
+
+is HAML.render(:src("Hello world\n")),
+   "Hello world\n",
+   '6.1.1: top-level plain text line';
+
+is HAML.render(:src("%p\n  Hello world\n")),
+   "<p>\n  Hello world\n</p>\n",
+   '6.1.1: plain text as child of tag';
+
+is HAML.render(:src("\\%foo\n")),
+   "%foo\n",
+   '6.1.2: backslash-escape on sigil';
+
+is HAML.render(:src("\\.bar\n")),
+   ".bar\n",
+   '6.1.2: backslash-escape on .class shorthand';
+
+is HAML.render(:src("\\#hash\n")),
+   "#hash\n",
+   '6.1.2: backslash-escape on #id shorthand';
+
+is HAML.render(:src("%div\n  Line 1\n  Line 2\n")),
+   "<div>\n  Line 1\n  Line 2\n</div>\n",
+   '6.1.3: plain text inherits parent indent';
+
+is HAML.render(:src("%section\n  %p\n    Inner text\n")),
+   "<section>\n  <p>\n    Inner text\n  </p>\n</section>\n",
+   '6.1.3: deeply nested plain text';
+
+is HAML.render(:src("Just text\n")),
+   "Just text\n",
+   '6.1: plain text at indent 0';
+
+is HAML.render(:src("plain1\nplain2\n")),
+   "plain1\nplain2\n",
+   '6.1: multiple plain lines as siblings';
+
+is HAML.render(:src("%p hello\nworld\n")),
+   "<p>hello</p>\nworld\n",
+   '6.1: tag and plain mixed';
+
+is HAML.render(:src("%section\n  %div\n    indented plain\n")),
+   "<section>\n  <div>\n    indented plain\n  </div>\n</section>\n",
+   '6.1.3: indent inherited inside indented block';
+
+is HAML.render(:src("Hello   \n")),
+   "Hello\n",
+   '1.2.3: trailing whitespace is stripped from plain';

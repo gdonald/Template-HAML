@@ -107,7 +107,25 @@ grammar Grammar is export {
   multi token line:sym<filter>         { ^^ \h* ':' <word> <.eol> }
   multi token line:sym<statement>      { <statement> }
   multi token line:sym<tag>            { <tag> }
-  multi token line:sym<plain>          { ^^ \h* <!before <[%.#=\-:/!&]>> \N <to-eol> <.eol> }
+  multi token line:sym<plain> {
+    ^^ $<head>=[\h*]
+    <!before
+      [
+        | '%'
+        | '.' \w
+        | '#' \w
+        | '='
+        | '-'
+        | '/'
+        | '!='
+        | '!!!'
+        | '&='
+        | ':' \w
+      ]
+    >
+    $<plain-text>=[\N+]
+    <.eol>
+  }
 
   rule TOP {
     <line>*

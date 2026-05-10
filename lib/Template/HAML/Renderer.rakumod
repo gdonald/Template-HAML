@@ -2,7 +2,9 @@
 use Template::HAML::Comment;
 use Template::HAML::Doctype;
 use Template::HAML::Eval;
+use Template::HAML::Interpolation;
 use Template::HAML::Node;
+use Template::HAML::Plain;
 use Template::HAML::Statement;
 use Template::HAML::Tag;
 use Template::HAML::X;
@@ -13,6 +15,17 @@ sub html-escape(Str $s --> Str) {
     .subst('>', '&gt;',  :g)
     .subst('"', '&quot;', :g)
     .subst("'", '&#39;', :g);
+}
+
+sub resolve-attrs(@attrs, %locals) {
+  @attrs.map(-> $p {
+    my $v = $p.value;
+    if $v ~~ Template::HAML::Interpolation::InterpString {
+      $p.key => $v.resolve(%locals, :escape(False));
+    } else {
+      $p;
+    }
+  }).list;
 }
 
 class Renderer is export {
@@ -44,27 +57,51 @@ class Renderer is export {
       return self.render-statement($node, %locals, $offset);
     }
 
+    if $obj ~~ Plain {
+      return self.render-plain($node, %locals, $offset);
+    }
+
     if $obj ~~ Tag && $obj.is-void && $node.children.elems {
       X::HAML::VoidWithChildren.new(
         :line($obj.line), :column($obj.column), :name($obj.name),
       ).throw;
     }
 
+    my @resolved = resolve-attrs($obj.attrs, %locals);
+    my $content  = self.interpolate-content($obj, %locals);
+
     if $obj ~~ Tag && $obj.self-close {
-      return $obj.open(:$offset) ~ $obj.close;
+      return $obj.open(:$offset, :attrs(@resolved)) ~ $obj.close;
     }
 
-    my $out = $obj.open(:$offset);
+    my $out = $obj.open(:$offset, :attrs(@resolved));
     if $node.children.elems {
-      $out ~= $obj.content if $obj.content;
+      $out ~= $content if $content;
       $out ~= "\n";
       $out ~= self.render-children($node, %locals, $offset);
       $out ~= $obj.get-indent(:$offset);
     } else {
-      $out ~= $obj.content;
+      $out ~= $content;
     }
     $out ~= $obj.close;
     $out;
+  }
+
+  method interpolate-content(Tag:D $obj, %locals --> Str) {
+    return '' unless $obj.content.defined && $obj.content.chars;
+    interpolate(
+      $obj.content, %locals,
+      :line($obj.line), :column($obj.column),
+    );
+  }
+
+  method render-plain(Node:D $node, %locals, Int $offset) {
+    my $obj = $node.object;
+    my $text = interpolate(
+      $obj.text, %locals,
+      :line($obj.line), :column($obj.column),
+    );
+    $obj.get-indent(:$offset) ~ $text ~ "\n";
   }
 
   method render-children(Node:D $node, %locals, Int $offset) {
@@ -170,6 +207,18 @@ class Renderer is export {
       when 'when' | 'default' {
         return self.render-children($node, %locals, $offset + 1);
       }
+    }
+
+    if $obj.op eq '==' {
+      my $str = interpolate(
+        $obj.expr, %locals,
+        :line($obj.line), :column($obj.column),
+      );
+      my $own = $obj.get-indent(:$offset) ~ $str ~ "\n";
+      my $kids = $node.children.elems
+        ?? self.render-children($node, %locals, $offset)
+        !! '';
+      return $own ~ $kids;
     }
 
     my $value = eval-haml(

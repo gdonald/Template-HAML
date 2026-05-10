@@ -1,7 +1,9 @@
 
 use Template::HAML::Comment;
 use Template::HAML::Doctype;
+use Template::HAML::Interpolation;
 use Template::HAML::Node;
+use Template::HAML::Plain;
 use Template::HAML::Statement;
 use Template::HAML::Tag;
 use Template::HAML::X;
@@ -170,6 +172,23 @@ class Actions is export {
     $!seen-content = True;
   }
 
+  method line:sym<plain>($/) {
+    my ($line, $column) = pos-to-line-col($/);
+    my $indent = self.compute-level($/<head>);
+    my $raw    = $/<plain-text>.Str;
+
+    $raw .= subst(/\h+ $/, '');
+    $raw .= subst(/^ '\\'/, '') if $raw.starts-with('\\');
+
+    my $object = Plain.new(
+      :$indent, :$line, :$column,
+      :text($raw),
+      :output-indent-width($!output-indent-width),
+    );
+    self.add-node($object);
+    $!seen-content = True;
+  }
+
   method line:sym<doctype>($/) {
     my ($line, $column) = pos-to-line-col($/);
     if $!seen-content {
@@ -250,7 +269,17 @@ class Actions is export {
   }
 
   method sq-content($/) { make decode-sq($/.Str) }
-  method dq-content($/) { make decode-dq($/.Str) }
+  method dq-content($/) {
+    my $raw = $/.Str;
+    if has-interp($raw) {
+      my ($line, $column) = pos-to-line-col($/);
+      make Template::HAML::Interpolation::InterpString.new(
+        :$raw, :$line, :$column,
+      );
+    } else {
+      make decode-dq($raw);
+    }
+  }
 
   method single-quoted-string($/) { make $/<sq-content>.made }
   method double-quoted-string($/) { make $/<dq-content>.made }

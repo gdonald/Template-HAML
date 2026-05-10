@@ -46,6 +46,10 @@ HAML.render(
 Locals of any type are bound under the `$` sigil; reach into structured values
 with the usual postfix syntax (`$items.elems`, `$cfg<title>`, `$user.name`).
 
+Locals are also visible inside `#{...}` and `!{...}` interpolations in tag
+content, plain text, and double-quoted attribute strings — see [Plain
+text](plain-text.md) for the full interpolation syntax.
+
 ## Escaping
 
 `=` escapes `& < > " '` by default. Use `!=` only when the value is already
