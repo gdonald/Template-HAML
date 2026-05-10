@@ -32,7 +32,6 @@ class Tag is export {
   has Bool $.self-close     is rw = False;
   has Bool $.trim-outer     = False;
   has Bool $.trim-inner     = False;
-  has Str  $.open;
 
   submethod BUILD(
     :$!indent, :$!name, :@attrs, :$!content,
@@ -50,14 +49,12 @@ class Tag is export {
     if !$!self-close && self.is-void && $!content.chars == 0 {
       $!self-close = True;
     }
-
-    self.build-open;
   }
 
   method is-void { $!name (elem) @VOID-ELEMENTS }
 
-  method build-open {
-    $!open = self.get-indent ~ '<' ~ $!name ~ self.render-attrs ~ '>';
+  method open(Int :$offset = 0) {
+    self.get-indent(:$offset) ~ '<' ~ $!name ~ self.render-attrs ~ '>';
   }
 
   method close {
@@ -65,8 +62,10 @@ class Tag is export {
     '</' ~ $!name ~ '>' ~ "\n";
   }
 
-  method get-indent {
-    ' ' x ($!indent * $!output-indent-width);
+  method get-indent(Int :$offset = 0) {
+    my $level = $!indent - $offset;
+    $level = 0 if $level < 0;
+    ' ' x ($level * $!output-indent-width);
   }
 
   method find-attr-index(Str $key) {

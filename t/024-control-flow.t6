@@ -1,0 +1,203 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Template::HAML::X;
+use Test;
+
+plan 35;
+
+# ----- if -----
+is HAML.render(:src("- if True\n  %p hi\n")),
+  "<p>hi</p>\n",
+  '- if True renders body';
+
+is HAML.render(:src("- if False\n  %p hi\n")),
+  '',
+  '- if False renders nothing';
+
+is HAML.render(:src("- if \$x\n  %p yes\n"), :locals(%(:x(1)))),
+  "<p>yes</p>\n",
+  '- if reads local';
+
+is HAML.render(:src("- if \$x\n  %p yes\n"), :locals(%(:x(0)))),
+  '',
+  '- if with falsey local';
+
+# ----- unless -----
+is HAML.render(:src("- unless False\n  %p hi\n")),
+  "<p>hi</p>\n",
+  '- unless False renders body';
+
+is HAML.render(:src("- unless True\n  %p hi\n")),
+  '',
+  '- unless True renders nothing';
+
+# ----- if/else -----
+is HAML.render(:src("- if True\n  %p a\n- else\n  %p b\n")),
+  "<p>a</p>\n",
+  'if/else: if-branch fires';
+
+is HAML.render(:src("- if False\n  %p a\n- else\n  %p b\n")),
+  "<p>b</p>\n",
+  'if/else: else-branch fires';
+
+# ----- if/elsif/else -----
+is HAML.render(
+  :src("- if \$x == 1\n  %p one\n- elsif \$x == 2\n  %p two\n- else\n  %p other\n"),
+  :locals(%(:x(1))),
+), "<p>one</p>\n", 'if-chain: first branch';
+
+is HAML.render(
+  :src("- if \$x == 1\n  %p one\n- elsif \$x == 2\n  %p two\n- else\n  %p other\n"),
+  :locals(%(:x(2))),
+), "<p>two</p>\n", 'if-chain: elsif branch';
+
+is HAML.render(
+  :src("- if \$x == 1\n  %p one\n- elsif \$x == 2\n  %p two\n- else\n  %p other\n"),
+  :locals(%(:x(9))),
+), "<p>other</p>\n", 'if-chain: else branch';
+
+# Multiple elsifs
+is HAML.render(
+  :src("- if \$x == 1\n  %p a\n- elsif \$x == 2\n  %p b\n- elsif \$x == 3\n  %p c\n"),
+  :locals(%(:x(3))),
+), "<p>c</p>\n", 'if-chain: third elsif';
+
+# ----- nested if -----
+is HAML.render(
+  :src("%div\n  - if True\n    %p hi\n"),
+), "<div>\n  <p>hi</p>\n</div>\n",
+  'if nested under tag';
+
+# ----- for: Raku-native form -----
+is HAML.render(
+  :src("- for \$items -> \$x\n  = \$x\n"),
+  :locals(%(:items([1,2,3]))),
+), "1\n2\n3\n",
+  'for ITER -> VAR loops';
+
+# ----- for: in-form -----
+is HAML.render(
+  :src("- for \$x in \$items\n  = \$x\n"),
+  :locals(%(:items(<a b c>))),
+), "a\nb\nc\n",
+  'for VAR in ITER loops';
+
+# ----- for empty -----
+is HAML.render(
+  :src("- for \$x in \$items\n  %li = \$x\n"),
+  :locals(%(:items([]))),
+), '',
+  'for over empty array emits nothing';
+
+# ----- for nested -----
+is HAML.render(
+  :src("%ul\n  - for \$x in \$items\n    = \$x\n"),
+  :locals(%(:items([1,2]))),
+), "<ul>\n  1\n  2\n</ul>\n",
+  'for nested inside tag';
+
+# Loop variable is visible in nested expressions
+is HAML.render(
+  :src("- for \$x in \$items\n  %p\n    = \$x\n"),
+  :locals(%(:items([10]))),
+), "<p>\n  10\n</p>\n",
+  'loop variable visible in deeper nested =';
+
+# Loop var doesn't leak after loop body (sibling can't see it)
+throws-like {
+  HAML.render(
+    :src("- for \$x in \$items\n  = \$x\n= \$x\n"),
+    :locals(%(:items([1]))),
+  )
+}, X::HAML::Eval, 'loop variable does not leak to siblings';
+
+# ----- while -----
+is HAML.render(
+  :src("- while \$items.elems\n  = \$items.shift\n"),
+  :locals(%(:items([1,2,3]))),
+), "1\n2\n3\n",
+  'while drains a mutable array';
+
+is HAML.render(
+  :src("- while False\n  %p hi\n"),
+), '', 'while False emits nothing';
+
+# ----- given/when/default -----
+is HAML.render(
+  :src("- given \$x\n  - when 1\n    %p one\n  - when 2\n    %p two\n  - default\n    %p other\n"),
+  :locals(%(:x(1))),
+), "<p>one</p>\n", 'given/when: first match';
+
+is HAML.render(
+  :src("- given \$x\n  - when 1\n    %p one\n  - when 2\n    %p two\n  - default\n    %p other\n"),
+  :locals(%(:x(2))),
+), "<p>two</p>\n", 'given/when: second match';
+
+is HAML.render(
+  :src("- given \$x\n  - when 1\n    %p one\n  - when 2\n    %p two\n  - default\n    %p other\n"),
+  :locals(%(:x(9))),
+), "<p>other</p>\n", 'given/when: default fires';
+
+# given/when with no default and no match -> empty
+is HAML.render(
+  :src("- given \$x\n  - when 1\n    %p one\n"),
+  :locals(%(:x(9))),
+), '', 'given/when: no match no default';
+
+# given/when first match wins
+is HAML.render(
+  :src("- given \$x\n  - when Int\n    %p int\n  - when 1\n    %p one\n"),
+  :locals(%(:x(1))),
+), "<p>int</p>\n", 'given/when: first match wins (smartmatch type)';
+
+# ----- orphan elsif/else -----
+throws-like {
+  HAML.render(:src("- elsif True\n  %p x\n"))
+}, X::HAML::OrphanElse, 'orphan elsif raises';
+
+throws-like {
+  HAML.render(:src("- else\n  %p x\n"))
+}, X::HAML::OrphanElse, 'orphan else raises';
+
+# ----- = also works inside control bodies -----
+is HAML.render(
+  :src("- if True\n  = 'yo'\n"),
+), "yo\n", '= inside if body';
+
+# ----- mixed siblings around if-chain -----
+is HAML.render(
+  :src("%p before\n- if True\n  %p mid\n%p after\n"),
+), "<p>before</p>\n<p>mid</p>\n<p>after</p>\n",
+  'siblings around if-chain render correctly';
+
+# ----- for over hash values -----
+is HAML.render(
+  :src("- for \$nums -> \$n\n  = \$n * 10\n"),
+  :locals(%(:nums([1,2,3]))),
+), "10\n20\n30\n",
+  '= sees loop variable inside body';
+
+# ----- nested for -----
+is HAML.render(
+  :src("- for \$x in \$as\n  - for \$y in \$bs\n    %p\n      = \$x ~ \$y\n"),
+  :locals(%(:as(<x y>), :bs(<1 2>))),
+), "<p>\n  x1\n</p>\n<p>\n  x2\n</p>\n<p>\n  y1\n</p>\n<p>\n  y2\n</p>\n",
+  'nested for produces cartesian output';
+
+# ----- elsif without else after a falsey if -----
+is HAML.render(
+  :src("- if False\n  %p a\n- elsif True\n  %p b\n"),
+), "<p>b</p>\n", 'if/elsif (no else) elsif fires';
+
+is HAML.render(
+  :src("- if False\n  %p a\n- elsif False\n  %p b\n"),
+), '', 'if/elsif (no else) nothing matches';
+
+# ----- nested control flow -----
+is HAML.render(
+  :src("- for \$x in \$xs\n  - if \$x > 1\n    %p big\n  - else\n    %p small\n"),
+  :locals(%(:xs([1,2,3]))),
+), "<p>small</p>\n<p>big</p>\n<p>big</p>\n",
+  'if/else nested inside for';

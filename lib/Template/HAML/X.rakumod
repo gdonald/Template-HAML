@@ -62,6 +62,13 @@ class X::HAML::Eval is X::HAML {
   }
 }
 
+class X::HAML::OrphanElse is X::HAML {
+  has Str $.kind;
+  method message {
+    self.loc ~ " '$!kind' has no preceding 'if' or 'unless'"
+  }
+}
+
 class X::IllegalIndent is X::HAML::IllegalIndent { }
 class X::DuplicateId  is X::HAML::DuplicateId   { }
 

@@ -11,6 +11,7 @@ nav:
     - Doctype: syntax/doctype.md
     - Comments: syntax/comments.md
     - Embedded code: syntax/embedded-code.md
+    - Control flow: syntax/control-flow.md
   - API: api.md
   - Tests: testing.md
 theme:

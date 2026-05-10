@@ -18,7 +18,11 @@ class Comment is export {
     Bool :$!revealed  = False,
   ) {}
 
-  method get-indent { ' ' x ($!indent * $!output-indent-width) }
+  method get-indent(Int :$offset = 0) {
+    my $level = $!indent - $offset;
+    $level = 0 if $level < 0;
+    ' ' x ($level * $!output-indent-width);
+  }
 
   method open-tag(--> Str) {
     return '' if $!silent;

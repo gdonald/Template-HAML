@@ -20,6 +20,29 @@ sub decode-sq(Str $s --> Str) {
   $s.subst(/'\\' (.)/, -> $/ { $0.Str }, :g);
 }
 
+sub parse-control(Str $op, Str $expr) {
+  return %( kind => 'expression', expr => $expr ) unless $op eq '-';
+
+  given $expr {
+    when /^ 'if'      \s+ (.+) $ /  { return %( kind => 'if',     expr => ~$0.trim ) }
+    when /^ 'unless'  \s+ (.+) $ /  { return %( kind => 'unless', expr => ~$0.trim ) }
+    when /^ 'elsif'   \s+ (.+) $ /  { return %( kind => 'elsif',  expr => ~$0.trim ) }
+    when /^ 'else' \s* $ /          { return %( kind => 'else',   expr => '' ) }
+    when /^ 'while'   \s+ (.+) $ /  { return %( kind => 'while',  expr => ~$0.trim ) }
+    when /^ 'given'   \s+ (.+) $ /  { return %( kind => 'given',  expr => ~$0.trim ) }
+    when /^ 'when'    \s+ (.+) $ /  { return %( kind => 'when',   expr => ~$0.trim ) }
+    when /^ 'default' \s* $ /       { return %( kind => 'default', expr => '' ) }
+    when /^ 'for' \s+ '$' (\w+) \s+ 'in' \s+ (.+) $ / {
+      return %( kind => 'for', expr => '', loop-var => ~$0, loop-iter => ~$1.trim );
+    }
+    when /^ 'for' \s+ (.+) \s+ '->' \s+ '$' (\w+) \s* $ / {
+      return %( kind => 'for', expr => '', loop-iter => ~$0.trim, loop-var => ~$1 );
+    }
+  }
+
+  %( kind => 'expression', expr => $expr );
+}
+
 sub decode-dq(Str $s --> Str) {
   $s.subst(/'\\' (.)/, -> $/ {
     given $0.Str {
@@ -102,8 +125,14 @@ class Actions is export {
     my $op     = $/<output-op>.Str;
     my $expr   = $/<expr>.Str.trim;
 
+    my %ctrl = parse-control($op, $expr);
+
     my $object = Statement.new(
-      :$indent, :$op, :$expr, :$line, :$column,
+      :$indent, :$op, :$line, :$column,
+      expr      => %ctrl<expr>,
+      kind      => %ctrl<kind>,
+      loop-var  => %ctrl<loop-var>  // '',
+      loop-iter => %ctrl<loop-iter> // '',
       :output-indent-width($!output-indent-width),
     );
     self.add-node($object);
