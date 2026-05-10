@@ -1,5 +1,6 @@
 
 use Template::HAML::Comment;
+use Template::HAML::Config;
 use Template::HAML::Doctype;
 use Template::HAML::Eval;
 use Template::HAML::Filter;
@@ -33,9 +34,30 @@ sub resolve-attrs(@attrs, %locals) {
 class Renderer is export {
   has %.locals;
   has Int $.max-while-iters = 10000;
+  has Template::HAML::Config $.config;
+
+  submethod BUILD(
+    :%!locals,
+    Int :$!max-while-iters = 10000,
+    Template::HAML::Config :$config,
+  ) {
+    $!config = $config // Template::HAML::Config.new;
+  }
 
   method render(Node:D $tree) {
-    self.render-node($tree, %!locals, 0);
+    my $out = self.render-node($tree, %!locals, 0);
+    $out = self.compress($out) if $!config.is-ugly;
+    $out;
+  }
+
+  method compress(Str $html --> Str) {
+    $html.lines.map(*.trim).grep(*.chars).join('');
+  }
+
+  method should-escape(Statement:D $obj --> Bool) {
+    return True  if $obj.op eq '&=';
+    return False if $obj.op eq '!=';
+    $!config.escape-html;
   }
 
   method render-node(Node:D $node, %locals, Int $offset) {
@@ -242,6 +264,13 @@ class Renderer is export {
       return $own ~ $kids;
     }
 
+    if $!config.suppress-eval {
+      my $kids = $node.children.elems
+        ?? self.render-children($node, %locals, $offset)
+        !! '';
+      return $kids;
+    }
+
     my $value = eval-haml(
       $obj.expr, %locals,
       :line($obj.line), :column($obj.column),
@@ -250,7 +279,7 @@ class Renderer is export {
     my $own = '';
     if $obj.outputs {
       my $str = $value.defined ?? $value.Str !! '';
-      $str = html-escape($str) if $obj.escape;
+      $str = html-escape($str) if self.should-escape($obj);
       $own  = $obj.get-indent(:$offset) ~ $str ~ "\n";
     }
 

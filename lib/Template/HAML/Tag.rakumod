@@ -1,9 +1,6 @@
 
+use Template::HAML::Config;
 use Template::HAML::X;
-
-constant @VOID-ELEMENTS = <
-  area base br col embed hr img input link meta param source track wbr
->;
 
 sub html-escape(Str $s --> Str) {
   $s.subst('&', '&amp;', :g)
@@ -32,6 +29,7 @@ class Tag is export {
   has Bool $.self-close     is rw = False;
   has Bool $.trim-outer     = False;
   has Bool $.trim-inner     = False;
+  has Template::HAML::Config $.config;
 
   submethod BUILD(
     :$!indent, :$!name, :@attrs, :$!content,
@@ -41,8 +39,10 @@ class Tag is export {
     Bool :$!trim-inner = False,
     Int  :$!output-indent-width = 2,
     Int  :$!line, Int :$!column,
+    Template::HAML::Config :$!config,
   ) {
     @!attrs = @attrs.list;
+    $!config //= Template::HAML::Config.new;
 
     self.merge-shorthands;
 
@@ -51,10 +51,16 @@ class Tag is export {
     }
   }
 
-  method is-void { $!name (elem) @VOID-ELEMENTS }
+  method is-void { $!config.is-void($!name) }
 
   method open(Int :$offset = 0, :@attrs = @!attrs) {
-    self.get-indent(:$offset) ~ '<' ~ $!name ~ self.render-attrs(:@attrs) ~ '>';
+    self.get-indent(:$offset) ~ '<' ~ $!name ~ self.render-attrs(:@attrs) ~ self.open-suffix;
+  }
+
+  method open-suffix(--> Str) {
+    return ' />' if $!self-close && $!config.is-xhtml;
+    return '>' if $!self-close && $!config.is-html;
+    '>';
   }
 
   method close {
@@ -135,7 +141,7 @@ class Tag is export {
   method render-attr-pair(Str $key, $value) {
     return Nil if !$value.defined;
     return Nil if $value === False;
-    return $key if $value === True;
+    return self.render-bool-attr($key) if $value === True;
 
     if ($key eq 'data' || $key eq 'aria') && is-pair-list($value) {
       my @sub = self.expand-prefix($key, $value);
@@ -159,6 +165,11 @@ class Tag is export {
     self.format-attr($key, $value.Str);
   }
 
+  method render-bool-attr(Str $key --> Str) {
+    return self.format-attr($key, $key) if $!config.is-xhtml;
+    $key;
+  }
+
   method expand-prefix(Str $prefix, $value) {
     my @result;
     for $value.list -> $p {
@@ -174,6 +185,15 @@ class Tag is export {
   }
 
   method format-attr(Str $key, Str $value --> Str) {
-    "$key='" ~ html-escape($value) ~ "'";
+    my $q = $!config.attr-quote;
+    my $val;
+    if $!config.escape-attrs {
+      $val = html-escape($value);
+    } else {
+      $val = $value;
+      my $entity = $q eq "'" ?? '&#39;' !! '&quot;';
+      $val = $val.subst($q, $entity, :g);
+    }
+    "$key=$q" ~ $val ~ $q;
   }
 }

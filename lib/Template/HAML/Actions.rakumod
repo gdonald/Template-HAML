@@ -1,5 +1,6 @@
 
 use Template::HAML::Comment;
+use Template::HAML::Config;
 use Template::HAML::Doctype;
 use Template::HAML::Filter;
 use Template::HAML::Interpolation;
@@ -90,12 +91,16 @@ class Actions is export {
   has Str $!indent-leader;
   has Int $!indent-unit;
 
-  has Int $.output-indent-width = 2;
-  has Str $.format = 'html5';
+  has Template::HAML::Config $.config;
+  has Int $.output-indent-width;
+  has Str $.format;
 
   has Bool $!seen-content = False;
 
-  submethod BUILD(Node:D :$!tree) {
+  submethod BUILD(Node:D :$!tree, Template::HAML::Config :$config) {
+    $!config = $config // Template::HAML::Config.new;
+    $!output-indent-width = $!config.output-indent-width;
+    $!format              = $!config.format;
     $!current-node = $!tree.children.first;
   }
 
@@ -140,6 +145,7 @@ class Actions is export {
       :$self-close, :$trim-outer, :$trim-inner,
       :$line, :$column,
       :output-indent-width($!output-indent-width),
+      :config($!config),
     );
     self.add-node($object);
     $!seen-content = True;
@@ -256,6 +262,7 @@ class Actions is export {
     my $object = Doctype.new(
       :indent(0), :$line, :$column,
       :$arg, :$encoding, :$!format,
+      :config($!config),
     );
     self.add-node($object);
   }

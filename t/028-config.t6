@@ -1,0 +1,176 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Template::HAML::Config;
+use Test;
+
+plan 34;
+
+# 10.1 Configuration object
+{
+  my $cfg = Template::HAML::Config.new;
+  is $cfg.format,        'html5',  'default format is html5';
+  is $cfg.escape-html,   True,     'default escape-html is True';
+  is $cfg.escape-attrs,  True,     'default escape-attrs is True';
+  is $cfg.output-style,  'pretty', 'default output-style is pretty';
+  is $cfg.attr-quote,    "'",      "default attr-quote is '";
+  is $cfg.encoding,      'utf-8',  'default encoding is utf-8';
+  is $cfg.suppress-eval, False,    'default suppress-eval is False';
+}
+
+# Validation
+dies-ok { Template::HAML::Config.new(:format<bogus>) }, 'invalid format dies';
+dies-ok { Template::HAML::Config.new(:output-style<weird>) }, 'invalid output-style dies';
+dies-ok { Template::HAML::Config.new(:attr-quote<x>) }, 'invalid attr-quote dies';
+
+# 10.2 Format option — XHTML void self-close
+{
+  my $cfg = Template::HAML::Config.new(:format<xhtml>);
+  is HAML.render(:src("%br\n"), :config($cfg)),
+     "<br />\n",
+     'XHTML void emits self-close with space-slash';
+
+  is HAML.render(:src("%img\n"), :config($cfg)),
+     "<img />\n",
+     'XHTML void %img emits <img />';
+}
+
+# 10.2 Format option — HTML5 void no self-close marker
+{
+  my $cfg = Template::HAML::Config.new(:format<html5>);
+  is HAML.render(:src("%br\n"), :config($cfg)),
+     "<br>\n",
+     'HTML5 void emits bare tag';
+}
+
+# 10.2 Format affects boolean attribute rendering
+{
+  my $cfg = Template::HAML::Config.new(:format<xhtml>);
+  is HAML.render(:src("%input\(disabled\)\n"), :config($cfg)),
+     "<input disabled='disabled' />\n",
+     'XHTML boolean attr uses name=name form';
+
+  my $cfg5 = Template::HAML::Config.new(:format<html5>);
+  is HAML.render(:src("%input\(disabled\)\n"), :config($cfg5)),
+     "<input disabled>\n",
+     'HTML5 boolean attr is bare';
+}
+
+# 10.2 Default doctype follows format
+{
+  my $cfg-html5 = Template::HAML::Config.new(:format<html5>);
+  is HAML.render(:src("!!!\n"), :config($cfg-html5)),
+     "<!DOCTYPE html>\n",
+     'HTML5 default doctype';
+
+  my $cfg-html4 = Template::HAML::Config.new(:format<html4>);
+  like HAML.render(:src("!!!\n"), :config($cfg-html4)),
+     /'HTML 4.01 Transitional'/,
+     'HTML4 default doctype';
+
+  my $cfg-xhtml = Template::HAML::Config.new(:format<xhtml>);
+  like HAML.render(:src("!!!\n"), :config($cfg-xhtml)),
+     /'XHTML 1.0 Transitional'/,
+     'XHTML default doctype';
+}
+
+# 10.3 escape_html
+{
+  my $cfg = Template::HAML::Config.new(:escape-html(False));
+  is HAML.render(:src("= \$x\n"), :locals(%(x => '<b>')), :config($cfg)),
+     "<b>\n",
+     'escape-html False: = does not escape';
+
+  my $cfg-on = Template::HAML::Config.new(:escape-html(True));
+  is HAML.render(:src("= \$x\n"), :locals(%(x => '<b>')), :config($cfg-on)),
+     "&lt;b&gt;\n",
+     'escape-html True: = does escape';
+
+  is HAML.render(:src("\&= \$x\n"), :locals(%(x => '<b>')), :config($cfg)),
+     "&lt;b&gt;\n",
+     'escape-html False: &= still escapes (force escape)';
+
+  is HAML.render(:src("!= \$x\n"), :locals(%(x => '<b>')), :config($cfg-on)),
+     "<b>\n",
+     'escape-html True: != still does not escape';
+}
+
+# 10.3 escape_attrs
+{
+  my $cfg-off = Template::HAML::Config.new(:escape-attrs(False));
+  is HAML.render(:src("%a\{href: 'a&b'\}\n"), :config($cfg-off)),
+     "<a href='a&b'></a>\n",
+     'escape-attrs False: ampersand left raw';
+
+  my $cfg-on = Template::HAML::Config.new(:escape-attrs(True));
+  is HAML.render(:src("%a\{href: 'a&b'\}\n"), :config($cfg-on)),
+     "<a href='a&amp;b'></a>\n",
+     'escape-attrs True (default): ampersand escaped';
+}
+
+# 10.4 Output style — ugly
+{
+  my $cfg = Template::HAML::Config.new(:output-style<ugly>);
+  is HAML.render(:src("%div\n  %p hi\n"), :config($cfg)),
+     '<div><p>hi</p></div>',
+     'ugly: no whitespace between tags';
+}
+
+# 10.5 autoclose customization
+{
+  my $cfg = Template::HAML::Config.new(:autoclose(<custom-tag br>), :format<xhtml>);
+  is HAML.render(:src("%custom-tag\n"), :config($cfg)),
+     "<custom-tag />\n",
+     'autoclose adds new void elements';
+
+  is HAML.render(:src("%img\n"), :config($cfg)),
+     "<img></img>\n",
+     'autoclose without img: img is no longer void';
+}
+
+# 10.6 Encoding for XML doctype
+{
+  my $cfg = Template::HAML::Config.new(:encoding<iso-8859-1>);
+  is HAML.render(:src("!!! XML\n"), :config($cfg)),
+     "<?xml version='1.0' encoding='iso-8859-1' ?>\n",
+     'encoding option drives XML decl';
+}
+
+# 10.7 attr_quote
+{
+  my $cfg = Template::HAML::Config.new(:attr-quote('"'));
+  is HAML.render(:src("%a\{href: '/'\}\n"), :config($cfg)),
+     qq{<a href="/"></a>\n},
+     'attr-quote " uses double quotes';
+}
+
+# 10.7 suppress_eval
+{
+  my $cfg = Template::HAML::Config.new(:suppress-eval);
+  is HAML.render(:src("= \$x\n"), :locals(%(x => 'hello')), :config($cfg)),
+     "",
+     'suppress-eval: = produces no output';
+
+  is HAML.render(:src("- my \$z = 1\n%p hi\n"), :config($cfg)),
+     "<p>hi</p>\n",
+     'suppress-eval: - skipped, but tags still render';
+}
+
+# Default config singleton round-trip — class-level render still works
+is HAML.render(:src("%p hi\n")),
+   "<p>hi</p>\n",
+   'class-level render with no config still works';
+
+# Per-render config overrides instance config
+{
+  my $h = HAML.new(:config(Template::HAML::Config.new(:format<xhtml>)));
+  is $h.render(:src("%br\n")),
+     "<br />\n",
+     'instance config XHTML produces self-close';
+
+  my $cfg5 = Template::HAML::Config.new(:format<html5>);
+  is $h.render(:src("%br\n"), :config($cfg5)),
+     "<br>\n",
+     'per-render config overrides instance config';
+}

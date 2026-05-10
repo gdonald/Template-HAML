@@ -6,6 +6,7 @@ The public surface of Template::HAML is small today.
 
 ```raku
 use Template::HAML;
+use Template::HAML::Config;
 
 my Str $html = HAML.render(:src("..."));
 
@@ -13,16 +14,23 @@ my Str $html = HAML.render(
   :src("= \$name\n"),
   :locals(%(:name<World>)),
 );
+
+my $cfg = Template::HAML::Config.new(:format<xhtml>);
+my Str $html = HAML.render(:src("%br\n"), :config($cfg));
 ```
 
 | Parameter | Type    | Description                                                          |
 |-----------|---------|----------------------------------------------------------------------|
 | `:src`    | `Str:D` | The HAML source to parse and render.                                 |
 | `:locals` | `%h`    | Optional name → value map; each key is bound as a `$name` lexical visible to embedded Raku in `=`/`-`/`!=`/`&=` lines. |
+| `:config` | `Template::HAML::Config` | Optional rendering options. See [Configuration](syntax/config.md). |
 
 Returns the rendered HTML as a `Str`.
 
-`HAML` is exported as a class from the `Template::HAML` module. There is no instance state today; `HAML.render` is effectively a class method.
+`HAML.render` may be called as either a class method (a fresh default config is
+used) or an instance method (the instance's stored config is used unless
+`:config` is passed at the call site). Construct an instance via
+`HAML.new(:config(...))` to reuse the same config across renders.
 
 ## `register-filter`
 
@@ -59,6 +67,7 @@ The implementation is split across several modules under `lib/Template/HAML/`. T
 | `Template::HAML::Renderer`   | Walks the parse tree and emits HTML.                          |
 | `Template::HAML::Filter`     | AST node representing a filter line and its dedented body.    |
 | `Template::HAML::Filters`    | Filter registry plus the built-in filter handlers.            |
+| `Template::HAML::Config`     | Per-render configuration: format, escape options, output style, etc. |
 | `Template::HAML::X`          | Exception types raised by the parser.                         |
 
 ## Exceptions

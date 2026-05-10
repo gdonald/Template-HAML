@@ -1,4 +1,5 @@
 
+use Template::HAML::Config;
 use Template::HAML::X;
 
 class Doctype is export {
@@ -8,11 +9,15 @@ class Doctype is export {
   has Str $.arg;
   has Str $.encoding;
   has Str $.format = 'html5';
+  has Template::HAML::Config $.config;
 
   submethod BUILD(
     Int :$!indent = 0, Int :$!line, Int :$!column,
     Str :$!arg = '', Str :$!encoding = '', Str :$!format = 'html5',
-  ) {}
+    Template::HAML::Config :$!config,
+  ) {
+    $!config //= Template::HAML::Config.new(:$!format);
+  }
 
   method render(--> Str) {
     given $!arg {
@@ -34,16 +39,11 @@ class Doctype is export {
   }
 
   method default-doctype(--> Str) {
-    given $!format {
-      when 'html5'  { '<!DOCTYPE html>' }
-      when 'html4'  { '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">' }
-      when 'xhtml'  { '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">' }
-      default       { '<!DOCTYPE html>' }
-    }
+    $!config.default-doctype;
   }
 
   method xml-decl(--> Str) {
-    my $enc = $!encoding || 'utf-8';
+    my $enc = $!encoding || $!config.encoding || 'utf-8';
     "<?xml version='1.0' encoding='$enc' ?>";
   }
 }
