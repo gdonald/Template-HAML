@@ -8,7 +8,7 @@ use Template::HAML::Node;
 use Template::HAML::X;
 use Test;
 
-plan 65;
+plan 67;
 
 my $tree = Node.new;
 my $root-node = Node.new;
@@ -32,12 +32,18 @@ $m = Grammar.parse('#', :rule<sigil>, :$actions);
 ok $m.Str eq '#';
 
 
-# <op>
-$m = Grammar.parse('=', :rule<op>, :$actions);
+# <output-op>
+$m = Grammar.parse('=', :rule<output-op>, :$actions);
 ok $m.Str eq '=';
 
-$m = Grammar.parse('-', :rule<op>, :$actions);
+$m = Grammar.parse('-', :rule<output-op>, :$actions);
 ok $m.Str eq '-';
+
+$m = Grammar.parse('!=', :rule<output-op>, :$actions);
+ok $m.Str eq '!=';
+
+$m = Grammar.parse('&=', :rule<output-op>, :$actions);
+ok $m.Str eq '&=';
 
 
 # <param-key>

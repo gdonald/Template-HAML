@@ -16,6 +16,6 @@ my $expected;
 my $rendered;
 
 Grammar.parse("%section.container", :rule<tag>, :$actions);
-$rendered = Renderer.render($actions.tree);
+$rendered = Renderer.new.render($actions.tree);
 $expected = "<section class='container'></section>\n";
 ok $expected eq $rendered;

@@ -6,7 +6,7 @@ use Template::HAML::Grammar;
 use Template::HAML::X;
 
 class HAML is export {
-  method render(Str:D :$src) {
+  method render(Str:D :$src, :%locals) {
     my $tree = Node.new;
     $tree.add-child(Node.new);
     my $actions = Actions.new(:$tree);
@@ -18,6 +18,6 @@ class HAML is export {
       X::HAML::ParseFail.new(:line(1), :column(1), :snippet($normalized.lines.first // '')).throw;
     }
 
-    Renderer.render($actions.tree);
+    Renderer.new(:%locals).render($actions.tree);
   }
 }

@@ -5,6 +5,18 @@ class Statement is export {
   has Int $.column;
   has Str $.op;
   has Str $.expr;
+  has Int $.output-indent-width = 2;
 
-  submethod BUILD(:$!indent, :$!op, :$!expr, Int :$!line, Int :$!column) { }
+  submethod BUILD(
+    Int :$!indent, Str :$!op, Str :$!expr,
+    Int :$!line, Int :$!column,
+    Int :$!output-indent-width = 2,
+  ) {}
+
+  method get-indent { ' ' x ($!indent * $!output-indent-width) }
+
+  method silent     { $!op eq '-'                    }
+  method escape     { $!op eq '=' || $!op eq '&='   }
+  method raw-output { $!op eq '!='                   }
+  method outputs    { !self.silent                   }
 }

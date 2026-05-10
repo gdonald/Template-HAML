@@ -1,11 +1,23 @@
 
 use Template::HAML::Comment;
 use Template::HAML::Doctype;
+use Template::HAML::Eval;
 use Template::HAML::Node;
+use Template::HAML::Statement;
 use Template::HAML::Tag;
 use Template::HAML::X;
 
+sub html-escape(Str $s --> Str) {
+  $s.subst('&', '&amp;', :g)
+    .subst('<', '&lt;',  :g)
+    .subst('>', '&gt;',  :g)
+    .subst('"', '&quot;', :g)
+    .subst("'", '&#39;', :g);
+}
+
 class Renderer is export {
+  has %.locals;
+
   method render(Node:D $tree) {
     self.render-node($tree);
   }
@@ -23,6 +35,10 @@ class Renderer is export {
 
     if $obj ~~ Comment {
       return self.render-comment($node);
+    }
+
+    if $obj ~~ Statement {
+      return self.render-statement($node);
     }
 
     if $obj ~~ Tag && $obj.is-void && $node.children.elems {
@@ -70,5 +86,20 @@ class Renderer is export {
       $body = $obj.condition ?? $text !! " $text ";
     }
     $indent ~ $obj.open-tag ~ $body ~ $obj.close-tag ~ "\n";
+  }
+
+  method render-statement(Node:D $node) {
+    my $obj   = $node.object;
+    my $value = eval-haml($obj.expr, %!locals, :line($obj.line), :column($obj.column));
+
+    my $own = '';
+    if $obj.outputs {
+      my $str = $value.defined ?? $value.Str !! '';
+      $str = html-escape($str) if $obj.escape;
+      $own  = $obj.get-indent ~ $str ~ "\n";
+    }
+
+    my $kids = $node.children.elems ?? self.render-children($node) !! '';
+    $own ~ $kids;
   }
 }

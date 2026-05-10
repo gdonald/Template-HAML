@@ -99,10 +99,13 @@ class Actions is export {
   method statement($/) {
     my ($line, $column) = pos-to-line-col($/);
     my $indent = self.compute-level($/<indent>);
-    my $op     = $/<op>.Str;
-    my $expr   = $/<expr>.Str;
+    my $op     = $/<output-op>.Str;
+    my $expr   = $/<expr>.Str.trim;
 
-    my $object = Statement.new(:$indent, :$op, :$expr, :$line, :$column);
+    my $object = Statement.new(
+      :$indent, :$op, :$expr, :$line, :$column,
+      :output-indent-width($!output-indent-width),
+    );
     self.add-node($object);
     $!seen-content = True;
   }

@@ -1,0 +1,83 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Template::HAML::X;
+use Test;
+
+plan 23;
+
+# = expr — eval, escape, emit
+is HAML.render(:src("= 1 + 2\n")), "3\n", '= simple arithmetic';
+is HAML.render(:src("= 'hi'\n")),  "hi\n", '= literal string';
+
+# = expr with locals
+is HAML.render(:src("= \$name\n"),    :locals(%(:name<World>))),    "World\n",   '= reads local';
+is HAML.render(:src("= \$x * \$y\n"), :locals(%(:x(3), :y(4)))),    "12\n",      '= reads multiple locals';
+
+# = escapes by default
+is HAML.render(:src("= '<b>x</b>'\n")), "&lt;b&gt;x&lt;/b&gt;\n", '= HTML-escapes output';
+
+# != expr — raw
+is HAML.render(:src("!= '<b>x</b>'\n")), "<b>x</b>\n", '!= leaves raw HTML';
+
+# &= expr — force escape
+is HAML.render(:src("&= '<b>x</b>'\n")), "&lt;b&gt;x&lt;/b&gt;\n", '&= escapes output';
+
+# - expr — silent
+is HAML.render(:src("- 1 + 2\n")), '', '- emits nothing';
+
+# - expr keeps children rendered after it
+is HAML.render(:src("- my \$x = 1\n%p hi\n")), "<p>hi</p>\n", '- silent does not break sibling rendering';
+
+# Indentation is preserved on output
+is HAML.render(:src("%div\n  = 1 + 1\n")), "<div>\n  2\n</div>\n", '= respects indent within tag';
+
+# Raku string ops
+is HAML.render(:src("= 'a' ~ 'b'\n")), "ab\n", '= string concat';
+
+# Numeric falsy => Nil-like
+is HAML.render(:src("= Nil\n")), "\n", '= Nil emits empty';
+is HAML.render(:src("= 0\n")),   "0\n", '= 0 emits 0';
+
+# Locals visible from inside a tag block
+is HAML.render(
+  :src("%ul\n  = \$item\n"),
+  :locals(%(:item<one>)),
+), "<ul>\n  one\n</ul>\n", 'locals visible inside nested block';
+
+# Nested tag with - expr beside it
+is HAML.render(
+  :src("- my \$count = 5\n%p hi\n"),
+), "<p>hi</p>\n", '- can declare a lexical without affecting other lines';
+
+# Multiple statements
+is HAML.render(:src("= 1\n= 2\n= 3\n")), "1\n2\n3\n", 'multiple = lines emit each';
+
+# Eval failure raises X::HAML::Eval
+throws-like { HAML.render(:src("= no_such_sub_xyzzy()\n")) }, X::HAML::Eval,
+  'undefined sub raises X::HAML::Eval';
+
+# Locals work via List, Hash, etc.
+is HAML.render(
+  :src("= \$items.elems\n"),
+  :locals(%(:items([1,2,3,4]))),
+), "4\n", '= sees array-typed local';
+
+is HAML.render(
+  :src("= \$cfg<title>\n"),
+  :locals(%(:cfg(%(:title<Hello>)))),
+), "Hello\n", '= sees hash-typed local';
+
+# Boolean
+is HAML.render(:src("= True\n")),  "True\n",  '= renders True';
+is HAML.render(:src("= False\n")), "False\n", '= renders False';
+
+# Exception carries position info
+sub trap-eval(&body) {
+  try { body(); CATCH { when X::HAML::Eval { return $_ } } }
+  Nil;
+}
+my $err = trap-eval({ HAML.render(:src("\n= no_such_sub_xyzzy()\n")) });
+ok $err.defined,                  'caught X::HAML::Eval';
+ok $err.line == 2,                'X::HAML::Eval has source line';

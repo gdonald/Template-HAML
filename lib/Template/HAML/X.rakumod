@@ -54,6 +54,14 @@ class X::HAML::DoctypeNotFirst is X::HAML {
   }
 }
 
+class X::HAML::Eval is X::HAML {
+  has Str $.code;
+  has Str $.reason;
+  method message {
+    self.loc ~ " failed to evaluate `$!code`" ~ ($!reason ?? ": $!reason" !! '')
+  }
+}
+
 class X::IllegalIndent is X::HAML::IllegalIndent { }
 class X::DuplicateId  is X::HAML::DuplicateId   { }
 

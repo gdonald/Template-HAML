@@ -10,6 +10,7 @@ nav:
     - Indentation: syntax/indentation.md
     - Doctype: syntax/doctype.md
     - Comments: syntax/comments.md
+    - Embedded code: syntax/embedded-code.md
   - API: api.md
   - Tests: testing.md
 theme:

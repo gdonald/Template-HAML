@@ -13,10 +13,9 @@ grammar Grammar is export {
   token number  { '-'? \d+ [ '.' \d+ ]? }
   token bool    { 'True' | 'False' | 'true' | 'false' | 'Nil' }
   token to-eol  { \N* }
-  token expr    { \N* }
+  token expr    { \N+ }
   token sigil   { <[%.#]> }
-  token op      { <[=\-]> }
-  token if      { if }
+  token output-op { '!=' | '&=' | '==' | '=' | '-' }
 
   token indent { ^^ \h* }
 
@@ -85,7 +84,7 @@ grammar Grammar is export {
     <.eol>
   }
 
-  token statement { <indent> <op> <.ws> <if> <.ws> <expr> <.eol> }
+  token statement { <indent> <output-op> <.ws> <expr> <.eol> }
 
   token comment-condition { '[' $<cond>=( <-[ \] ]>+ ) ']' }
   token comment-revealed  { '!' }
@@ -108,7 +107,7 @@ grammar Grammar is export {
   multi token line:sym<filter>         { ^^ \h* ':' <word> <.eol> }
   multi token line:sym<statement>      { <statement> }
   multi token line:sym<tag>            { <tag> }
-  multi token line:sym<plain>          { ^^ \h* <!before <[%.#=\-:/!]>> \N <to-eol> <.eol> }
+  multi token line:sym<plain>          { ^^ \h* <!before <[%.#=\-:/!&]>> \N <to-eol> <.eol> }
 
   rule TOP {
     <line>*
