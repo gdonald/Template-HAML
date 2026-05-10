@@ -31,6 +31,9 @@ sub resolve-attrs(@attrs, %locals) {
   }).list;
 }
 
+constant TRIM-BEFORE = "\x[E000]";
+constant TRIM-AFTER  = "\x[E001]";
+
 class Renderer is export {
   has %.locals;
   has Int $.max-while-iters = 10000;
@@ -46,8 +49,16 @@ class Renderer is export {
 
   method render(Node:D $tree) {
     my $out = self.render-node($tree, %!locals, 0);
+    $out = self.apply-trim-markers($out);
     $out = self.compress($out) if $!config.is-ugly;
     $out;
+  }
+
+  method apply-trim-markers(Str $html --> Str) {
+    my $tb = TRIM-BEFORE;
+    my $ta = TRIM-AFTER;
+    $html.subst(/\s* $tb \s*/, '', :g)
+         .subst(/\s* $ta \s*/, '', :g);
   }
 
   method compress(Str $html --> Str) {
@@ -98,20 +109,39 @@ class Renderer is export {
     my @resolved = resolve-attrs($obj.attrs, %locals);
     my $content  = self.interpolate-content($obj, %locals);
 
-    if $obj ~~ Tag && $obj.self-close {
-      return $obj.open(:$offset, :attrs(@resolved)) ~ $obj.close;
+    my $open  = $obj.open(:$offset, :attrs(@resolved));
+    my $close = $obj.close;
+
+    if $obj.trim-outer {
+      $open  = TRIM-BEFORE ~ $open;
+      $close = $close ~ TRIM-AFTER;
     }
 
-    my $out = $obj.open(:$offset, :attrs(@resolved));
+    if $obj.self-close {
+      return $open ~ $close;
+    }
+
+    my $is-preserved = $!config.is-preserved($obj.name);
+
+    my $out = $open;
     if $node.children.elems {
       $out ~= $content if $content;
-      $out ~= "\n";
-      $out ~= self.render-children($node, %locals, $offset);
-      $out ~= $obj.get-indent(:$offset);
+      if $obj.trim-inner {
+        my $kids = self.render-children($node, %locals, $offset + 1);
+        $out ~= $kids.subst(/^ \s+/, '').subst(/\s+ $/, '');
+      } elsif $is-preserved {
+        my $kids = self.render-children($node, %locals, $offset);
+        my $inner = "\n" ~ $kids ~ $obj.get-indent(:$offset);
+        $out ~= $inner.subst("\n", '&#x000A;', :g);
+      } else {
+        $out ~= "\n";
+        $out ~= self.render-children($node, %locals, $offset);
+        $out ~= $obj.get-indent(:$offset);
+      }
     } else {
       $out ~= $content;
     }
-    $out ~= $obj.close;
+    $out ~= $close;
     $out;
   }
 
@@ -280,6 +310,9 @@ class Renderer is export {
     if $obj.outputs {
       my $str = $value.defined ?? $value.Str !! '';
       $str = html-escape($str) if self.should-escape($obj);
+      if $obj.op eq '~' {
+        $str = $str.subst("\n", '&#x000A;', :g);
+      }
       $own  = $obj.get-indent(:$offset) ~ $str ~ "\n";
     }
 

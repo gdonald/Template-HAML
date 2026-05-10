@@ -15,7 +15,7 @@ grammar Grammar is export {
   token to-eol  { \N* }
   token expr    { \N+ }
   token sigil   { <[%.#]> }
-  token output-op { '!=' | '&=' | '==' | '=' | '-' }
+  token output-op { '!=' | '&=' | '==' | '=' | '-' | '~' }
 
   token indent { ^^ \h* }
 
@@ -133,6 +133,7 @@ grammar Grammar is export {
         | '!='
         | '!!!'
         | '&='
+        | '~'
         | ':' \w
       ]
     >

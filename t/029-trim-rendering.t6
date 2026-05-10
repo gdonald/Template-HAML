@@ -1,0 +1,72 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Test;
+
+plan 14;
+
+my $LT = chr(60);
+my $GT = chr(62);
+
+sub render(Str $src) { HAML.render(:$src) }
+
+# Outer trim `>`
+is render("%p$GT hi\n"),
+   "<p>hi</p>",
+   'trim-outer on lone tag strips trailing newline';
+
+is render("%p first\n%p$GT middle\n%p last\n"),
+   "<p>first</p><p>middle</p><p>last</p>\n",
+   'trim-outer eats whitespace surrounding the tag';
+
+is render("%img\n%img$GT\n%img\n", ),
+   "<img><img><img>\n",
+   'trim-outer on void element';
+
+is render("%div\n  %p$GT hi\n"),
+   "<div><p>hi</p></div>\n",
+   'trim-outer on only child of parent';
+
+is render("%div\n  %a one\n  %b$GT two\n  %c three\n"),
+   "<div>\n  <a>one</a><b>two</b><c>three</c>\n</div>\n",
+   'trim-outer on middle child eats surrounding whitespace';
+
+# Inner trim `<`
+is render("%p$LT hi\n"),
+   "<p>hi</p>\n",
+   'trim-inner with only inline content unchanged';
+
+is render("%blockquote$LT\n  %div\n    Foo!\n"),
+   "<blockquote><div>\n  Foo!\n</div></blockquote>\n",
+   'trim-inner removes whitespace inside the tag';
+
+is render("%p$LT hello\n  %strong world\n"),
+   "<p>hello<strong>world</strong></p>\n",
+   'trim-inner with content and child renders inline';
+
+# Combined `<>` / `><`
+is render("%p$LT$GT hi\n"),
+   "<p>hi</p>",
+   'trim-inner+trim-outer combined (<>) on lone tag';
+
+is render("%p$GT$LT\n  %a hi\n"),
+   "<p><a>hi</a></p>",
+   'trim-outer+trim-inner combined (><)';
+
+is render("%div\n  %p$LT$GT\n    %a hi\n"),
+   "<div><p><a>hi</a></p></div>\n",
+   'combined trims as only child of parent';
+
+# Edge cases
+is render("%p$GT\n"),
+   "<p></p>",
+   'trim-outer on empty tag';
+
+is render("%a$GT one\n%b$GT two\n"),
+   "<a>one</a><b>two</b>",
+   'consecutive trim-outer tags';
+
+is render("%div\n  %a hi\n  %b$GT bye\n"),
+   "<div>\n  <a>hi</a><b>bye</b></div>\n",
+   'trim-outer on last child eats trailing newline and parent indent';

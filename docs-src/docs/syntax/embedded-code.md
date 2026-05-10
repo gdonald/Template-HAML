@@ -12,6 +12,7 @@ expression.
 | `!=`     | Evaluate the expression, emit the result without escaping. |
 | `&=`     | Evaluate the expression, force HTML-escape, emit it.       |
 | `-`      | Evaluate the expression for side effects only — emit nothing. |
+| `~`      | Like `=`, but additionally replace newlines in the result with `&#x000A;`. See [Whitespace](whitespace.md). |
 
 ```haml
 = 1 + 2
