@@ -1,7 +1,8 @@
 {
   "name": "Template::HAML",
-  "description": "HTML Template Parser for Raku",
-  "version": "0.0.1",
+  "description": "HAML template engine for Raku",
+  "version": "0.9.0",
+  "api": "1",
   "perl": "6.d",
   "authors": ["Greg Donald"],
   "auth": "github:gdonald",
@@ -36,6 +37,6 @@
     "bugtracker": "https://github.com/gdonald/Template-HAML/issues"
   },
   "license": "Artistic-2.0",
-  "tags": ["HAML", "HTML", "Template", "Parser"],
-  "source-url": "git://github.com/gdonald/Template-HAML.git"
+  "tags": ["HAML", "HTML", "Template", "Parser", "templating", "views", "web"],
+  "source-url": "https://github.com/gdonald/Template-HAML.git"
 }

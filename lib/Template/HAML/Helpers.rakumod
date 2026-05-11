@@ -14,12 +14,10 @@ class SafeString is export {
   method gist(--> Str) { $!value }
 }
 
-#| Mark a string as already-safe so it bypasses default escaping.
 sub html-safe(Str() $s --> SafeString) is export {
   SafeString.new($s);
 }
 
-#| Append a string to the current capture buffer (inside C<capture-haml>).
 sub haml-concat(Str() $s --> SafeString) is export {
   my $buf = try { @*HAML-CONCAT };
   if $buf.defined {
@@ -30,14 +28,12 @@ sub haml-concat(Str() $s --> SafeString) is export {
   }
 }
 
-#| Increase the renderer's output indent by C<$n> levels.
 sub tab-up(Int $n = 1) is export {
   if (try { $*HAML-TAB-OFFSET }).defined {
     $*HAML-TAB-OFFSET = $*HAML-TAB-OFFSET + $n;
   }
 }
 
-#| Decrease the renderer's output indent by C<$n> levels.
 sub tab-down(Int $n = 1) is export {
   if (try { $*HAML-TAB-OFFSET }).defined {
     $*HAML-TAB-OFFSET = $*HAML-TAB-OFFSET - $n;
@@ -48,8 +44,6 @@ sub current-ctx() {
   try { $*HAML-CTX } // Nil;
 }
 
-#| Inside a layout, emit the rendered inner template (default) or a
-#| named C<content-for> block.
 our sub yield(Str :$name = 'default' --> SafeString) is export {
   my $ctx = current-ctx();
   unless $ctx.defined {
@@ -62,7 +56,6 @@ our sub yield(Str :$name = 'default' --> SafeString) is export {
   }
 }
 
-#| Capture block output and store it under C<$name> for later C<yield>.
 sub content-for(Str() $name, &block --> Str) is export {
   my $ctx = current-ctx();
   return '' unless $ctx.defined;
@@ -71,7 +64,6 @@ sub content-for(Str() $name, &block --> Str) is export {
   '';
 }
 
-#| Render a partial template by name with optional locals or a collection.
 sub render(:$partial, :%locals, :$collection, Str :$as --> SafeString) is export {
   my $ctx = current-ctx();
   die "render() requires :partial" unless $partial.defined;
@@ -117,7 +109,6 @@ sub html-escape(Str $s --> Str) {
     .subst("'", '&#39;', :g);
 }
 
-#| HTML-escape C<$s>, skipping characters that are already part of an entity.
 sub escape-once(Str() $s --> Str) is export {
   my $out = '';
   my $i   = 0;
@@ -151,22 +142,18 @@ sub strip-ws(Str $s --> Str) {
   $s.subst(/^ \s+/, '').subst(/\s+ $/, '');
 }
 
-#| Render C<$pre>, then the trimmed block output, then C<$post>.
 sub surround(Str() $pre, Str() $post, &block --> Str) is export {
   $pre ~ strip-ws(block-result(&block)) ~ $post;
 }
 
-#| Render C<$pre> immediately before the trimmed block output.
 sub precede(Str() $pre, &block --> Str) is export {
   $pre ~ strip-ws(block-result(&block));
 }
 
-#| Render the trimmed block output immediately followed by C<$post>.
 sub succeed(Str() $post, &block --> Str) is export {
   strip-ws(block-result(&block)) ~ $post;
 }
 
-#| Emit a C<< <li>...</li> >> for each item, calling C<&block> per item.
 sub list-of($items, &block --> Str) is export {
   my @rendered;
   for $items.list -> $item {
@@ -177,7 +164,6 @@ sub list-of($items, &block --> Str) is export {
   @rendered.join("\n");
 }
 
-#| Convert newlines to C<&#x000A;> inside any C<< <pre> >>/C<< <textarea> >> in C<$html>.
 sub find-and-preserve(Str() $html --> Str) is export {
   my $out = $html;
   for <pre textarea> -> $tag {
@@ -194,36 +180,8 @@ sub find-and-preserve(Str() $html --> Str) is export {
   $out;
 }
 
-#| Render a block that returns HAML source and return the resulting HTML.
 sub capture-haml(&block --> Str) is export {
   my $template = block-result(&block);
   require ::('Template::HAML');
   ::('HAML').render(:src($template));
 }
-
-=begin pod
-
-=head1 NAME
-
-Template::HAML::Helpers - helper subs available to embedded code
-
-=head1 SYNOPSIS
-
-=begin code :lang<raku>
-use Template::HAML::Helpers;
-
-surround '<b>', '</b>', { 'hi' };  # <b>hi</b>
-list-of(<a b c>, -> $x { $x.uc });
-=end code
-
-=head1 EXPORTED SUBS
-
-C<html-safe>, C<haml-concat>, C<tab-up>, C<tab-down>, C<yield>,
-C<content-for>, C<render>, C<escape-once>, C<surround>, C<precede>,
-C<succeed>, C<list-of>, C<find-and-preserve>, C<capture-haml>.
-
-C<yield> and C<render> require an active C<HAML> rendering context;
-calling them outside one raises C<X::HAML::YieldOutsideLayout> or a
-plain die respectively.
-
-=end pod
