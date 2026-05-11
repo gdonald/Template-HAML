@@ -19,6 +19,7 @@ nav:
     - Layouts and partials: syntax/layouts-partials.md
     - Configuration: syntax/config.md
   - API: api.md
+  - CLI: cli.md
   - Tests: testing.md
 theme:
   name: 'material'

@@ -1,0 +1,171 @@
+
+use v6.d;
+use lib 'lib';
+use Test;
+use Template::HAML::CLI;
+
+plan 32;
+
+sub make-tmpdir(--> IO::Path) {
+  my $d = $*TMPDIR.add("haml-cli-{$*PID}-{(^999999).pick}");
+  $d.mkdir;
+  $d;
+}
+
+sub capture(@args) {
+  my $tmp     = $*TMPDIR.add("haml-cli-out-{$*PID}-{(^999999).pick}");
+  my $tmp-err = $*TMPDIR.add("haml-cli-err-{$*PID}-{(^999999).pick}");
+  my $out = $tmp.open(:w);
+  my $err = $tmp-err.open(:w);
+  my $exit = Template::HAML::CLI::run(@args, :$out, :$err);
+  $out.close;
+  $err.close;
+  my $out-text = $tmp.slurp;
+  my $err-text = $tmp-err.slurp;
+  $tmp.unlink;
+  $tmp-err.unlink;
+  { :$exit, :out($out-text), :err($err-text) };
+}
+
+# 15.4.1 — top-level help
+{
+  my $r = capture(['help']);
+  is $r<exit>, 0, 'help exits 0';
+  like $r<out>, /'Usage: haml'/, 'help mentions usage';
+  like $r<out>, /'render'/, 'help lists render';
+  like $r<out>, /'check'/,  'help lists check';
+}
+
+# 15.4.2 — per-command help
+{
+  my $r = capture(['render', '--help']);
+  is $r<exit>, 0, 'render --help exits 0';
+  like $r<out>, /'--locals'/, 'render help mentions --locals';
+  like $r<out>, /'--format'/, 'render help mentions --format';
+}
+
+{
+  my $r = capture(['check', '-h']);
+  is $r<exit>, 0, 'check -h exits 0';
+  like $r<out>, /'haml check'/, 'check help mentions command';
+}
+
+# Unknown command exits non-zero
+{
+  my $r = capture(['frobnicate']);
+  isnt $r<exit>, 0, 'unknown command non-zero exit';
+  like $r<err>, /"unknown command"/, 'mentions unknown command';
+}
+
+# 15.1.1 — render to stdout
+{
+  my $dir  = make-tmpdir;
+  my $file = $dir.add('hello.haml');
+  $file.spurt("%p hello\n");
+  my $r = capture(['render', $file.Str]);
+  is $r<exit>, 0, 'render exit 0';
+  is $r<out>.chomp, '<p>hello</p>', 'renders to stdout';
+  $file.unlink;
+  $dir.rmdir;
+}
+
+# 15.1.2 — render to file via -o
+{
+  my $dir  = make-tmpdir;
+  my $file = $dir.add('hello.haml');
+  my $out  = $dir.add('out.html');
+  $file.spurt("%h1 hi\n");
+  my $r = capture(['render', $file.Str, '-o', $out.Str]);
+  is $r<exit>, 0, '-o exit 0';
+  is $r<out>, '', 'stdout empty when -o is used';
+  is $out.slurp.chomp, '<h1>hi</h1>', 'file contains rendered output';
+  $file.unlink;
+  $out.unlink;
+  $dir.rmdir;
+}
+
+# 15.2.1 — --locals
+{
+  my $dir  = make-tmpdir;
+  my $file = $dir.add('locals.haml');
+  $file.spurt("%p Hello \#\{\$name\}\n");
+  my $r = capture(['render', '--locals', 'name=Alice', $file.Str]);
+  is $r<exit>, 0, '--locals exit 0';
+  is $r<out>.chomp, '<p>Hello Alice</p>', 'locals threaded to render';
+  $file.unlink;
+  $dir.rmdir;
+}
+
+# 15.2.2 — --format xhtml affects void elements
+{
+  my $dir  = make-tmpdir;
+  my $file = $dir.add('void.haml');
+  $file.spurt("%br\n");
+  my $r-html5 = capture(['render', '--format', 'html5', $file.Str]);
+  my $r-xhtml = capture(['render', '--format', 'xhtml', $file.Str]);
+  like $r-html5<out>, /'<br>'/, 'html5 emits <br>';
+  like $r-xhtml<out>, /'<br />'/, 'xhtml emits <br />';
+  $file.unlink;
+  $dir.rmdir;
+}
+
+# 15.2.3 — --no-escape-html
+{
+  my $dir  = make-tmpdir;
+  my $file = $dir.add('esc.haml');
+  $file.spurt("= '<b>'\n");
+  my $r-esc  = capture(['render', '--escape-html', $file.Str]);
+  my $r-noesc = capture(['render', '--no-escape-html', $file.Str]);
+  like $r-esc<out>,   /'&lt;b&gt;'/, 'default escapes';
+  like $r-noesc<out>, /'<b>'/, '--no-escape-html disables escaping';
+  unlike $r-noesc<out>, /'&lt;'/, '--no-escape-html: no escape sequences';
+  $file.unlink;
+  $dir.rmdir;
+}
+
+# 15.2.4 — --ugly
+{
+  my $dir  = make-tmpdir;
+  my $file = $dir.add('ugly.haml');
+  $file.spurt("%div\n  %p hi\n");
+  my $r = capture(['render', '--ugly', $file.Str]);
+  is $r<exit>, 0, '--ugly exit 0';
+  unlike $r<out>, /\n \s+ '<p>'/, 'ugly removes indentation';
+  $file.unlink;
+  $dir.rmdir;
+}
+
+# Missing file
+{
+  my $r = capture(['render', 'does-not-exist.haml']);
+  isnt $r<exit>, 0, 'missing file non-zero exit';
+  like $r<err>, /'not found'/, 'mentions not found';
+}
+
+# 15.1.3 — check on valid file
+{
+  my $dir  = make-tmpdir;
+  my $file = $dir.add('ok.haml');
+  $file.spurt("%p ok\n");
+  my $r = capture(['check', $file.Str]);
+  is $r<exit>, 0, 'check valid file exit 0';
+  like $r<out>, /'OK'/, 'reports OK';
+  $file.unlink;
+  $dir.rmdir;
+}
+
+# check on bad file
+{
+  my $dir  = make-tmpdir;
+  my $file = $dir.add('bad.haml');
+  $file.spurt("\t %p mixed\n  %p indent\n");
+  my $r = capture(['check', $file.Str]);
+  isnt $r<exit>, 0, 'check bad file non-zero exit';
+}
+
+# Unknown render option
+{
+  my $r = capture(['render', '--bogus', 'foo']);
+  isnt $r<exit>, 0, 'unknown render option non-zero exit';
+  like $r<err>, /'unknown option'/, 'mentions unknown option';
+}
