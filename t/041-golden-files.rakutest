@@ -1,0 +1,26 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Test;
+
+my $dir = $*PROGRAM.parent.add('fixtures/golden');
+my @pairs = $dir.dir(:test(/\.haml$/)).sort(*.Str);
+
+plan @pairs.elems;
+
+for @pairs -> $haml-file {
+  my $name = $haml-file.basename.subst(/\.haml$/, '');
+  my $html-file = $dir.add("$name.html");
+
+  unless $html-file.e {
+    flunk "missing golden output for $name";
+    next;
+  }
+
+  my $src      = $haml-file.slurp;
+  my $expected = $html-file.slurp;
+  my $rendered = HAML.render(:$src);
+
+  is $rendered, $expected, "golden: $name";
+}

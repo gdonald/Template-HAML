@@ -14,10 +14,18 @@ prove6 -Ilib t/
 zef install --deps-only --/test --test-depends .
 ```
 
-## META validation
+## Author tests
 
-`t/000-meta.t6` validates `META6.json` via `Test::META`. It runs as part of the suite; if the metadata file is malformed, missing a required field, or refers to a non-existent module, the test fails.
+Author-only checks are gated behind `AUTHOR_TESTING=1`. The META validation in `t/000-meta.rakutest` runs only when this variable is set, so contributors don't fail builds over local metadata churn.
+
+```shell
+AUTHOR_TESTING=1 prove6 -Ilib t/
+```
+
+## Golden-file tests
+
+`t/041-golden-files.rakutest` iterates `t/fixtures/golden/*.haml` against `t/fixtures/golden/*.html` and asserts the rendered output matches the recorded golden output. Add a new fixture by dropping a matched `.haml`/`.html` pair into that directory.
 
 ## CI
 
-Every push to `main` and every PR runs `prove6 -Ilib t/` on Linux via the GitHub Actions workflow at `.github/workflows/ci.yml`.
+Every push to `main` and every PR runs `prove6 -Ilib t/` via the GitHub Actions workflow at `.github/workflows/ci.yml`. The matrix covers the latest Rakudo release and the prior minor release, and caches `~/.zef` per OS/version.

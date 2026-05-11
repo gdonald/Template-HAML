@@ -1,17 +1,37 @@
+name: CI
+
 on: [push, pull_request]
+
 jobs:
   test:
-    runs-on: ubuntu-latest
+    name: Raku ${{ matrix.raku-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        raku-version: ['latest', '2024.10']
     steps:
       - uses: actions/checkout@v4
       - uses: Raku/setup-raku@v1
         with:
-          raku-version: 'latest'
+          raku-version: ${{ matrix.raku-version }}
       - name: Raku version
         run: raku --version
+      - name: Cache zef
+        uses: actions/cache@v4
+        with:
+          path: ~/.zef
+          key: zef-${{ matrix.os }}-${{ matrix.raku-version }}-${{ hashFiles('META6.json') }}
+          restore-keys: |
+            zef-${{ matrix.os }}-${{ matrix.raku-version }}-
       - name: Install dependencies
         run: zef install --deps-only --/test --test-depends .
       - name: Install prove6
         run: zef install --/test App::Prove6
-      - name: Run tests and specs
-        run: ./test.raku
+      - name: Run tests
+        run: prove6 -Ilib t/
+      - name: Run author tests
+        env:
+          AUTHOR_TESTING: 1
+        run: prove6 -Ilib t/

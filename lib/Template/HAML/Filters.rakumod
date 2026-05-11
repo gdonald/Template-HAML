@@ -14,18 +14,24 @@ sub html-escape(Str $s --> Str) {
 
 my %filters;
 
+#| Register a filter handler under C<:name>. The handler is called as
+#| C<sub (Str $body, %locals --> Str)>; its return value is emitted
+#| in place of the filter block.
 sub register-filter(Str :$name!, :&handler!) is export {
   %filters{$name} = &handler;
 }
 
+#| Look up a registered filter by name; returns C<Nil> if not found.
 sub lookup-filter(Str $name) is export {
   %filters{$name};
 }
 
+#| C<True> if a filter with C<$name> is currently registered.
 sub has-filter(Str $name --> Bool) is export {
   %filters{$name}:exists;
 }
 
+#| Sorted list of registered filter names.
 sub filter-names(--> Seq) is export {
   %filters.keys.sort;
 }
@@ -118,3 +124,50 @@ register-filter :name<raku>, :handler(-> Str $body, %locals --> Str {
     $val.defined ?? $val.Str !! '';
   }
 });
+
+=begin pod
+
+=head1 NAME
+
+Template::HAML::Filters - filter registry
+
+=head1 SYNOPSIS
+
+=begin code :lang<raku>
+use Template::HAML::Filters;
+
+register-filter(
+  :name<shout>,
+  :handler(-> Str $body, %locals --> Str { $body.uc }),
+);
+=end code
+
+=head1 BUILT-IN FILTERS
+
+=item C<:plain> - Emit raw text, no sigil parsing, with C<#{}> interpolation.
+=item C<:escaped> - HTML-escape then emit.
+=item C<:javascript> - Wrap content in a C<< <script> >> tag.
+=item C<:css> - Wrap content in a C<< <style> >> tag.
+=item C<:cdata> - Wrap content in C<< <![CDATA[ ... ]]> >>.
+=item C<:preserve> - Replace literal newlines with C<&#x000A;>.
+=item C<:raku> - Evaluate the body as Raku code; emit its return value.
+
+=head1 SUBS
+
+=head2 register-filter(Str :$name!, :&handler!)
+
+Register a filter handler under C<$name>.
+
+=head2 lookup-filter(Str $name)
+
+Return the handler associated with C<$name>, or C<Nil>.
+
+=head2 has-filter(Str $name --> Bool)
+
+Whether a filter with C<$name> is registered.
+
+=head2 filter-names(--> Seq)
+
+Sorted sequence of registered filter names.
+
+=end pod

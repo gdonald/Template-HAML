@@ -1,0 +1,6 @@
+%section.posts
+  - if $posts.elems == 0
+    %p.empty No posts yet.
+  - else
+    - for $posts -> $post
+      = render :partial<posts/post>, :locals(%($post))

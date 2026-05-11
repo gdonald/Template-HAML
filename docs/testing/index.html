@@ -817,10 +817,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#meta-validation" class="md-nav__link">
+  <a href="#author-tests" class="md-nav__link">
     <span class="md-ellipsis">
       
-        META validation
+        Author tests
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#golden-file-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Golden-file tests
       
     </span>
   </a>
@@ -884,10 +895,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#meta-validation" class="md-nav__link">
+  <a href="#author-tests" class="md-nav__link">
     <span class="md-ellipsis">
       
-        META validation
+        Author tests
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#golden-file-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Golden-file tests
       
     </span>
   </a>
@@ -933,10 +955,14 @@
 <p><code>prove6</code> is a TAP runner; <code>-Ilib</code> puts the project's modules on the include path. Install test-depends from <code>META6.json</code> first if you don't have them:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>zef<span class="w"> </span>install<span class="w"> </span>--deps-only<span class="w"> </span>--/test<span class="w"> </span>--test-depends<span class="w"> </span>.
 </code></pre></div></td></tr></table></div>
-<h2 id="meta-validation">META validation<a class="headerlink" href="#meta-validation" title="Permanent link">&para;</a></h2>
-<p><code>t/000-meta.t6</code> validates <code>META6.json</code> via <code>Test::META</code>. It runs as part of the suite; if the metadata file is malformed, missing a required field, or refers to a non-existent module, the test fails.</p>
+<h2 id="author-tests">Author tests<a class="headerlink" href="#author-tests" title="Permanent link">&para;</a></h2>
+<p>Author-only checks are gated behind <code>AUTHOR_TESTING=1</code>. The META validation in <code>t/000-meta.rakutest</code> runs only when this variable is set, so contributors don't fail builds over local metadata churn.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">AUTHOR_TESTING</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>prove6<span class="w"> </span>-Ilib<span class="w"> </span>t/
+</code></pre></div></td></tr></table></div>
+<h2 id="golden-file-tests">Golden-file tests<a class="headerlink" href="#golden-file-tests" title="Permanent link">&para;</a></h2>
+<p><code>t/041-golden-files.rakutest</code> iterates <code>t/fixtures/golden/*.haml</code> against <code>t/fixtures/golden/*.html</code> and asserts the rendered output matches the recorded golden output. Add a new fixture by dropping a matched <code>.haml</code>/<code>.html</code> pair into that directory.</p>
 <h2 id="ci">CI<a class="headerlink" href="#ci" title="Permanent link">&para;</a></h2>
-<p>Every push to <code>main</code> and every PR runs <code>prove6 -Ilib t/</code> on Linux via the GitHub Actions workflow at <code>.github/workflows/ci.yml</code>.</p>
+<p>Every push to <code>main</code> and every PR runs <code>prove6 -Ilib t/</code> via the GitHub Actions workflow at <code>.github/workflows/ci.yml</code>. The matrix covers the latest Rakudo release and the prior minor release, and caches <code>~/.zef</code> per OS/version.</p>
 
 
 

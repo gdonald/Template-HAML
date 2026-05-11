@@ -81,6 +81,7 @@ class Template::HAML::Config is export {
     }
   }
 
+  #| Return a copy of this Config with the given attributes overridden.
   method clone-with(*%overrides) {
     my %args =
       format              => $!format,
@@ -103,3 +104,42 @@ class Template::HAML::Config is export {
     Template::HAML::Config.new(|%args);
   }
 }
+
+=begin pod
+
+=head1 NAME
+
+Template::HAML::Config - render-time configuration
+
+=head1 SYNOPSIS
+
+=begin code :lang<raku>
+use Template::HAML;
+use Template::HAML::Config;
+
+my $cfg = Template::HAML::Config.new(
+  :format<xhtml>,
+  :output-style<ugly>,
+  :escape-html(False),
+);
+
+say HAML.render(:src($source), :config($cfg));
+=end code
+
+=head1 ATTRIBUTES
+
+=item C<format> - C<'html5'> (default), C<'html4'>, or C<'xhtml'>.
+=item C<escape-html> - HTML-escape C<= expr> by default (C<True>).
+=item C<escape-attrs> - HTML-escape attribute values by default (C<True>).
+=item C<output-style> - C<'pretty'> or C<'ugly'>.
+=item C<attr-quote> - Quote style for emitted attributes, C<'> or C<">.
+=item C<encoding> - Encoding emitted for the XML doctype (C<'utf-8'>).
+=item C<suppress-eval> - When C<True>, disable embedded code evaluation.
+=item C<cdata> - Wrap C<:javascript>/C<:css> bodies in CDATA when emitting XHTML.
+=item C<mime-type> - Override MIME type emitted by C<:javascript>/C<:css>.
+=item C<hyphenate-data-attrs> - camelCase → kebab-case for C<data:>/C<aria:> keys.
+=item C<output-indent-width> - Spaces per indent level in pretty mode.
+=item C<autoclose> - List of void elements emitted self-closed.
+=item C<preserve> - List of tags whose inner whitespace is preserved.
+
+=end pod

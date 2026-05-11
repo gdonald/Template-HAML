@@ -1,0 +1,16 @@
+
+use v6.d;
+use lib 'lib';
+use Test;
+
+unless %*ENV<AUTHOR_TESTING> {
+  plan :skip-all<set AUTHOR_TESTING=1 to run META tests>;
+}
+
+require Test::META <&meta-ok>;
+
+plan 1;
+
+meta-ok;
+
+done-testing;

@@ -140,3 +140,33 @@ sub haml-debug(*@msg) is export {
   return unless ?%*ENV<HAML_DEBUG>;
   note '[HAML DEBUG] ', @msg.map(*.gist).join(' ');
 }
+
+=begin pod
+
+=head1 NAME
+
+Template::HAML::X - exception hierarchy
+
+=head1 EXCEPTIONS
+
+All exceptions inherit from C<X::HAML> and carry C<:line>, C<:column>,
+C<:file>, and C<:snippet> attributes.  Their C<message> includes a
+caret-pointer snippet showing the offending source location.
+
+=item C<X::HAML::ParseFail> - generic grammar parse failure.
+=item C<X::HAML::IllegalIndent> - indentation that breaks structural rules.
+=item C<X::HAML::IndentMixed> - tabs and spaces mixed in one indent.
+=item C<X::HAML::IndentInconsistent> - indent is not a multiple of the detected unit.
+=item C<X::HAML::DuplicateId> - duplicate C<id> attributes (legacy; current renderer concatenates).
+=item C<X::HAML::VoidWithChildren> - void element used with children.
+=item C<X::HAML::UnknownDoctype> - C<!!!> with an unknown variant.
+=item C<X::HAML::DoctypeNotFirst> - C<!!!> not the first non-blank line.
+=item C<X::HAML::Eval> - embedded code evaluation failed.
+=item C<X::HAML::UnbalancedExpression> - multi-line expression never closed.
+=item C<X::HAML::OrphanElse> - C<- else>/C<- elsif> with no preceding C<- if>.
+=item C<X::HAML::UnknownFilter> - unknown filter name.
+=item C<X::HAML::TemplateNotFound> - partial/layout not found in search paths.
+=item C<X::HAML::PartialDepthExceeded> - recursive partial depth limit reached.
+=item C<X::HAML::YieldOutsideLayout> - C<yield> called outside a layout render.
+
+=end pod
