@@ -49,6 +49,7 @@ class Renderer is export {
   }
 
   method render(Node:D $tree) {
+    my Int $*HAML-TAB-OFFSET = 0;
     my $out = self.render-node($tree, %!locals, 0);
     $out = self.apply-trim-markers($out);
     $out = self.compress($out) if $!config.is-ugly;
@@ -162,7 +163,10 @@ class Renderer is export {
       ).throw;
     }
     my &handler = lookup-filter($obj.name);
-    my $rendered = handler($obj.body, %locals);
+    my $rendered = do {
+      my $*HAML-CFG = $!config;
+      handler($obj.body, %locals);
+    };
     return '' unless $rendered.defined && $rendered.chars;
 
     my $indent = $obj.get-indent(:$offset);
@@ -275,9 +279,10 @@ class Renderer is export {
     my $obj = $node.object;
 
     given $obj.kind {
-      when 'for'   { return self.render-for($node,   %locals, $offset) }
-      when 'while' { return self.render-while($node, %locals, $offset) }
-      when 'given' { return self.render-given($node, %locals, $offset) }
+      when 'for'    { return self.render-for($node,    %locals, $offset) }
+      when 'while'  { return self.render-while($node,  %locals, $offset) }
+      when 'repeat' { return self.render-repeat($node, %locals, $offset) }
+      when 'given'  { return self.render-given($node,  %locals, $offset) }
       when 'when' | 'default' {
         return self.render-children($node, %locals, $offset + 1);
       }
@@ -302,10 +307,12 @@ class Renderer is export {
       return $kids;
     }
 
+    my @*HAML-CONCAT;
     my $value = eval-haml(
       $obj.expr, %locals,
       :line($obj.line), :column($obj.column),
     );
+    my $buffered = @*HAML-CONCAT.join('');
 
     my $own = '';
     if $obj.outputs {
@@ -315,7 +322,9 @@ class Renderer is export {
       if $obj.op eq '~' {
         $str = $str.subst("\n", '&#x000A;', :g);
       }
-      $own  = $obj.get-indent(:$offset) ~ $str ~ "\n";
+      $own  = $obj.get-indent(:$offset) ~ $buffered ~ $str ~ "\n";
+    } elsif $buffered.chars {
+      $own = $obj.get-indent(:$offset) ~ $buffered ~ "\n";
     }
 
     my $kids = $node.children.elems
@@ -336,6 +345,22 @@ class Renderer is export {
       my %sub = %locals.clone;
       %sub{$obj.loop-var} = $item;
       $out ~= self.render-children($node, %sub, $offset + 1);
+    }
+    $out;
+  }
+
+  method render-repeat(Node:D $node, %locals, Int $offset) {
+    my $obj = $node.object;
+    my $n = eval-haml(
+      $obj.expr, %locals,
+      :line($obj.line), :column($obj.column),
+    );
+    my $count = ($n // 0).Int;
+    $count = 0 if $count < 0;
+
+    my $out = '';
+    for ^$count {
+      $out ~= self.render-children($node, %locals, $offset + 1);
     }
     $out;
   }

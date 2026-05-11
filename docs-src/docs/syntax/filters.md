@@ -49,9 +49,19 @@ renders to:
 
 Wraps the body in `<script> ... </script>`. Interpolates `#{ ... }`.
 
+When the format is `xhtml`, or when the `cdata` config option is `True`, the
+body is additionally wrapped in `//<![CDATA[ ... //]]>` markers and the
+`<script>` tag emits `type="text/javascript"` (or whatever `mime-type` is set
+to). In HTML5 with `mime-type` set, the type attribute is emitted with no
+CDATA wrapping unless `cdata: True`.
+
 ### `:css`
 
 Wraps the body in `<style> ... </style>`. Interpolates `#{ ... }`.
+
+`:css` mirrors `:javascript` for the `cdata` / `mime-type` config options:
+the CDATA markers use the `/*<![CDATA[*/ ... /*]]>*/` form, and the default
+XHTML type attribute is `text/css`.
 
 ### `:cdata`
 

@@ -59,6 +59,18 @@ body. Sibling lines outside the loop will not see the loop variable.
 Templates iterate at most `Renderer.max-while-iters` times (default `10000`) as
 a runaway-loop safeguard.
 
+## `repeat`
+
+```haml
+- repeat 3
+  %li hi
+```
+
+renders three `<li>hi</li>` siblings. The count is any expression that
+evaluates to an integer; values that are zero or negative render nothing. Use
+`repeat` when you only need a fixed number of iterations and don't care about
+the loop index — for the index, reach for `for`.
+
 ## `given` / `when` / `default`
 
 ```haml

@@ -625,6 +625,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#repeat" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        repeat
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#given-when-default" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -938,6 +949,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#repeat" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        repeat
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#given-when-default" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1047,6 +1069,15 @@ body. Sibling lines outside the loop will not see the loop variable.</p>
 </code></pre></div></td></tr></table></div>
 <p>Templates iterate at most <code>Renderer.max-while-iters</code> times (default <code>10000</code>) as
 a runaway-loop safeguard.</p>
+<h2 id="repeat"><code>repeat</code><a class="headerlink" href="#repeat" title="Permanent link">&para;</a></h2>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">-</span><span class="w"> </span><span class="n">repeat</span><span class="w"> </span><span class="mi">3</span>
+<span class="w">  </span><span class="nt">%li</span> hi
+</code></pre></div></td></tr></table></div>
+<p>renders three <code>&lt;li&gt;hi&lt;/li&gt;</code> siblings. The count is any expression that
+evaluates to an integer; values that are zero or negative render nothing. Use
+<code>repeat</code> when you only need a fixed number of iterations and don't care about
+the loop index — for the index, reach for <code>for</code>.</p>
 <h2 id="given-when-default"><code>given</code> / <code>when</code> / <code>default</code><a class="headerlink" href="#given-when-default" title="Permanent link">&para;</a></h2>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>

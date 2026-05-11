@@ -720,6 +720,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#haml-concats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        haml-concat($s)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tab-upn-1-tab-downn-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tab-up($n = 1) / tab-down($n = 1)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#capture-hamlblock" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -938,6 +960,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#haml-concats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        haml-concat($s)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tab-upn-1-tab-downn-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tab-up($n = 1) / tab-down($n = 1)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#capture-hamlblock" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1059,6 +1103,47 @@ the <a href="../config/"><code>preserve</code></a> tag list reaches.</p>
 <span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">find-and-preserve</span>(<span class="s">&quot;&lt;pre&gt;line1\nline2&lt;/pre&gt;&quot;</span>);
 <span class="c1"># → &#39;&lt;pre&gt;line1&amp;#x000A;line2&lt;/pre&gt;&#39;</span>
 </code></pre></div></td></tr></table></div>
+<h2 id="haml-concats"><code>haml-concat($s)</code><a class="headerlink" href="#haml-concats" title="Permanent link">&para;</a></h2>
+<p>Appends a string to the current rendering buffer. When called inside a <code>=</code> or
+<code>-</code> expression, the value is emitted at the current indent — without
+HTML-escaping, since <code>haml-concat</code> returns a <code>SafeString</code>. The most useful
+shape is calling <code>haml-concat</code> from inside helpers that need to write more
+than one chunk:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">-</span><span class="w"> </span><span class="n">haml</span><span class="o">-</span><span class="n">concat</span><span class="p">(</span><span class="s1">&#39;one&#39;</span><span class="p">);</span><span class="w"> </span><span class="n">haml</span><span class="o">-</span><span class="n">concat</span><span class="p">(</span><span class="s1">&#39;two&#39;</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+<p>renders:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code>one
+two
+</code></pre></div></td></tr></table></div>
+<p>When called outside a render context, <code>haml-concat</code> just returns a
+<code>SafeString</code> wrapping its argument.</p>
+<h2 id="tab-upn-1-tab-downn-1"><code>tab-up($n = 1)</code> / <code>tab-down($n = 1)</code><a class="headerlink" href="#tab-upn-1-tab-downn-1" title="Permanent link">&para;</a></h2>
+<p>Adjust the current output indent for everything that follows. Useful when a
+helper emits a block of nested markup and wants the surrounding template's
+indent to line up.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">%div</span>
+<span class="w">  </span><span class="p">-</span><span class="w"> </span><span class="n">tab</span><span class="o">-</span><span class="n">up</span>
+<span class="w">  </span><span class="nt">%p</span> deep
+<span class="w">  </span><span class="p">-</span><span class="w"> </span><span class="n">tab</span><span class="o">-</span><span class="n">down</span>
+<span class="w">  </span><span class="nt">%p</span> back
+</code></pre></div></td></tr></table></div>
+<p>renders:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">&lt;</span><span class="nt">div</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>deep<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+  <span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>back<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+</code></pre></div></td></tr></table></div>
+<p>Adjustments are sticky — <code>tab-up</code> keeps applying to siblings until a matching
+<code>tab-down</code> undoes it. The offset resets at the start of every <code>HAML.render</code>
+call.</p>
 <h2 id="capture-hamlblock"><code>capture-haml(&amp;block)</code><a class="headerlink" href="#capture-hamlblock" title="Permanent link">&para;</a></h2>
 <p>Calls the block, treats its return value as HAML source, and renders it to a
 string.</p>

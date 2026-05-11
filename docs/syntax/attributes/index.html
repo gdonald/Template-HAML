@@ -456,6 +456,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#data-aria-hyphenation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        data: / aria: hyphenation
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -904,6 +915,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#data-aria-hyphenation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        data: / aria: hyphenation
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1013,6 +1035,21 @@
 <span class="p">&lt;/</span><span class="nt">ul</span><span class="p">&gt;</span>
 </code></pre></div></td></tr></table></div>
 <p>Source line numbers are preserved across multi-line hashes, so children render and report at their actual line in the source.</p>
+<h2 id="data-aria-hyphenation"><code>data:</code> / <code>aria:</code> hyphenation<a class="headerlink" href="#data-aria-hyphenation" title="Permanent link">&para;</a></h2>
+<p>By default, keys under <code>data:</code> and <code>aria:</code> hashes are emitted verbatim:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">%a</span><span class="p">{</span><span class="ss">data</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="ss">fooBar</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">}</span>}
+</code></pre></div></td></tr></table></div>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">&lt;</span><span class="nt">a</span> <span class="na">data-fooBar</span><span class="o">=</span><span class="s">&#39;1&#39;</span><span class="p">&gt;&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
+</code></pre></div></td></tr></table></div>
+<p>Enable the <a href="../config/"><code>hyphenate-data-attrs</code></a> config option to convert
+<code>camelCase</code> keys to <code>kebab-case</code>. The conversion is recursive — every level
+of a nested hash is rewritten:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$cfg</span> = <span class="n">Template::HAML::Config</span>.<span class="nb">new</span>(:<span class="n">hyphenate-data-attrs</span>);
+<span class="n">HAML</span>.<span class="n">render</span>(:<span class="n">src</span>(<span class="s">&#39;%a{data: {fooBar: 1}}&#39;</span> ~ <span class="s">&quot;\n&quot;</span>), :<span class="n">config</span>(<span class="nv">$cfg</span>));
+</code></pre></div></td></tr></table></div>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">&lt;</span><span class="nt">a</span> <span class="na">data-foo-bar</span><span class="o">=</span><span class="s">&#39;1&#39;</span><span class="p">&gt;&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
+</code></pre></div></td></tr></table></div>
 
 
 

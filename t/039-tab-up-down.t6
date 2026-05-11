@@ -1,0 +1,72 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Template::HAML::Helpers;
+use Test;
+
+plan 6;
+
+# tab-up shifts subsequent output one indent level deeper
+my $src = q:to/HAML/;
+%div
+  - tab-up
+  %p deep
+  - tab-down
+  %p back
+HAML
+my $r = HAML.render(:src($src));
+is $r,
+   "<div>\n    <p>deep</p>\n  <p>back</p>\n</div>\n",
+   'tab-up bumps indent until tab-down restores it';
+
+# tab-up with explicit n
+$src = q:to/HAML/;
+%div
+  - tab-up 2
+  %p deep
+  - tab-down 2
+  %p back
+HAML
+$r = HAML.render(:src($src));
+is $r,
+   "<div>\n      <p>deep</p>\n  <p>back</p>\n</div>\n",
+   'tab-up 2 bumps two levels';
+
+# tab-up affects haml-concat buffered output
+$src = q:to/HAML/;
+%div
+  - tab-up
+  = haml-concat('x')
+  - tab-down
+HAML
+$r = HAML.render(:src($src));
+is $r,
+   "<div>\n    x\n</div>\n",
+   'tab-up bumps indent for `=` output';
+
+# Each render call gets a fresh tab offset (no leakage across renders)
+$src = q:to/HAML/;
+%div
+  - tab-up
+  %p deep
+HAML
+HAML.render(:src($src));
+# Second render starts with offset 0 — no carry-over
+$r = HAML.render(:src("%p hi\n"));
+is $r, "<p>hi</p>\n", 'tab offset resets between renders';
+
+# tab-up/tab-down outside a render context: silent no-op
+lives-ok { tab-up(); tab-down() }, 'tab-up/tab-down outside render is a no-op';
+
+# Plain text lines get bumped too
+$src = q:to/HAML/;
+%div
+  - tab-up
+  hello
+  - tab-down
+HAML
+$r = HAML.render(:src($src));
+is $r,
+   "<div>\n    hello\n</div>\n",
+   'tab-up bumps plain text indent';

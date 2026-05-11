@@ -107,6 +107,55 @@ find-and-preserve("<pre>line1\nline2</pre>");
 # → '<pre>line1&#x000A;line2</pre>'
 ```
 
+## `haml-concat($s)`
+
+Appends a string to the current rendering buffer. When called inside a `=` or
+`-` expression, the value is emitted at the current indent — without
+HTML-escaping, since `haml-concat` returns a `SafeString`. The most useful
+shape is calling `haml-concat` from inside helpers that need to write more
+than one chunk:
+
+```haml
+- haml-concat('one'); haml-concat('two')
+```
+
+renders:
+
+```html
+one
+two
+```
+
+When called outside a render context, `haml-concat` just returns a
+`SafeString` wrapping its argument.
+
+## `tab-up($n = 1)` / `tab-down($n = 1)`
+
+Adjust the current output indent for everything that follows. Useful when a
+helper emits a block of nested markup and wants the surrounding template's
+indent to line up.
+
+```haml
+%div
+  - tab-up
+  %p deep
+  - tab-down
+  %p back
+```
+
+renders:
+
+```html
+<div>
+    <p>deep</p>
+  <p>back</p>
+</div>
+```
+
+Adjustments are sticky — `tab-up` keeps applying to siblings until a matching
+`tab-down` undoes it. The offset resets at the start of every `HAML.render`
+call.
+
 ## `capture-haml(&block)`
 
 Calls the block, treats its return value as HAML source, and renders it to a

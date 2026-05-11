@@ -66,6 +66,7 @@ sub parse-control(Str $op, Str $expr) {
     when /^ 'elsif'   \s+ (.+) $ /  { return %( kind => 'elsif',  expr => ~$0.trim ) }
     when /^ 'else' \s* $ /          { return %( kind => 'else',   expr => '' ) }
     when /^ 'while'   \s+ (.+) $ /  { return %( kind => 'while',  expr => ~$0.trim ) }
+    when /^ 'repeat'  \s+ (.+) $ /  { return %( kind => 'repeat', expr => ~$0.trim ) }
     when /^ 'given'   \s+ (.+) $ /  { return %( kind => 'given',  expr => ~$0.trim ) }
     when /^ 'when'    \s+ (.+) $ /  { return %( kind => 'when',   expr => ~$0.trim ) }
     when /^ 'default' \s* $ /       { return %( kind => 'default', expr => '' ) }

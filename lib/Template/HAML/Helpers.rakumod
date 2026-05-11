@@ -18,6 +18,28 @@ sub html-safe(Str() $s --> SafeString) is export {
   SafeString.new($s);
 }
 
+sub haml-concat(Str() $s --> SafeString) is export {
+  my $buf = try { @*HAML-CONCAT };
+  if $buf.defined {
+    $buf.push: $s;
+    SafeString.new('');
+  } else {
+    SafeString.new($s);
+  }
+}
+
+sub tab-up(Int $n = 1) is export {
+  if (try { $*HAML-TAB-OFFSET }).defined {
+    $*HAML-TAB-OFFSET = $*HAML-TAB-OFFSET + $n;
+  }
+}
+
+sub tab-down(Int $n = 1) is export {
+  if (try { $*HAML-TAB-OFFSET }).defined {
+    $*HAML-TAB-OFFSET = $*HAML-TAB-OFFSET - $n;
+  }
+}
+
 sub current-ctx() {
   try { $*HAML-CTX } // Nil;
 }

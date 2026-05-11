@@ -1148,8 +1148,16 @@ Interpolates <code>#{ ... }</code> expressions.</p>
 </code></pre></div></td></tr></table></div>
 <h3 id="javascript"><code>:javascript</code><a class="headerlink" href="#javascript" title="Permanent link">&para;</a></h3>
 <p>Wraps the body in <code>&lt;script&gt; ... &lt;/script&gt;</code>. Interpolates <code>#{ ... }</code>.</p>
+<p>When the format is <code>xhtml</code>, or when the <code>cdata</code> config option is <code>True</code>, the
+body is additionally wrapped in <code>//&lt;![CDATA[ ... //]]&gt;</code> markers and the
+<code>&lt;script&gt;</code> tag emits <code>type="text/javascript"</code> (or whatever <code>mime-type</code> is set
+to). In HTML5 with <code>mime-type</code> set, the type attribute is emitted with no
+CDATA wrapping unless <code>cdata: True</code>.</p>
 <h3 id="css"><code>:css</code><a class="headerlink" href="#css" title="Permanent link">&para;</a></h3>
 <p>Wraps the body in <code>&lt;style&gt; ... &lt;/style&gt;</code>. Interpolates <code>#{ ... }</code>.</p>
+<p><code>:css</code> mirrors <code>:javascript</code> for the <code>cdata</code> / <code>mime-type</code> config options:
+the CDATA markers use the <code>/*&lt;![CDATA[*/ ... /*]]&gt;*/</code> form, and the default
+XHTML type attribute is <code>text/css</code>.</p>
 <h3 id="cdata"><code>:cdata</code><a class="headerlink" href="#cdata" title="Permanent link">&para;</a></h3>
 <p>Wraps the body in <code>&lt;![CDATA[ ... ]]&gt;</code>. Interpolates <code>#{ ... }</code>.</p>
 <h3 id="preserve"><code>:preserve</code><a class="headerlink" href="#preserve" title="Permanent link">&para;</a></h3>

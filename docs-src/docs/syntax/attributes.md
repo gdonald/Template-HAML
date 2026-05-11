@@ -109,3 +109,28 @@ Content and child indentation pick up after the closing brace:
 ```
 
 Source line numbers are preserved across multi-line hashes, so children render and report at their actual line in the source.
+
+## `data:` / `aria:` hyphenation
+
+By default, keys under `data:` and `aria:` hashes are emitted verbatim:
+
+```haml
+%a{data: {fooBar: 1}}
+```
+
+```html
+<a data-fooBar='1'></a>
+```
+
+Enable the [`hyphenate-data-attrs`](config.md) config option to convert
+`camelCase` keys to `kebab-case`. The conversion is recursive — every level
+of a nested hash is rewritten:
+
+```raku
+my $cfg = Template::HAML::Config.new(:hyphenate-data-attrs);
+HAML.render(:src('%a{data: {fooBar: 1}}' ~ "\n"), :config($cfg));
+```
+
+```html
+<a data-foo-bar='1'></a>
+```

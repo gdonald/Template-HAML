@@ -15,6 +15,7 @@ class Template::HAML::Config is export {
   has Bool $.suppress-eval   is rw = False;
   has Bool $.cdata           is rw = False;
   has Str  $.mime-type       is rw = '';
+  has Bool $.hyphenate-data-attrs is rw = False;
   has Int  $.output-indent-width is rw = 2;
   has @.autoclose            is rw;
   has @.preserve             is rw;
@@ -29,6 +30,7 @@ class Template::HAML::Config is export {
     Bool :$!suppress-eval   = False,
     Bool :$!cdata           = False,
     Str  :$!mime-type       = '',
+    Bool :$!hyphenate-data-attrs = False,
     Int  :$!output-indent-width = 2,
     :@autoclose,
     :@preserve,
@@ -90,6 +92,7 @@ class Template::HAML::Config is export {
       suppress-eval       => $!suppress-eval,
       cdata               => $!cdata,
       mime-type           => $!mime-type,
+      hyphenate-data-attrs => $!hyphenate-data-attrs,
       output-indent-width => $!output-indent-width,
       autoclose           => @!autoclose,
       preserve            => @!preserve,

@@ -787,10 +787,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#options-not-yet-implemented" class="md-nav__link">
+  <a href="#filter-rendering-cdata-and-mime-type" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Options not yet implemented
+        Filter rendering: cdata and mime-type
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hyphenate-data-attrs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        hyphenate-data-attrs
       
     </span>
   </a>
@@ -960,10 +971,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#options-not-yet-implemented" class="md-nav__link">
+  <a href="#filter-rendering-cdata-and-mime-type" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Options not yet implemented
+        Filter rendering: cdata and mime-type
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hyphenate-data-attrs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        hyphenate-data-attrs
       
     </span>
   </a>
@@ -1058,6 +1080,21 @@
 <td>When true, <code>=</code>, <code>-</code>, <code>!=</code>, <code>&amp;=</code> produce no output and the expression body is not evaluated.</td>
 </tr>
 <tr>
+<td><code>cdata</code></td>
+<td><code>False</code></td>
+<td>When true, the <code>:javascript</code> and <code>:css</code> filters wrap their body in a <code>CDATA</code> marker even outside XHTML.</td>
+</tr>
+<tr>
+<td><code>mime-type</code></td>
+<td><code>''</code></td>
+<td>When set, <code>:javascript</code> / <code>:css</code> emit a <code>type="…"</code> attribute with this value.</td>
+</tr>
+<tr>
+<td><code>hyphenate-data-attrs</code></td>
+<td><code>False</code></td>
+<td>When true, <code>camelCase</code> keys under <code>data:</code> / <code>aria:</code> hashes are emitted as <code>kebab-case</code>.</td>
+</tr>
+<tr>
 <td><code>output-indent-width</code></td>
 <td><code>2</code></td>
 <td>Number of spaces per indent level in pretty output.</td>
@@ -1070,7 +1107,7 @@
 <tr>
 <td><code>preserve</code></td>
 <td><code>&lt;pre textarea&gt;</code></td>
-<td>List of elements whose inner whitespace will be preserved (Phase 11 hook).</td>
+<td>List of elements whose inner whitespace is preserved.</td>
 </tr>
 </tbody>
 </table>
@@ -1145,14 +1182,40 @@ element while keeping the defaults, pass the full list:</p>
 lines. The line's children are still rendered (so structural tags around
 suppressed expressions still appear). Use this for templates where the embedded
 expressions are not trusted.</p>
-<h2 id="options-not-yet-implemented">Options not yet implemented<a class="headerlink" href="#options-not-yet-implemented" title="Permanent link">&para;</a></h2>
-<p>The following options are accepted on <code>Config</code> but currently have no rendering
-effect. They are wired up in subsequent phases:</p>
+<h2 id="filter-rendering-cdata-and-mime-type">Filter rendering: <code>cdata</code> and <code>mime-type</code><a class="headerlink" href="#filter-rendering-cdata-and-mime-type" title="Permanent link">&para;</a></h2>
+<p>The <code>:javascript</code> and <code>:css</code> filters look at two config options when emitting
+their wrapper tags:</p>
 <ul>
-<li><code>cdata</code> — wrap script/style content in <code>CDATA</code> when format is XHTML (Phase 9 follow-up).</li>
-<li><code>mime-type</code> — affects <code>:javascript</code> / <code>:css</code> filter output (Phase 9 follow-up).</li>
-<li><code>preserve</code> — whitespace preservation for <code>pre</code> / <code>textarea</code> (Phase 11).</li>
+<li>
+<p>When format is <code>xhtml</code>, or when <code>cdata: True</code> is set explicitly, the body is
+  wrapped in a <code>CDATA</code> marker:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">&lt;</span><span class="nt">script</span> <span class="na">type</span><span class="o">=</span><span class="s">&#39;text/javascript&#39;</span><span class="p">&gt;</span>
+<span class="w">  </span><span class="c1">//&lt;![CDATA[</span>
+<span class="w">  </span><span class="nx">alert</span><span class="p">(</span><span class="mf">1</span><span class="p">);</span>
+<span class="w">  </span><span class="c1">//]]&gt;</span>
+<span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+</code></pre></div></td></tr></table></div>
+<p><code>:css</code> uses the comment-wrapped form <code>/*&lt;![CDATA[*/ ... /*]]&gt;*/</code>.</p>
+</li>
+<li>
+<p><code>mime-type</code> sets the <code>type="…"</code> attribute on the emitted <code>&lt;script&gt;</code> /
+  <code>&lt;style&gt;</code> tag. When unset, XHTML defaults to <code>text/javascript</code> /
+  <code>text/css</code>; HTML5 omits the attribute.</p>
+</li>
 </ul>
+<h2 id="hyphenate-data-attrs"><code>hyphenate-data-attrs</code><a class="headerlink" href="#hyphenate-data-attrs" title="Permanent link">&para;</a></h2>
+<p>When the <code>data:</code> or <code>aria:</code> shorthand expands a hash whose keys are
+camelCase, setting <code>hyphenate-data-attrs: True</code> rewrites each key to
+kebab-case:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">%a</span><span class="p">{</span><span class="ss">data</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="ss">fooBar</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">}</span>}
+</code></pre></div></td></tr></table></div>
+<p>renders as <code>&lt;a data-fooBar='1'&gt;</code> by default and <code>&lt;a data-foo-bar='1'&gt;</code> with
+the option on. The conversion is recursive, so nested hashes have every level
+hyphenated.</p>
 
 
 

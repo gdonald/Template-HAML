@@ -16,6 +16,10 @@ sub is-pair-list($value --> Bool) {
   $value[0] ~~ Pair;
 }
 
+sub camel-to-kebab(Str $s --> Str) {
+  $s.subst(/ (<[a..z 0..9]>) (<[A..Z]>) /, -> $/ { $0 ~ '-' ~ $1.Str.lc }, :g).lc;
+}
+
 class Tag is export {
   has Int  $.indent;
   has Int  $.output-indent-width = 2;
@@ -69,7 +73,8 @@ class Tag is export {
   }
 
   method get-indent(Int :$offset = 0) {
-    my $level = $!indent - $offset;
+    my $tab = (try { $*HAML-TAB-OFFSET }) // 0;
+    my $level = $!indent - $offset + $tab;
     $level = 0 if $level < 0;
     ' ' x ($level * $!output-indent-width);
   }
@@ -173,7 +178,10 @@ class Tag is export {
   method expand-prefix(Str $prefix, $value) {
     my @result;
     for $value.list -> $p {
-      my $sub-key = "$prefix-{$p.key}";
+      my $part = $!config.hyphenate-data-attrs
+        ?? camel-to-kebab($p.key)
+        !! $p.key;
+      my $sub-key = "$prefix-$part";
       my $sub-val = $p.value;
       if is-pair-list($sub-val) {
         @result.append: self.expand-prefix($sub-key, $sub-val);

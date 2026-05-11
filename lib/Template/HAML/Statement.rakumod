@@ -20,7 +20,8 @@ class Statement is export {
   ) {}
 
   method get-indent(Int :$offset = 0) {
-    my $level = $!indent - $offset;
+    my $tab = (try { $*HAML-TAB-OFFSET }) // 0;
+    my $level = $!indent - $offset + $tab;
     $level = 0 if $level < 0;
     ' ' x ($level * $!output-indent-width);
   }

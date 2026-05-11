@@ -1,0 +1,57 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Test;
+
+plan 5;
+
+my $src = qq:to/HAML/;
+%ul
+  - repeat 3
+    %li hi
+HAML
+
+my $r = HAML.render(:src($src));
+is $r,
+   "<ul>\n  <li>hi</li>\n  <li>hi</li>\n  <li>hi</li>\n</ul>\n",
+   '`- repeat 3` renders children three times';
+
+# Zero repeats → nothing rendered
+$src = qq:to/HAML/;
+%ul
+  - repeat 0
+    %li hi
+HAML
+$r = HAML.render(:src($src));
+is $r, "<ul>\n</ul>\n", '`- repeat 0` renders nothing';
+
+# Negative → nothing rendered
+$src = qq:to/HAML/;
+%ul
+  - repeat -2
+    %li hi
+HAML
+$r = HAML.render(:src($src));
+is $r, "<ul>\n</ul>\n", 'negative count renders nothing';
+
+# Expression with a local
+$src = qq:to/HAML/;
+%ul
+  - repeat \$n
+    %li hi
+HAML
+$r = HAML.render(:src($src), :locals(%(n => 2)));
+is $r,
+   "<ul>\n  <li>hi</li>\n  <li>hi</li>\n</ul>\n",
+   'count comes from a local';
+
+# Repeat at top level
+$src = qq:to/HAML/;
+- repeat 2
+  %p x
+HAML
+$r = HAML.render(:src($src));
+is $r,
+   "<p>x</p>\n<p>x</p>\n",
+   'repeat at top level';

@@ -1,0 +1,43 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Template::HAML::Config;
+use Test;
+
+plan 6;
+
+# Default off: camelCase keys are preserved literally
+my $r = HAML.render(:src(Q<%a{data: {fooBar: 1}}> ~ "\n"));
+ok $r.contains("data-fooBar='1'"),
+   "default: camelCase data: key preserved (got: $r)";
+
+# Option on: camelCase → kebab-case
+my $cfg = Template::HAML::Config.new(:hyphenate-data-attrs);
+$r = HAML.render(:src(Q<%a{data: {fooBar: 1}}> ~ "\n"), :config($cfg));
+is $r,
+   "<a data-foo-bar='1'></a>\n",
+   'hyphenate-data-attrs: camelCase → kebab-case';
+
+# Multiple humps
+$r = HAML.render(:src(Q<%a{data: {fooBarBaz: 1}}> ~ "\n"), :config($cfg));
+is $r,
+   "<a data-foo-bar-baz='1'></a>\n",
+   'multiple humps converted';
+
+# Same behavior for aria:
+$r = HAML.render(:src(Q<%a{aria: {labelledBy: 'x'}}> ~ "\n"), :config($cfg));
+is $r,
+   "<a aria-labelled-by='x'></a>\n",
+   'aria: keys also hyphenated';
+
+# Nested hashes — each level is converted
+$r = HAML.render(:src(Q<%a{data: {userId: {fullName: 'x'}}}> ~ "\n"), :config($cfg));
+is $r,
+   "<a data-user-id-full-name='x'></a>\n",
+   'nested hash keys all hyphenated';
+
+# Plain lowercase keys unchanged
+$r = HAML.render(:src(Q<%a{data: {id: 1, role: 'foo'}}> ~ "\n"), :config($cfg));
+ok $r.contains("data-id='1'") && $r.contains("data-role='foo'"),
+   "plain lowercase data: keys unchanged (got: $r)";

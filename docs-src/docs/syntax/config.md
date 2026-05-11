@@ -27,9 +27,12 @@ $h.render(:src("%br\n"));                     # uses the instance config
 | `attr-quote`          | `"'"`        | Quote character used around attribute values; `"'"` or `'"'`.                                    |
 | `encoding`            | `'utf-8'`    | Used for `!!! XML` output and any future encoding helpers.                                       |
 | `suppress-eval`       | `False`      | When true, `=`, `-`, `!=`, `&=` produce no output and the expression body is not evaluated.     |
+| `cdata`               | `False`      | When true, the `:javascript` and `:css` filters wrap their body in a `CDATA` marker even outside XHTML. |
+| `mime-type`           | `''`         | When set, `:javascript` / `:css` emit a `type="…"` attribute with this value.                    |
+| `hyphenate-data-attrs`| `False`      | When true, `camelCase` keys under `data:` / `aria:` hashes are emitted as `kebab-case`.          |
 | `output-indent-width` | `2`          | Number of spaces per indent level in pretty output.                                              |
 | `autoclose`           | HTML5 voids  | List of element names that auto-self-close: `area base br col embed hr img input link meta param source track wbr`. |
-| `preserve`            | `<pre textarea>` | List of elements whose inner whitespace will be preserved (Phase 11 hook).                  |
+| `preserve`            | `<pre textarea>` | List of elements whose inner whitespace is preserved.                                       |
 
 ## Format effects
 
@@ -91,11 +94,38 @@ lines. The line's children are still rendered (so structural tags around
 suppressed expressions still appear). Use this for templates where the embedded
 expressions are not trusted.
 
-## Options not yet implemented
+## Filter rendering: `cdata` and `mime-type`
 
-The following options are accepted on `Config` but currently have no rendering
-effect. They are wired up in subsequent phases:
+The `:javascript` and `:css` filters look at two config options when emitting
+their wrapper tags:
 
-* `cdata` — wrap script/style content in `CDATA` when format is XHTML (Phase 9 follow-up).
-* `mime-type` — affects `:javascript` / `:css` filter output (Phase 9 follow-up).
-* `preserve` — whitespace preservation for `pre` / `textarea` (Phase 11).
+* When format is `xhtml`, or when `cdata: True` is set explicitly, the body is
+  wrapped in a `CDATA` marker:
+
+    ```html
+    <script type='text/javascript'>
+      //<![CDATA[
+      alert(1);
+      //]]>
+    </script>
+    ```
+
+    `:css` uses the comment-wrapped form `/*<![CDATA[*/ ... /*]]>*/`.
+
+* `mime-type` sets the `type="…"` attribute on the emitted `<script>` /
+  `<style>` tag. When unset, XHTML defaults to `text/javascript` /
+  `text/css`; HTML5 omits the attribute.
+
+## `hyphenate-data-attrs`
+
+When the `data:` or `aria:` shorthand expands a hash whose keys are
+camelCase, setting `hyphenate-data-attrs: True` rewrites each key to
+kebab-case:
+
+```haml
+%a{data: {fooBar: 1}}
+```
+
+renders as `<a data-fooBar='1'>` by default and `<a data-foo-bar='1'>` with
+the option on. The conversion is recursive, so nested hashes have every level
+hyphenated.
