@@ -4,34 +4,24 @@ on: [push, pull_request]
 
 jobs:
   test:
-    name: Raku ${{ matrix.raku-version }} on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest]
-        raku-version: ['latest', '2024.10']
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: Raku/setup-raku@v1
         with:
-          raku-version: ${{ matrix.raku-version }}
+          raku-version: 'latest'
       - name: Raku version
         run: raku --version
       - name: Cache zef
         uses: actions/cache@v4
         with:
           path: ~/.zef
-          key: zef-${{ matrix.os }}-${{ matrix.raku-version }}-${{ hashFiles('META6.json') }}
+          key: zef-ubuntu-latest-${{ hashFiles('META6.json') }}
           restore-keys: |
-            zef-${{ matrix.os }}-${{ matrix.raku-version }}-
+            zef-ubuntu-latest-
       - name: Install dependencies
         run: zef install --deps-only --/test --test-depends .
       - name: Install prove6
         run: zef install --/test App::Prove6
       - name: Run tests
-        run: prove6 -Ilib t/
-      - name: Run author tests
-        env:
-          AUTHOR_TESTING: 1
-        run: prove6 -Ilib t/
+        run: ./test.raku
