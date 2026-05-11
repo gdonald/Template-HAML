@@ -1,6 +1,6 @@
 {
   "name": "Template::HAML",
-  "description": "HAML template engine for Raku",
+  "description": "HAML template engine",
   "version": "0.9.0",
   "api": "1",
   "perl": "6.d",
