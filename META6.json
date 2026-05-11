@@ -5,7 +5,7 @@
   "api": "1",
   "perl": "6.d",
   "authors": ["Greg Donald"],
-  "auth": "github:gdonald",
+  "auth": "zef:gdonald",
   "depends": [],
   "build-depends": [],
   "test-depends": ["Test", "Test::META"],
