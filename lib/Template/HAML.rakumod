@@ -113,9 +113,33 @@ class HAML is export {
 
     my $m = Grammar.parse($joined, :$actions);
     unless $m {
-      X::HAML::ParseFail.new(:line(1), :column(1), :snippet($joined.lines.first // '')).throw;
+      self!throw-parse-fail($joined, $cfg);
     }
     $actions.tree;
+  }
+
+  method !throw-parse-fail(Str:D $joined, Template::HAML::Config $cfg) {
+    my $tmp-tree = Node.new;
+    $tmp-tree.add-child(Node.new);
+    my $tmp-actions = Actions.new(:tree($tmp-tree), :config($cfg));
+    my $raw-to = do {
+      CATCH { default { 0 } }
+      my $partial = Grammar.subparse($joined, :actions($tmp-actions));
+      $partial.defined ?? $partial.to !! 0;
+    };
+    my $pos = (($raw-to // 0) max 0) min $joined.chars;
+
+    my $before  = $joined.substr(0, $pos);
+    my $line    = 1 + $before.comb("\n").elems;
+    my $last-nl = $before.rindex("\n");
+    my $column  = $last-nl.defined ?? $pos - $last-nl !! $pos + 1;
+
+    my @lines   = $joined.lines;
+    my $snippet = @lines[$line - 1] // '';
+
+    X::HAML::ParseFail.new(
+      :$line, :$column, :$snippet,
+    ).throw;
   }
 
   method compile-file(Str:D $path --> Node) {

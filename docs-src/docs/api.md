@@ -73,6 +73,26 @@ The implementation is split across several modules under `lib/Template/HAML/`. T
 
 ## Exceptions
 
+Every `X::HAML::*` subclass inherits from `X::HAML` and carries the
+following attributes when raised:
+
+| Attribute  | Description                                            |
+|------------|--------------------------------------------------------|
+| `line`     | 1-based line number where the error was detected.     |
+| `column`   | 1-based column within that line.                       |
+| `file`     | Source file path, when `HAML.render(:file(...))` was used. |
+| `snippet`  | The source line containing the error, used for the caret pointer. |
+
+The `.message` of every subclass includes a `[HAML <file>:<line>:<col>]`
+prefix and (when a snippet was captured) a one-line caret-pointer that
+underlines the offending column:
+
+```
+[HAML source:3:1] mixed tabs and spaces in indent
+  3 | 	%b bye
+    | ^
+```
+
 | Exception                    | When                                                       |
 |------------------------------|------------------------------------------------------------|
 | `X::HAML::IllegalIndent`     | A line's leading whitespace isn't a valid indent.          |
@@ -80,9 +100,21 @@ The implementation is split across several modules under `lib/Template/HAML/`. T
 | `X::HAML::IndentInconsistent`| Indent isn't a multiple of the first observed unit.        |
 | `X::HAML::DuplicateId`       | A tag has both `#id` shorthand and an `id:` attr.          |
 | `X::HAML::VoidWithChildren`  | A void element (`br`, `img`, …) was given child nodes.     |
-| `X::HAML::ParseFail`         | The source did not parse.                                  |
+| `X::HAML::ParseFail`         | The source did not parse; `snippet` is the failing line.   |
 | `X::HAML::UnknownDoctype`    | `!!! foo` named a doctype variant that is not recognized.  |
 | `X::HAML::DoctypeNotFirst`   | A `!!!` line appeared after non-blank content.             |
 | `X::HAML::Eval`              | An embedded `=`/`-`/`!=`/`&=` expression failed to compile or run. |
 | `X::HAML::UnbalancedExpression` | A multi-line code expression ran to end of source with open brackets or a trailing comma. |
 | `X::HAML::UnknownFilter`     | A `:name` line referenced a filter that is not registered. |
+| `X::HAML::OrphanElse`        | An `- elsif`/`- else` had no preceding `if`/`unless`.      |
+| `X::HAML::TemplateNotFound`  | `HAML.render(:file(...))` could not locate the template.   |
+| `X::HAML::PartialDepthExceeded` | A partial recursed past the configured depth limit.     |
+| `X::HAML::YieldOutsideLayout`| `yield()` was called outside a layout rendering context.   |
+
+### Debug logging
+
+`Template::HAML::X` exports `haml-debug(*@msg)` for low-noise diagnostics.
+It is a no-op unless the `HAML_DEBUG` environment variable is set, in
+which case each call writes a `[HAML DEBUG]`-prefixed line to STDERR.
+Use it sparingly inside the implementation; it must never be left on a
+hot path.

@@ -795,6 +795,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Exceptions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#debug-logging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Debug logging
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -899,6 +916,23 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Exceptions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#debug-logging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Debug logging
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1059,6 +1093,43 @@ applies the filter's own source indent to each line of the result.</p>
 </tbody>
 </table>
 <h2 id="exceptions">Exceptions<a class="headerlink" href="#exceptions" title="Permanent link">&para;</a></h2>
+<p>Every <code>X::HAML::*</code> subclass inherits from <code>X::HAML</code> and carries the
+following attributes when raised:</p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>line</code></td>
+<td>1-based line number where the error was detected.</td>
+</tr>
+<tr>
+<td><code>column</code></td>
+<td>1-based column within that line.</td>
+</tr>
+<tr>
+<td><code>file</code></td>
+<td>Source file path, when <code>HAML.render(:file(...))</code> was used.</td>
+</tr>
+<tr>
+<td><code>snippet</code></td>
+<td>The source line containing the error, used for the caret pointer.</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>.message</code> of every subclass includes a <code>[HAML &lt;file&gt;:&lt;line&gt;:&lt;col&gt;]</code>
+prefix and (when a snippet was captured) a one-line caret-pointer that
+underlines the offending column:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code>[HAML source:3:1] mixed tabs and spaces in indent
+  3 |   %b bye
+    | ^
+</code></pre></div></td></tr></table></div>
 <table>
 <thead>
 <tr>
@@ -1089,7 +1160,7 @@ applies the filter's own source indent to each line of the result.</p>
 </tr>
 <tr>
 <td><code>X::HAML::ParseFail</code></td>
-<td>The source did not parse.</td>
+<td>The source did not parse; <code>snippet</code> is the failing line.</td>
 </tr>
 <tr>
 <td><code>X::HAML::UnknownDoctype</code></td>
@@ -1111,8 +1182,30 @@ applies the filter's own source indent to each line of the result.</p>
 <td><code>X::HAML::UnknownFilter</code></td>
 <td>A <code>:name</code> line referenced a filter that is not registered.</td>
 </tr>
+<tr>
+<td><code>X::HAML::OrphanElse</code></td>
+<td>An <code>- elsif</code>/<code>- else</code> had no preceding <code>if</code>/<code>unless</code>.</td>
+</tr>
+<tr>
+<td><code>X::HAML::TemplateNotFound</code></td>
+<td><code>HAML.render(:file(...))</code> could not locate the template.</td>
+</tr>
+<tr>
+<td><code>X::HAML::PartialDepthExceeded</code></td>
+<td>A partial recursed past the configured depth limit.</td>
+</tr>
+<tr>
+<td><code>X::HAML::YieldOutsideLayout</code></td>
+<td><code>yield()</code> was called outside a layout rendering context.</td>
+</tr>
 </tbody>
 </table>
+<h3 id="debug-logging">Debug logging<a class="headerlink" href="#debug-logging" title="Permanent link">&para;</a></h3>
+<p><code>Template::HAML::X</code> exports <code>haml-debug(*@msg)</code> for low-noise diagnostics.
+It is a no-op unless the <code>HAML_DEBUG</code> environment variable is set, in
+which case each call writes a <code>[HAML DEBUG]</code>-prefixed line to STDERR.
+Use it sparingly inside the implementation; it must never be left on a
+hot path.</p>
 
 
 

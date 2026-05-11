@@ -20,6 +20,16 @@ sub pos-to-line-col($/) {
   ($line, $column);
 }
 
+sub snippet-for($/) {
+  my $orig = $/.orig.Str;
+  my $pos  = $/.from;
+  my $start = $orig.substr(0, $pos).rindex("\n");
+  $start = $start.defined ?? $start + 1 !! 0;
+  my $end = $orig.index("\n", $pos);
+  $end = $end.defined ?? $end !! $orig.chars;
+  $orig.substr($start, $end - $start);
+}
+
 sub decode-sq(Str $s --> Str) {
   $s.subst(/'\\' (.)/, -> $/ { $0.Str }, :g);
 }
@@ -248,7 +258,7 @@ class Actions is export {
   method line:sym<doctype>($/) {
     my ($line, $column) = pos-to-line-col($/);
     if $!seen-content {
-      X::HAML::DoctypeNotFirst.new(:$line, :$column).throw;
+      X::HAML::DoctypeNotFirst.new(:$line, :$column, :snippet(snippet-for($/))).throw;
     }
 
     my $rest = $/<to-eol>.Str.trim;
@@ -299,9 +309,10 @@ class Actions is export {
     return 0 unless $ws.chars;
 
     my ($line, $column) = pos-to-line-col($indent-match);
+    my $snippet = snippet-for($indent-match);
 
     if $ws.contains("\t") && $ws.contains(' ') {
-      indent-mixed(:$line, :$column);
+      indent-mixed(:$line, :$column, :$snippet);
     }
 
     my $leader = $ws.substr(0, 1);
@@ -311,11 +322,11 @@ class Actions is export {
     }
 
     if $leader ne $!indent-leader {
-      indent-mixed(:$line, :$column);
+      indent-mixed(:$line, :$column, :$snippet);
     }
 
     if $ws.chars % $!indent-unit != 0 {
-      indent-inconsistent(:$line, :$column, :unit($!indent-unit), :got($ws.chars));
+      indent-inconsistent(:$line, :$column, :unit($!indent-unit), :got($ws.chars), :$snippet);
     }
 
     $ws.chars div $!indent-unit;
