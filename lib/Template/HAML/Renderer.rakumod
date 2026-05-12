@@ -39,6 +39,95 @@ sub resolve-attrs(@attrs, %locals) {
   }).list;
 }
 
+sub camel-to-snake(Str $s --> Str) {
+  $s.subst(/ (<[a..z 0..9]>) (<[A..Z]>) /, -> $/ { $0 ~ '_' ~ $1.Str.lc }, :g).lc;
+}
+
+sub prefix-str($p) {
+  return Nil unless $p.defined;
+  return $p.key.Str if $p ~~ Pair;
+  $p.Str;
+}
+
+sub compute-obj-ref($obj, %locals) {
+  my @args = $obj.obj-ref-args.list;
+  return (Nil, Nil) unless @args.elems;
+
+  my $val = eval-haml(
+    @args[0], %locals,
+    :line($obj.line), :column($obj.column),
+  );
+  return (Nil, Nil) unless $val.defined;
+
+  my $prefix;
+  if @args.elems >= 2 {
+    my $p = eval-haml(
+      @args[1], %locals,
+      :line($obj.line), :column($obj.column),
+    );
+    $prefix = prefix-str($p);
+  }
+
+  my $type-name;
+  if $val.^can('haml-object-ref') {
+    my $r = $val.haml-object-ref;
+    $type-name = $r.defined ?? $r.Str !! camel-to-snake($val.WHAT.^shortname);
+  } else {
+    $type-name = camel-to-snake($val.WHAT.^shortname);
+  }
+
+  my $cls = ($prefix.defined && $prefix.chars)
+    ?? $prefix ~ '_' ~ $type-name
+    !! $type-name;
+
+  my $id-val = $val.^can('id') ?? $val.id !! Nil;
+  my $id-str = $id-val.defined ?? $cls ~ '_' ~ $id-val.Str !! Nil;
+
+  ($cls, $id-str);
+}
+
+sub existing-class-str($v --> Str) {
+  if $v ~~ Positional && $v !~~ Pair {
+    return $v.list.grep({ .defined && .so }).join(' ');
+  }
+  $v.defined ?? $v.Str !! '';
+}
+
+sub existing-id-str($v --> Str) {
+  if $v ~~ Positional && $v !~~ Pair {
+    return $v.list.grep({ .defined && .so }).join('_');
+  }
+  $v.defined ?? $v.Str !! '';
+}
+
+sub inject-obj-ref-attrs(@attrs, $cls, $id) {
+  my @out = @attrs;
+
+  if $cls.defined && $cls.chars {
+    my $idx = @out.first({ .key eq 'class' }, :k);
+    if $idx.defined {
+      my $existing = existing-class-str(@out[$idx].value);
+      my $merged   = $existing.chars ?? "$cls $existing" !! $cls;
+      @out[$idx] = 'class' => $merged;
+    } else {
+      @out.push: 'class' => $cls;
+    }
+  }
+
+  if $id.defined && $id.chars {
+    my $idx = @out.first({ .key eq 'id' }, :k);
+    if $idx.defined {
+      my $existing = existing-id-str(@out[$idx].value);
+      my $merged   = $existing.chars ?? $id ~ '_' ~ $existing !! $id;
+      @out[$idx] = 'id' => $merged;
+    } else {
+      @out.push: 'id' => $id;
+    }
+  }
+
+  @out;
+}
+
 constant TRIM-BEFORE = "\x[E000]";
 constant TRIM-AFTER  = "\x[E001]";
 
@@ -116,6 +205,10 @@ class Renderer is export {
     }
 
     my @resolved = resolve-attrs($obj.attrs, %locals);
+    if $obj ~~ Tag && $obj.obj-ref-args.elems {
+      my ($cls, $id) = compute-obj-ref($obj, %locals);
+      @resolved = inject-obj-ref-attrs(@resolved, $cls, $id);
+    }
     my $content  = self.interpolate-content($obj, %locals);
 
     my $open  = $obj.open(:$offset, :attrs(@resolved));

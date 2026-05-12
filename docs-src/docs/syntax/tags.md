@@ -143,3 +143,83 @@ renders to:
 ```html
 <div class='literal-#{x}'></div>
 ```
+
+## Object reference
+
+A bracketed expression after the tag name (and any shorthand) derives a
+`class` and an `id` from a Raku object at render time:
+
+```haml
+%div[$user]
+```
+
+with `$user` an instance of class `User` whose `.id` returns `42`,
+renders to:
+
+```html
+<div id='user_42' class='user'></div>
+```
+
+The class is the object's short type name converted from `CamelCase` to
+`snake_case` (e.g. `BlogPost` → `blog_post`). The id is `<class>_<.id>`.
+If the object has no `.id` method, only the class is emitted.
+
+To customize the derived class name, define a `haml-object-ref` method
+on the class:
+
+```raku
+class Page {
+  has Int $.id;
+  method haml-object-ref { 'cms-page' }
+}
+```
+
+```haml
+%div[$page]
+```
+
+```html
+<div id='cms-page_7' class='cms-page'></div>
+```
+
+### Prefix form
+
+A second argument is treated as a prefix prepended to both the class and
+the id with an underscore:
+
+```haml
+%div[$user, 'greeting']
+```
+
+```html
+<div id='greeting_user_42' class='greeting_user'></div>
+```
+
+The prefix may be any Raku expression — a string literal, a local
+variable, or a method call. A `Pair` value (e.g. `:greeting`) uses its
+key for parity with Ruby's symbol form.
+
+### Combining with shorthand and attribute hashes
+
+Object reference fits between the shorthand and the attribute hashes:
+
+```haml
+%p.lead#hero[$user]{class: 'active'}
+```
+
+The object-ref class is prepended to the existing classes, and the
+object-ref id is prepended to any other id (joined with `_`):
+
+```html
+<p id='user_42_hero' class='user lead active'></p>
+```
+
+An undefined object emits neither class nor id:
+
+```haml
+%div[$missing]
+```
+
+```html
+<div></div>
+```

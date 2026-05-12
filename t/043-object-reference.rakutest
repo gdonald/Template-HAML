@@ -1,0 +1,129 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Test;
+
+plan 22;
+
+class User {
+  has Int $.id;
+  has Str $.name;
+}
+
+class BlogPost {
+  has Int $.id;
+}
+
+class Article {
+  has Int $.id;
+  has Str $.title;
+}
+
+class Thing {
+  has Str $.name;
+}
+
+class CustomRef {
+  has Int $.id;
+  method haml-object-ref { 'custom' }
+}
+
+my $u = User.new(:id(42), :name('Greg'));
+my $b = BlogPost.new(:id(7));
+my $a = Article.new(:id(1), :title('Hi'));
+my $t = Thing.new(:name('x'));
+my $c = CustomRef.new(:id(99));
+
+is HAML.render(:src(Q!%div[$u]! ~ "\n"), :locals(%(u => $u))),
+   "<div id='user_42' class='user'></div>\n",
+   'object reference: class from type, id from .id';
+
+is HAML.render(:src(Q!%div[$u, 'greeting']! ~ "\n"), :locals(%(u => $u))),
+   "<div id='greeting_user_42' class='greeting_user'></div>\n",
+   'object reference: prefix form';
+
+is HAML.render(:src(Q!%article[$b]! ~ "\n"), :locals(%(b => $b))),
+   "<article id='blog_post_7' class='blog_post'></article>\n",
+   'CamelCase type collapses to snake_case';
+
+is HAML.render(:src(Q!%p.foo[$u]! ~ "\n"), :locals(%(u => $u))),
+   "<p id='user_42' class='user foo'></p>\n",
+   'obj-ref class prepends to shorthand class';
+
+is HAML.render(:src(Q!%p#main[$u]! ~ "\n"), :locals(%(u => $u))),
+   "<p id='user_42_main' class='user'></p>\n",
+   'obj-ref id prepends to shorthand id';
+
+is HAML.render(:src(Q!%div[$t]! ~ "\n"), :locals(%(t => $t))),
+   "<div class='thing'></div>\n",
+   'no .id method emits only class';
+
+is HAML.render(:src(Q!%div[$u]{class: 'active'}! ~ "\n"), :locals(%(u => $u))),
+   "<div id='user_42' class='user active'></div>\n",
+   'obj-ref class prepends to params-hash class';
+
+is HAML.render(:src(Q!.container[$u]! ~ "\n"), :locals(%(u => $u))),
+   "<div id='user_42' class='user container'></div>\n",
+   'implicit div with obj-ref';
+
+is HAML.render(:src(Q!%div.a.b[$u]! ~ "\n"), :locals(%(u => $u))),
+   "<div id='user_42' class='user a b'></div>\n",
+   'obj-ref class merges with multiple shorthand classes';
+
+is HAML.render(:src(Q!%section[$a, 'admin']! ~ "\n"), :locals(%(a => $a))),
+   "<section id='admin_article_1' class='admin_article'></section>\n",
+   'prefix combines with type name and .id';
+
+is HAML.render(:src(Q!%div[$t, 'g']! ~ "\n"), :locals(%(t => $t))),
+   "<div class='g_thing'></div>\n",
+   'prefix without .id method';
+
+is HAML.render(:src(Q!%p[$u] Hello! ~ "\n"), :locals(%(u => $u))),
+   "<p id='user_42' class='user'>Hello</p>\n",
+   'obj-ref with text content';
+
+is HAML.render(:src(Q!%div[$c]! ~ "\n"), :locals(%(c => $c))),
+   "<div id='custom_99' class='custom'></div>\n",
+   'haml-object-ref method overrides type name';
+
+is HAML.render(:src(Q!%div[$missing]! ~ "\n"), :locals(%(missing => Nil))),
+   "<div></div>\n",
+   'undefined object emits no class or id';
+
+is HAML.render(:src(Q!#wrap[$u]! ~ "\n"), :locals(%(u => $u))),
+   "<div id='user_42_wrap' class='user'></div>\n",
+   'implicit div with id shorthand and obj-ref';
+
+is HAML.render(:src(Q!%div[$u]{id: 'x'}! ~ "\n"), :locals(%(u => $u))),
+   "<div id='user_42_x' class='user'></div>\n",
+   'obj-ref id prepends to params-hash id';
+
+is HAML.render(:src(Q!%input[$u]/! ~ "\n"), :locals(%(u => $u))),
+   "<input id='user_42' class='user'>\n",
+   'obj-ref on self-closing element';
+
+is HAML.render(:src(Q!%div! ~ "\n" ~ Q!  %p[$u] hi! ~ "\n"), :locals(%(u => $u))),
+   "<div>\n  <p id='user_42' class='user'>hi</p>\n</div>\n",
+   'obj-ref nested under another tag';
+
+is HAML.render(:src(Q!%div[$u, $p]! ~ "\n"), :locals(%(u => $u, p => 'pfx'))),
+   "<div id='pfx_user_42' class='pfx_user'></div>\n",
+   'prefix from a local variable';
+
+is HAML.render(:src(Q!%div[$u, :greeting]! ~ "\n"), :locals(%(u => $u))),
+   "<div id='greeting_user_42' class='greeting_user'></div>\n",
+   'Pair-style prefix uses .key';
+
+class Box {
+  has $.id;
+  method tag-prefix(Int $n) { "box$n" }
+}
+my $box = Box.new(:id(3));
+is HAML.render(:src(Q!%div[$box, $box.tag-prefix(1)]! ~ "\n"), :locals(%(box => $box))),
+   "<div id='box1_box_3' class='box1_box'></div>\n",
+   'expression with method call and parens as prefix';
+
+is HAML.render(:src(Q!%p.lead#hero[$u]! ~ "\n"), :locals(%(u => $u))),
+   "<p id='user_42_hero' class='user lead'></p>\n",
+   'obj-ref with both shorthand class and id';

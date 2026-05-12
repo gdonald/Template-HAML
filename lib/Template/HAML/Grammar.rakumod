@@ -70,6 +70,18 @@ grammar Grammar is export {
   token html-attr       { <html-keyed-attr> | <html-bool-attr> }
   token html-attrs      { '(' [ \s* <html-attr> ]+ \s* ')' }
 
+  token obj-ref-balanced {
+    [
+      | "'" [ \\ . | <-[\\']> ]* "'"
+      | '"' [ \\ . | <-[\\"]> ]* '"'
+      | '[' <obj-ref-balanced> ']'
+      | '(' <obj-ref-balanced> ')'
+      | '{' <obj-ref-balanced> '}'
+      | <-[ \[ \] \( \) \{ \} \n ' " ]>
+    ]*
+  }
+  token object-ref { '[' <obj-ref-balanced> ']' }
+
   rule param-key   { <word> ':' }
   rule param-value { <value> }
   rule param       { <pair-bare> }
@@ -85,6 +97,7 @@ grammar Grammar is export {
       | <explicit-tag-name> <shorthand>*
       | <shorthand>+
     ]
+    <object-ref>?
     <html-attrs>?
     <params-hash>?
     <trim-modifiers>

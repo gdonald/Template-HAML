@@ -34,6 +34,58 @@ sub decode-sq(Str $s --> Str) {
   $s.subst(/'\\' (.)/, -> $/ { $0.Str }, :g);
 }
 
+sub split-obj-ref-args(Str $body --> List) {
+  my @args;
+  my $current = '';
+  my $depth   = 0;
+  my $i       = 0;
+  my $len     = $body.chars;
+
+  while $i < $len {
+    my $c = $body.substr($i, 1);
+
+    if $c eq '\\' && $i + 1 < $len {
+      $current ~= $c ~ $body.substr($i + 1, 1);
+      $i += 2;
+      next;
+    }
+
+    if $c eq "'" || $c eq '"' {
+      my $q = $c;
+      $current ~= $c;
+      $i++;
+      while $i < $len {
+        my $cc = $body.substr($i, 1);
+        if $cc eq '\\' && $i + 1 < $len {
+          $current ~= $cc ~ $body.substr($i + 1, 1);
+          $i += 2;
+          next;
+        }
+        $current ~= $cc;
+        $i++;
+        last if $cc eq $q;
+      }
+      next;
+    }
+
+    if $c eq '[' || $c eq '(' || $c eq '{' { $depth++ }
+    if $c eq ']' || $c eq ')' || $c eq '}' { $depth-- }
+
+    if $c eq ',' && $depth == 0 {
+      @args.push: $current.trim;
+      $current = '';
+      $i++;
+      next;
+    }
+
+    $current ~= $c;
+    $i++;
+  }
+
+  @args.push: $current.trim if $current.trim.chars;
+  @args.grep({ .chars }).List;
+}
+
 sub blank-line(Str $s --> Bool) {
   so $s ~~ /^ \h* $/;
 }
@@ -143,6 +195,12 @@ class Actions is export {
       @attrs.append: $/<params-hash>.made.list;
     }
 
+    my @obj-ref-args;
+    if $/<object-ref>.defined {
+      my $body = $/<object-ref><obj-ref-balanced>.Str;
+      @obj-ref-args = split-obj-ref-args($body);
+    }
+
     my $content = $/<to-eol>.defined ?? $/<to-eol>.Str.trim !! '';
 
     my $trim    = $/<trim-modifiers>.Str;
@@ -152,7 +210,7 @@ class Actions is export {
 
     my $object = Tag.new(
       :$indent, :$name, :@attrs, :$content,
-      :@classes, :@ids,
+      :@classes, :@ids, :@obj-ref-args,
       :$self-close, :$trim-outer, :$trim-inner,
       :$line, :$column,
       :output-indent-width($!output-indent-width),

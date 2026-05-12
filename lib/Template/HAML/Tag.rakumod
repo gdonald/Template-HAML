@@ -31,6 +31,7 @@ class Tag is export {
   has Str  $.content;
   has @.classes             of Str;
   has @.ids                 of Str;
+  has @.obj-ref-args        of Str;
   has Bool $.self-close     is rw = False;
   has Bool $.trim-outer     = False;
   has Bool $.trim-inner     = False;
@@ -39,6 +40,7 @@ class Tag is export {
   submethod BUILD(
     :$!indent, :$!name, :@attrs, :$!content,
     :@!classes, :@!ids,
+    :@!obj-ref-args,
     Bool :$!self-close = False,
     Bool :$!trim-outer = False,
     Bool :$!trim-inner = False,
