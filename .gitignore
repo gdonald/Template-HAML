@@ -1,3 +1,4 @@
 .precomp
 docs/
 docs-src/site/
+.fezignore

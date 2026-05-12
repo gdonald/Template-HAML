@@ -1,5 +1,6 @@
 
 use Template::HAML::Config;
+use Template::HAML::Interpolation;
 use Template::HAML::X;
 
 sub html-escape(Str $s --> Str) {
@@ -97,21 +98,45 @@ class Tag is export {
     }
   }
 
+  method maybe-interp(Str $s) {
+    has-interp($s)
+      ?? Template::HAML::Interpolation::InterpString.new(:raw($s))
+      !! $s;
+  }
+
   method merge-shorthands {
     if @!ids.elems {
+      my @parts;
+      @parts.push: self.maybe-interp($_) for @!ids;
       my $existing = self.find-attr-value('id');
-      my @parts = (|@!ids, |($existing.defined ?? ($existing,) !! ()));
-      self.set-attr('id', @parts.join('_'));
+      @parts.push: $existing if $existing.defined;
+
+      if @parts.grep({ $_ !~~ Str }).elems {
+        self.set-attr('id', @parts.List);
+      } else {
+        self.set-attr('id', @parts.join('_'));
+      }
     }
 
     if @!classes.elems {
       my $existing = self.find-attr-value('class');
       my @parts;
       if $existing.defined {
-        @parts.push: $_ for $existing.split(' ');
+        if $existing ~~ Template::HAML::Interpolation::InterpString {
+          @parts.push: $existing;
+        } elsif $existing ~~ Positional {
+          @parts.push: $_ for $existing.list;
+        } else {
+          @parts.push: $_ for $existing.Str.split(' ');
+        }
       }
-      @parts.push: $_ for @!classes;
-      self.set-attr('class', @parts.unique.join(' '));
+      @parts.push: self.maybe-interp($_) for @!classes;
+
+      if @parts.grep({ $_ !~~ Str }).elems {
+        self.set-attr('class', @parts.List);
+      } else {
+        self.set-attr('class', @parts.unique.join(' '));
+      }
     }
   }
 

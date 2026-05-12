@@ -27,7 +27,7 @@ sub capture(@args) {
   { :$exit, :out($out-text), :err($err-text) };
 }
 
-# 15.4.1 — top-level help
+# top-level help
 {
   my $r = capture(['help']);
   is $r<exit>, 0, 'help exits 0';
@@ -36,7 +36,7 @@ sub capture(@args) {
   like $r<out>, /'check'/,  'help lists check';
 }
 
-# 15.4.2 — per-command help
+# per-command help
 {
   my $r = capture(['render', '--help']);
   is $r<exit>, 0, 'render --help exits 0';
@@ -57,7 +57,7 @@ sub capture(@args) {
   like $r<err>, /"unknown command"/, 'mentions unknown command';
 }
 
-# 15.1.1 — render to stdout
+# render to stdout
 {
   my $dir  = make-tmpdir;
   my $file = $dir.add('hello.haml');
@@ -69,7 +69,7 @@ sub capture(@args) {
   $dir.rmdir;
 }
 
-# 15.1.2 — render to file via -o
+# render to file via -o
 {
   my $dir  = make-tmpdir;
   my $file = $dir.add('hello.haml');
@@ -84,7 +84,7 @@ sub capture(@args) {
   $dir.rmdir;
 }
 
-# 15.2.1 — --locals
+# --locals
 {
   my $dir  = make-tmpdir;
   my $file = $dir.add('locals.haml');
@@ -96,7 +96,7 @@ sub capture(@args) {
   $dir.rmdir;
 }
 
-# 15.2.2 — --format xhtml affects void elements
+# --format xhtml affects void elements
 {
   my $dir  = make-tmpdir;
   my $file = $dir.add('void.haml');
@@ -109,7 +109,7 @@ sub capture(@args) {
   $dir.rmdir;
 }
 
-# 15.2.3 — --no-escape-html
+# --no-escape-html
 {
   my $dir  = make-tmpdir;
   my $file = $dir.add('esc.haml');
@@ -123,7 +123,7 @@ sub capture(@args) {
   $dir.rmdir;
 }
 
-# 15.2.4 — --ugly
+# --ugly
 {
   my $dir  = make-tmpdir;
   my $file = $dir.add('ugly.haml');
@@ -142,7 +142,7 @@ sub capture(@args) {
   like $r<err>, /'not found'/, 'mentions not found';
 }
 
-# 15.1.3 — check on valid file
+# check on valid file
 {
   my $dir  = make-tmpdir;
   my $file = $dir.add('ok.haml');

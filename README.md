@@ -140,4 +140,9 @@ register-filter(:name<shout>, :handler(-> $body, %locals { $body.uc }));
 
 ### License
 
-Released under the [Artistic License 2.0](https://opensource.org/licenses/Artistic-2.0).
+Copyright (c) 2020-2026 Greg Donald
+
+This software is licensed under the Artistic License 2.0.
+
+[![GitHub](https://img.shields.io/github/license/gdonald/Template-HAML?color=aa0000)](https://github.com/gdonald/Template-HAML/blob/master/LICENSE)
+

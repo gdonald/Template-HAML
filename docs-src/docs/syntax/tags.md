@@ -71,3 +71,75 @@ The class shorthand merges with a `class:` attribute hash entry:
 ```
 
 See [Attributes](attributes.md) for the full attribute hash syntax.
+
+## Shorthand interpolation
+
+`#{ ... }` and `!{ ... }` are recognized inside class and id shorthand and
+may be combined with literal segments (including hyphens):
+
+```haml
+%div.item-#{ $id }
+%div#row-#{ $n }
+%li.item-#{ $id }#row-#{ $n }
+```
+
+with `:locals(%(id => 7, n => 4))` renders to:
+
+```html
+<div class='item-7'></div>
+<div id='row-4'></div>
+<li id='row-4' class='item-7'></li>
+```
+
+Multiple interpolations may appear in a single shorthand segment:
+
+```haml
+%div.a-#{ $x }-b-#{ $y }
+```
+
+with `:locals(%(x => 1, y => 2))` renders to:
+
+```html
+<div class='a-1-b-2'></div>
+```
+
+`#{ ... }` HTML-escapes its value; `!{ ... }` emits it raw:
+
+```haml
+%div.item-#{ $s }
+```
+
+with `:locals(%(s => 'a&b'))` renders to:
+
+```html
+<div class='item-a&amp;b'></div>
+```
+
+Interpolated shorthand merges with hash-style `class:` and `id:` entries
+using the same rules as plain shorthand — classes accumulate, ids
+concatenate with `_`:
+
+```haml
+%p.item-#{ $id }{class: 'active'}
+%p#row-#{ $n }{id: 'extra'}
+```
+
+with `:locals(%(id => 9, n => 5))` renders to:
+
+```html
+<p class='active item-9'></p>
+<p id='row-5_extra'></p>
+```
+
+To produce a literal `#{...}` in a shorthand segment, escape the `#` with
+a backslash:
+
+```haml
+%div.literal-\#{x}
+```
+
+renders to:
+
+```html
+<div class='literal-#{x}'></div>
+```

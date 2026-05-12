@@ -1,0 +1,92 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Test;
+
+plan 18;
+
+is HAML.render(:src(Q[%div.item-#{$id}] ~ "\n"), :locals(%(id => 7))),
+   "<div class='item-7'></div>\n",
+   '#{...} inside class shorthand';
+
+is HAML.render(:src(Q[%p.item-#{$id} Hello] ~ "\n"), :locals(%(id => 'x'))),
+   "<p class='item-x'>Hello</p>\n",
+   'class shorthand interp with content';
+
+is HAML.render(:src(Q[%div.a.item-#{$id}.b] ~ "\n"), :locals(%(id => 3))),
+   "<div class='a item-3 b'></div>\n",
+   'class shorthand interp among static classes';
+
+is HAML.render(:src(Q[%div#row-#{$n}] ~ "\n"), :locals(%(n => 4))),
+   "<div id='row-4'></div>\n",
+   '#{...} inside id shorthand';
+
+is HAML.render(:src(Q[%section#main-#{$slug}] ~ "\n"), :locals(%(slug => 'home'))),
+   "<section id='main-home'></section>\n",
+   'id shorthand interp on explicit tag';
+
+is HAML.render(:src(Q[%li.item-#{$id}#row-#{$n}] ~ "\n"),
+                :locals(%(id => 'q', n => 2))),
+   "<li id='row-2' class='item-q'></li>\n",
+   'combined class and id shorthand interp';
+
+# Interaction with hash-attr class:
+is HAML.render(:src(Q[%p.item-#{$id}{class: 'active'}] ~ "\n"),
+                :locals(%(id => 9))),
+   "<p class='active item-9'></p>\n",
+   'shorthand interp merges with hash class:';
+
+is HAML.render(:src(Q[%p#row-#{$n}{id: 'extra'}] ~ "\n"),
+                :locals(%(n => 5))),
+   "<p id='row-5_extra'></p>\n",
+   'shorthand id interp concatenates with hash id:';
+
+is HAML.render(:src(Q[%div.literal-\#{x}] ~ "\n")),
+   Q[<div class='literal-#{x}'></div>] ~ "\n",
+   '\\#{...} in class shorthand is literal';
+
+is HAML.render(:src(Q[%div#row-\#{y}] ~ "\n")),
+   Q[<div id='row-#{y}'></div>] ~ "\n",
+   '\\#{...} in id shorthand is literal';
+
+# Hyphens in shorthand (parity feature needed for interp use case)
+is HAML.render(:src("%p.foo-bar Hi\n")),
+   "<p class='foo-bar'>Hi</p>\n",
+   'hyphenated class shorthand';
+
+is HAML.render(:src("%section#main-header\n")),
+   "<section id='main-header'></section>\n",
+   'hyphenated id shorthand';
+
+# Non-escaping interp (!{...}) in shorthand
+is HAML.render(:src(Q[%div.cls-!{$raw}] ~ "\n"), :locals(%(raw => 'X'))),
+   "<div class='cls-X'></div>\n",
+   '!{...} in class shorthand';
+
+# HTML escaping applies for #{...} value
+is HAML.render(:src(Q[%div.item-#{$s}] ~ "\n"), :locals(%(s => 'a&b'))),
+   "<div class='item-a&amp;b'></div>\n",
+   '#{...} in shorthand HTML-escapes the value';
+
+# Multiple interp segments in a single shorthand
+is HAML.render(:src(Q[%div.a-#{$x}-b-#{$y}] ~ "\n"),
+                :locals(%(x => 1, y => 2))),
+   "<div class='a-1-b-2'></div>\n",
+   'multiple interps in a single class shorthand';
+
+# Combining with .x.y after interp class
+is HAML.render(:src(Q[%div.x.item-#{$id}] ~ "\n"), :locals(%(id => 'k'))),
+   "<div class='x item-k'></div>\n",
+   'static class then interp class';
+
+# Interp in id with hyphen
+is HAML.render(:src(Q[%div#r-#{$a}-#{$b}] ~ "\n"),
+                :locals(%(a => 'p', b => 'q'))),
+   "<div id='r-p-q'></div>\n",
+   'multiple interps in id shorthand';
+
+# Plain shorthand still works
+is HAML.render(:src("%a.cls#main go\n")),
+   "<a id='main' class='cls'>go</a>\n",
+   'non-interp shorthand unchanged';

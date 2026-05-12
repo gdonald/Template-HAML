@@ -7,7 +7,7 @@ use Test;
 
 plan 34;
 
-# 10.1 Configuration object
+# Configuration object
 {
   my $cfg = Template::HAML::Config.new;
   is $cfg.format,        'html5',  'default format is html5';
@@ -24,7 +24,7 @@ dies-ok { Template::HAML::Config.new(:format<bogus>) }, 'invalid format dies';
 dies-ok { Template::HAML::Config.new(:output-style<weird>) }, 'invalid output-style dies';
 dies-ok { Template::HAML::Config.new(:attr-quote<x>) }, 'invalid attr-quote dies';
 
-# 10.2 Format option — XHTML void self-close
+# Format option — XHTML void self-close
 {
   my $cfg = Template::HAML::Config.new(:format<xhtml>);
   is HAML.render(:src("%br\n"), :config($cfg)),
@@ -36,7 +36,7 @@ dies-ok { Template::HAML::Config.new(:attr-quote<x>) }, 'invalid attr-quote dies
      'XHTML void %img emits <img />';
 }
 
-# 10.2 Format option — HTML5 void no self-close marker
+# Format option — HTML5 void no self-close marker
 {
   my $cfg = Template::HAML::Config.new(:format<html5>);
   is HAML.render(:src("%br\n"), :config($cfg)),
@@ -44,7 +44,7 @@ dies-ok { Template::HAML::Config.new(:attr-quote<x>) }, 'invalid attr-quote dies
      'HTML5 void emits bare tag';
 }
 
-# 10.2 Format affects boolean attribute rendering
+# Format affects boolean attribute rendering
 {
   my $cfg = Template::HAML::Config.new(:format<xhtml>);
   is HAML.render(:src("%input\(disabled\)\n"), :config($cfg)),
@@ -57,7 +57,7 @@ dies-ok { Template::HAML::Config.new(:attr-quote<x>) }, 'invalid attr-quote dies
      'HTML5 boolean attr is bare';
 }
 
-# 10.2 Default doctype follows format
+# Default doctype follows format
 {
   my $cfg-html5 = Template::HAML::Config.new(:format<html5>);
   is HAML.render(:src("!!!\n"), :config($cfg-html5)),
@@ -75,7 +75,7 @@ dies-ok { Template::HAML::Config.new(:attr-quote<x>) }, 'invalid attr-quote dies
      'XHTML default doctype';
 }
 
-# 10.3 escape_html
+# escape_html
 {
   my $cfg = Template::HAML::Config.new(:escape-html(False));
   is HAML.render(:src("= \$x\n"), :locals(%(x => '<b>')), :config($cfg)),
@@ -96,7 +96,7 @@ dies-ok { Template::HAML::Config.new(:attr-quote<x>) }, 'invalid attr-quote dies
      'escape-html True: != still does not escape';
 }
 
-# 10.3 escape_attrs
+# escape_attrs
 {
   my $cfg-off = Template::HAML::Config.new(:escape-attrs(False));
   is HAML.render(:src("%a\{href: 'a&b'\}\n"), :config($cfg-off)),
@@ -109,7 +109,7 @@ dies-ok { Template::HAML::Config.new(:attr-quote<x>) }, 'invalid attr-quote dies
      'escape-attrs True (default): ampersand escaped';
 }
 
-# 10.4 Output style — ugly
+# Output style — ugly
 {
   my $cfg = Template::HAML::Config.new(:output-style<ugly>);
   is HAML.render(:src("%div\n  %p hi\n"), :config($cfg)),
@@ -117,7 +117,7 @@ dies-ok { Template::HAML::Config.new(:attr-quote<x>) }, 'invalid attr-quote dies
      'ugly: no whitespace between tags';
 }
 
-# 10.5 autoclose customization
+# autoclose customization
 {
   my $cfg = Template::HAML::Config.new(:autoclose(<custom-tag br>), :format<xhtml>);
   is HAML.render(:src("%custom-tag\n"), :config($cfg)),
@@ -129,7 +129,7 @@ dies-ok { Template::HAML::Config.new(:attr-quote<x>) }, 'invalid attr-quote dies
      'autoclose without img: img is no longer void';
 }
 
-# 10.6 Encoding for XML doctype
+# Encoding for XML doctype
 {
   my $cfg = Template::HAML::Config.new(:encoding<iso-8859-1>);
   is HAML.render(:src("!!! XML\n"), :config($cfg)),
@@ -137,7 +137,7 @@ dies-ok { Template::HAML::Config.new(:attr-quote<x>) }, 'invalid attr-quote dies
      'encoding option drives XML decl';
 }
 
-# 10.7 attr_quote
+# attr_quote
 {
   my $cfg = Template::HAML::Config.new(:attr-quote('"'));
   is HAML.render(:src("%a\{href: '/'\}\n"), :config($cfg)),
@@ -145,7 +145,7 @@ dies-ok { Template::HAML::Config.new(:attr-quote<x>) }, 'invalid attr-quote dies
      'attr-quote " uses double quotes';
 }
 
-# 10.7 suppress_eval
+# suppress_eval
 {
   my $cfg = Template::HAML::Config.new(:suppress-eval);
   is HAML.render(:src("= \$x\n"), :locals(%(x => 'hello')), :config($cfg)),

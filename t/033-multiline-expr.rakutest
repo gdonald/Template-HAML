@@ -8,7 +8,7 @@ use Test;
 
 plan 18;
 
-# 4.5.1 — trailing comma continuation on = output
+# trailing comma continuation on = output
 my $src1 = q:to/HAML/;
 = [1,
    2,
@@ -17,7 +17,7 @@ HAML
 is HAML.render(:src($src1)), "6\n",
    'trailing comma continuation joins array literal';
 
-# 4.5.1 — trailing comma in argument list
+# trailing comma in argument list
 my $src2 = q:to/HAML/;
 = (1,
    2,
@@ -26,7 +26,7 @@ HAML
 is HAML.render(:src($src2)), "1-2-3\n",
    'trailing comma continuation joins paren list';
 
-# 4.5.2 — unbalanced paren continuation
+# unbalanced paren continuation
 my $src3 = q:to/HAML/;
 = sprintf('%d-%d',
           10, 20)
@@ -34,7 +34,7 @@ HAML
 is HAML.render(:src($src3)), "10-20\n",
    'paren continuation joins multi-line argument list';
 
-# 4.5.2 — unbalanced square bracket continuation
+# unbalanced square bracket continuation
 my $src4 = q:to/HAML/;
 = [10,
    20,
@@ -44,7 +44,7 @@ HAML
 is HAML.render(:src($src4)), "3\n",
    'square-bracket continuation';
 
-# 4.5.2 — unbalanced curly brace continuation
+# unbalanced curly brace continuation
 my $src5 = q:to/HAML/;
 = ({
     x => 'y'
@@ -53,7 +53,7 @@ HAML
 is HAML.render(:src($src5)), "y\n",
    'curly-brace continuation';
 
-# 4.5.2 — nested bracket continuation
+# nested bracket continuation
 my $src6 = q:to/HAML/;
 = [
     [1, 2],
@@ -63,14 +63,14 @@ HAML
 is HAML.render(:src($src6)), "2\n",
    'nested brackets across multiple lines';
 
-# 4.5.3 — never balances → X::HAML::UnbalancedExpression
+# never balances → X::HAML::UnbalancedExpression
 my $src7 = q:to/HAML/;
 = [1,
 HAML
 throws-like { HAML.render(:src($src7)) }, X::HAML::UnbalancedExpression,
    'unbalanced bracket at EOF raises X::HAML::UnbalancedExpression';
 
-# 4.5.3 — trailing comma at EOF
+# trailing comma at EOF
 my $src8 = "= 1,\n";
 throws-like { HAML.render(:src($src8)) }, X::HAML::UnbalancedExpression,
    'trailing comma at EOF raises X::HAML::UnbalancedExpression';

@@ -26,6 +26,13 @@ sub resolve-attrs(@attrs, %locals) {
     my $v = $p.value;
     if $v ~~ Template::HAML::Interpolation::InterpString {
       $p.key => $v.resolve(%locals, :escape(False));
+    } elsif $v ~~ Positional && $v !~~ Pair {
+      my @resolved = $v.list.map(-> $item {
+        $item ~~ Template::HAML::Interpolation::InterpString
+          ?? $item.resolve(%locals, :escape(False))
+          !! $item;
+      });
+      $p.key => @resolved.List;
     } else {
       $p;
     }

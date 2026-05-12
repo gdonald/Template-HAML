@@ -21,8 +21,17 @@ grammar Grammar is export {
 
   token tag-name        { <[A..Za..z_]> [ <[\w \: \-]> ]* }
   token explicit-tag-name { '%' <tag-name> }
-  token shorthand-class { '.' <word> }
-  token shorthand-id    { '#' <word> }
+  token shorthand-interp-body { [ '\\' . | <-[\\ }]> ]* }
+  token shorthand-interp { <[#!]> '{' <shorthand-interp-body> '}' }
+  token shorthand-escaped-interp { '\\' <[#!]> '{' <shorthand-interp-body> '}' }
+  token shorthand-atom  {
+    | <shorthand-escaped-interp>
+    | <shorthand-interp>
+    | <[\w \-]>+
+  }
+  token shorthand-name  { <shorthand-atom>+ }
+  token shorthand-class { '.' <shorthand-name> }
+  token shorthand-id    { '#' <!before '{'> <shorthand-name> }
   token shorthand       { <shorthand-class> | <shorthand-id> }
 
   token trim-modifiers  { <[<>]> ** 0..2 }

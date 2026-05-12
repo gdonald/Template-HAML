@@ -129,9 +129,9 @@ class Actions is export {
     my @ids;
     for ($/<shorthand> // ()).list -> $sh {
       if $sh<shorthand-class>.defined {
-        @classes.push: $sh<shorthand-class><word>.Str;
+        @classes.push: $sh<shorthand-class><shorthand-name>.Str;
       } elsif $sh<shorthand-id>.defined {
-        @ids.push: $sh<shorthand-id><word>.Str;
+        @ids.push: $sh<shorthand-id><shorthand-name>.Str;
       }
     }
 
