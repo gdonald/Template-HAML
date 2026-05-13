@@ -17,6 +17,14 @@ sub default-user-context() {
   Template::HAML::ViewContext.new;
 }
 
+my %fn-cache;
+
+sub fn-cache-clear(--> Int) {
+  my $n = %fn-cache.elems;
+  %fn-cache = ();
+  $n;
+}
+
 class HAML is export {
   has Template::HAML::Config $.config;
   has @.search-paths is rw;
@@ -229,10 +237,14 @@ class HAML is export {
   }
 
   method render-cached(Str:D :$src!, :%locals, Template::HAML::Config :$config, :$context --> Str) {
-    my $cfg  = $config // ($!config // Template::HAML::Config.new);
-    my $path = self.compile-to-cache(:$src, :config($cfg));
-    my &fn   = self.load-from-cache($path);
-    my $ctx  = Template::HAML::Context.new(
+    my $cfg = $config // ($!config // Template::HAML::Config.new);
+    my $key = self.compiled-cache-key(:$src, :config($cfg));
+    unless %fn-cache{$key}:exists {
+      my $path = self.compile-to-cache(:$src, :config($cfg));
+      %fn-cache{$key} = self.load-from-cache($path);
+    }
+    my &fn = %fn-cache{$key};
+    my $ctx = Template::HAML::Context.new(
       :haml(self.WHAT === HAML ?? self.WHAT !! self),
       :user-context($context // default-user-context()),
     );
@@ -266,11 +278,15 @@ class HAML is export {
   }
 
   method render-file-cached(Str:D :$file!, :%locals, Template::HAML::Config :$config, :$context --> Str) {
-    my $cfg     = $config // ($!config // Template::HAML::Config.new);
+    my $cfg      = $config // ($!config // Template::HAML::Config.new);
     my $resolved = self!resolve-file-for-cache($file);
-    my $path    = self.compile-file-to-cache(:$file, :config($cfg));
-    my &fn      = self.load-from-cache($path);
-    my $ctx     = Template::HAML::Context.new(
+    my $key      = self.compiled-cache-key-for-file(:$file, :config($cfg));
+    unless %fn-cache{$key}:exists {
+      my $path = self.compile-file-to-cache(:$file, :config($cfg));
+      %fn-cache{$key} = self.load-from-cache($path);
+    }
+    my &fn = %fn-cache{$key};
+    my $ctx = Template::HAML::Context.new(
       :haml(self),
       :current-dir($resolved.dirname),
       :user-context($context // default-user-context()),
@@ -279,6 +295,7 @@ class HAML is export {
   }
 
   method clear-compiled-cache(--> Int) {
+    fn-cache-clear();
     my $root = $!compiled-cache-dir;
     return 0 unless $root.e;
     my $count = 0;
@@ -292,4 +309,8 @@ class HAML is export {
     }
     $count;
   }
+
+  method compiled-fn-cache-size(--> Int) { %fn-cache.elems }
+
+  method clear-compiled-fn-cache(--> Int) { fn-cache-clear() }
 }

@@ -89,6 +89,12 @@ Invalidation is automatic for both flavors of the API:
 Stale entries left behind on disk are not garbage-collected automatically; see
 [`clear-compiled-cache`](#clear-compiled-cache) below.
 
+On top of the on-disk cache, each unique `(src, config)` or `(file, mtime,
+config)` pair produces a compiled `&fn` closure that is memoized in-process,
+so the cache file is `EVAL`'d at most once per process per template. See
+[`compiled-fn-cache-size`](#hamlcompiled-fn-cache-size) and
+[`clear-compiled-fn-cache`](#hamlclear-compiled-fn-cache).
+
 ### `HAML.new(:compiled-cache-dir(...))`
 
 ```raku
@@ -150,6 +156,13 @@ my $html = $haml.render-cached(:src(...), :%locals, :config(...));
 Convenience wrapper: `compile-to-cache` + `load-from-cache` + invocation
 with the appropriate `Template::HAML::Context` plumbed through `$*HAML-CTX`.
 
+The compiled `&fn` is memoized in-process by cache key, so a cache file is
+`EVAL`'d at most once per process per `(src, config)` tuple. Subsequent calls
+skip disk I/O entirely and reuse the in-memory closure. The memoization is
+shared across `HAML` instances in the same process — different
+`:compiled-cache-dir` values do not produce duplicate entries when the cache
+key matches.
+
 ### File-based cache API
 
 The same on-disk layout is reused for cached compilations keyed by file
@@ -170,6 +183,10 @@ changes, so touching the file or editing it both force a recompile.
 `Template::HAML::Context` so that `render(:partial)` inside the template
 resolves relative paths the same way `HAML.render(:file)` does.
 
+Like `render-cached`, the compiled `&fn` is memoized in-process by cache key
+(which includes the file's mtime). An edited file produces a new key and a
+fresh `EVAL`; an unchanged file reuses the in-memory closure.
+
 ### `HAML.clear-compiled-cache`
 
 ```raku
@@ -179,7 +196,28 @@ my Int $removed = $haml.clear-compiled-cache;
 Removes every `.raku-haml` file under the cache directory and returns the
 count. Empty shard directories are removed too. Use this when configuration
 changes, after upgrading Template::HAML, or any time the cache is suspected
-of being stale.
+of being stale. The in-process `&fn` memoization is cleared as well.
+
+### `HAML.compiled-fn-cache-size`
+
+```raku
+my Int $n = $haml.compiled-fn-cache-size;
+```
+
+Returns the number of compiled `&fn` closures currently memoized in-process.
+The memoization is process-wide (shared across `HAML` instances), so this is
+also the global count.
+
+### `HAML.clear-compiled-fn-cache`
+
+```raku
+my Int $cleared = $haml.clear-compiled-fn-cache;
+```
+
+Drops every in-process memoized `&fn` and returns the number of entries that
+were removed. The on-disk cache is untouched; the next render rebuilds the
+in-memory entry by `EVAL`'ing the cache file (or recompiling if the file is
+missing).
 
 ## `register-filter`
 
