@@ -1,0 +1,146 @@
+
+use v6.d;
+use lib 'lib';
+use MONKEY-SEE-NO-EVAL;
+use Template::HAML;
+use Template::HAML::Codegen;
+use Template::HAML::Config;
+use Test;
+
+plan 34;
+
+sub compile-and-call(Str $src, %locals = (), Template::HAML::Config :$config) {
+  my $source = HAML.compile-source-to-raku(:$src, :$config);
+  my &fn     = EVAL $source;
+  &fn(%locals, :$config);
+}
+
+sub round-trip(Str $src, %locals, Str $desc, Template::HAML::Config :$config) {
+  my $expected = HAML.render(:$src, :%locals, :$config);
+  my $actual   = compile-and-call($src, %locals, :$config);
+  is $actual, $expected, $desc;
+}
+
+# ---- emit-source returns Raku code ----
+
+{
+  my $src = "%p hi\n";
+  my $code = HAML.compile-source-to-raku(:$src);
+  ok $code.contains('Template::HAML::Renderer'), 'emitted source mentions Renderer';
+  ok $code.contains('sub ('),                    'emitted source defines an anon sub';
+  ok $code.contains('Tag.new('),                 'emitted source reconstructs Tag nodes';
+}
+
+# ---- core node types ----
+
+round-trip "%p hello\n",                          %(),                'plain inline tag';
+round-trip "%div\n  %p first\n  %p second\n",     %(),                'nested tags';
+round-trip "%br\n",                               %(),                'void element self-closes';
+round-trip "%p.x.y#main hi\n",                    %(),                'shorthand classes and id';
+round-trip "%p Plain text content\n",             %(),                'tag with text content';
+round-trip "Plain at top\n",                      %(),                'plain text node';
+
+# ---- doctypes ----
+
+round-trip "!!!\n%html\n  %body\n",               %(),                'html5 doctype';
+round-trip "!!! XML\n",                           %(),                'XML declaration';
+
+# ---- comments ----
+
+round-trip "/ a comment\n",                       %(),                'visible comment';
+round-trip "-# silent\n",                         %(),                'silent comment';
+round-trip "/[if IE]\n  %p hi\n",                 %(),                'conditional comment block';
+
+# ---- statements / control flow ----
+
+round-trip "= \$name\n",                          %(name => 'World'), 'expression statement';
+round-trip "!= \$raw\n",                          %(raw  => '<b>x</b>'), 'unescaped expression';
+round-trip "&= \$x\n",                            %(x    => '<x>'),   'force-escape statement';
+round-trip "== Hello, \#\{\$name\}!\n",           %(name => 'World'), 'string interpolation statement';
+round-trip "- my \$x = 1\n%p= \$x\n",             %(),                'silent assignment then output';
+
+round-trip Q:to/HAML/, %(items => [1, 2, 3]), 'for loop';
+- for $items -> $i
+  %li= $i
+HAML
+
+round-trip Q:to/HAML/, %(n => 2), 'if/elsif/else chain';
+- if $n == 1
+  %p one
+- elsif $n == 2
+  %p two
+- else
+  %p other
+HAML
+
+round-trip Q:to/HAML/, %(items => [1, 2, 3].Array), 'while loop drains array';
+- while $items.elems
+  %li= $items.shift
+HAML
+
+round-trip Q:to/HAML/, %(label => 2), 'given/when statement';
+- given $label
+  - when 1
+    %p one
+  - when 2
+    %p two
+  - default
+    %p other
+HAML
+
+# ---- attributes ----
+
+round-trip Q[%a(href='/' title='Home') home] ~ "\n",      %(),                       'static attrs';
+round-trip Q[%a{href: $url} go] ~ "\n",                   %(url => '/x'),            'dynamic hash attr';
+round-trip Q[%div{data: {foo: 1, bar: 'baz'}} body] ~ "\n", %(),                     'data hash expansion';
+
+# ---- attribute splat ----
+
+my %sp = href => '/about', title => 'About';
+round-trip Q[%a{|$attrs} link] ~ "\n",                    %(attrs => %sp),           'attribute splat';
+
+round-trip Q[%div.shorthand{|$attrs} body] ~ "\n", %(attrs => { class => 'extra' }), 'splat merges with shorthand';
+
+# ---- object reference ----
+
+class Account {
+  has Int $.id;
+  method haml-object-ref(--> Str) { 'account' }
+}
+my $acct = Account.new(:id(7));
+round-trip Q[%div[$acct] hi] ~ "\n",                      %(acct => $acct),          'object reference';
+
+# ---- interpolation in shorthand ----
+
+round-trip Q[%li.item-#{$id} hi] ~ "\n",                  %(id => 42),               'interpolated class shorthand';
+
+# ---- filters ----
+
+round-trip Q:to/HAML/, %(name => 'World'), 'plain filter with interpolation';
+:plain
+  hello #{$name}
+HAML
+
+round-trip Q:to/HAML/, %(), 'escaped filter';
+:escaped
+  <b>x</b>
+HAML
+
+# ---- config preservation ----
+
+{
+  my $cfg = Template::HAML::Config.new(:format<xhtml>);
+  round-trip "%br\n", %(), :config($cfg), 'xhtml self-close in compiled output';
+}
+
+# ---- multi tree depth ----
+
+round-trip Q:to/HAML/, %(name => 'world'), 'nested with statements and tags';
+%html
+  %body
+    %h1
+      = "Hello, " ~ $name
+    %ul
+      - for ^3 -> $i
+        %li= $i
+HAML

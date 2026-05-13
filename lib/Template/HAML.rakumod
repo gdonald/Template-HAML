@@ -1,5 +1,9 @@
 
+use MONKEY-SEE-NO-EVAL;
+
 use Template::HAML::Actions;
+use Template::HAML::Cache;
+use Template::HAML::Codegen;
 use Template::HAML::Config;
 use Template::HAML::Context;
 use Template::HAML::Multiline;
@@ -12,12 +16,14 @@ class HAML is export {
   has Template::HAML::Config $.config;
   has @.search-paths is rw;
   has Bool $.cache is rw = True;
+  has IO::Path $.compiled-cache-dir is rw;
   has %!compiled-cache;
 
   submethod BUILD(
     Template::HAML::Config :$config,
     :$search-paths,
     Bool :$cache = True,
+    :$compiled-cache-dir,
   ) {
     $!config = $config // Template::HAML::Config.new;
     @!search-paths = do given $search-paths {
@@ -26,6 +32,11 @@ class HAML is export {
       default        { $search-paths.list }
     };
     $!cache = $cache;
+    $!compiled-cache-dir = do given $compiled-cache-dir {
+      when !.defined { default-cache-dir() }
+      when IO::Path  { $compiled-cache-dir }
+      default        { $compiled-cache-dir.IO }
+    };
   }
 
   multi method render(HAML:U: Str:D :$src!, :%locals, Template::HAML::Config :$config) {
@@ -167,5 +178,63 @@ class HAML is export {
 
   method clear-cache() {
     %!compiled-cache = ();
+  }
+
+  multi method compile-source-to-raku(HAML:U: Str:D :$src!, Template::HAML::Config :$config --> Str) {
+    my $cfg  = $config // Template::HAML::Config.new;
+    my $tree = self!compile-source($src, $cfg);
+    Codegen.new(:config($cfg)).emit($tree);
+  }
+
+  multi method compile-source-to-raku(HAML:D: Str:D :$src!, Template::HAML::Config :$config --> Str) {
+    my $cfg  = $config // $!config // Template::HAML::Config.new;
+    my $tree = self!compile-source($src, $cfg);
+    Codegen.new(:config($cfg)).emit($tree);
+  }
+
+  method compiled-cache-key(Str:D :$src!, Template::HAML::Config :$config --> Str) {
+    my $cfg = $config // ($!config // Template::HAML::Config.new);
+    compute-cache-key($src, $cfg);
+  }
+
+  method compiled-cache-path(Str:D :$src!, Template::HAML::Config :$config --> IO::Path) {
+    my $key = self.compiled-cache-key(:$src, :$config);
+    cache-path($!compiled-cache-dir, $key);
+  }
+
+  method compile-to-cache(Str:D :$src!, Template::HAML::Config :$config --> IO::Path) {
+    my $cfg  = $config // ($!config // Template::HAML::Config.new);
+    my $path = self.compiled-cache-path(:$src, :config($cfg));
+    return $path if $path.e;
+    my $code = self.compile-source-to-raku(:$src, :config($cfg));
+    write-cache-file($path, $code);
+    $path;
+  }
+
+  method load-from-cache(IO::Path:D $path --> Code) {
+    EVAL read-cache-file($path);
+  }
+
+  method render-cached(Str:D :$src!, :%locals, Template::HAML::Config :$config --> Str) {
+    my $cfg  = $config // ($!config // Template::HAML::Config.new);
+    my $path = self.compile-to-cache(:$src, :config($cfg));
+    my &fn   = self.load-from-cache($path);
+    my $ctx  = Template::HAML::Context.new(:haml(self.WHAT === HAML ?? self.WHAT !! self));
+    fn(%locals, :config($cfg), :$ctx);
+  }
+
+  method clear-compiled-cache(--> Int) {
+    my $root = $!compiled-cache-dir;
+    return 0 unless $root.e;
+    my $count = 0;
+    for $root.dir -> $shard {
+      next unless $shard.d;
+      for $shard.dir(:test(/ '.raku-haml' $/)) -> $f {
+        $f.unlink;
+        $count++;
+      }
+      $shard.rmdir if $shard.dir.elems == 0;
+    }
+    $count;
   }
 }

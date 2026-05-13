@@ -1,0 +1,143 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Template::HAML::Cache;
+use Template::HAML::Config;
+use Test;
+
+plan 22;
+
+# Per-test isolated cache dir under $*TMPDIR.
+sub fresh-dir(--> IO::Path) {
+  my $base = $*TMPDIR.add('Template-HAML-tests-' ~ (now.Rat * 1_000_000).Int ~ '-' ~ ((^1_000_000).pick));
+  $base.mkdir;
+  $base;
+}
+
+# ---- cache key stability ----
+
+{
+  my $a = HAML.new.compiled-cache-key(:src("%p hi\n"));
+  my $b = HAML.new.compiled-cache-key(:src("%p hi\n"));
+  is $a, $b, 'cache key is stable for identical input';
+  is $a.chars, 16, 'cache key is 16 hex chars';
+  ok $a ~~ /^ <[0..9 a..f]>+ $/, 'cache key is hex';
+}
+
+{
+  my $a = HAML.new.compiled-cache-key(:src("%p hi\n"));
+  my $b = HAML.new.compiled-cache-key(:src("%p bye\n"));
+  isnt $a, $b, 'different source -> different key';
+}
+
+{
+  my $cfg-html5 = Template::HAML::Config.new(:format<html5>);
+  my $cfg-xhtml = Template::HAML::Config.new(:format<xhtml>);
+  my $a = HAML.new.compiled-cache-key(:src("%br\n"), :config($cfg-html5));
+  my $b = HAML.new.compiled-cache-key(:src("%br\n"), :config($cfg-xhtml));
+  isnt $a, $b, 'config affects cache key';
+}
+
+# ---- on-disk layout ----
+
+{
+  my $dir   = fresh-dir;
+  my $haml  = HAML.new(:compiled-cache-dir($dir));
+  my $key   = $haml.compiled-cache-key(:src("%p hi\n"));
+  my $path  = $haml.compiled-cache-path(:src("%p hi\n"));
+
+  is $path.basename, $key ~ '.raku-haml',     'cache filename is <key>.raku-haml';
+  is $path.parent.basename, $key.substr(0, 2), 'cache file lives in 2-char shard dir';
+  ok $path.absolute.starts-with($dir.absolute), 'cache path is under configured dir';
+}
+
+# ---- compile-to-cache writes the file ----
+
+{
+  my $dir  = fresh-dir;
+  my $haml = HAML.new(:compiled-cache-dir($dir));
+  my $path = $haml.compile-to-cache(:src("%p hi\n"));
+  ok $path.e, 'compile-to-cache wrote the file';
+  ok $path.s > 0, 'cache file is non-empty';
+  my $contents = $path.slurp;
+  ok $contents.contains('Renderer'),   'cached file contains emitted Raku source';
+  ok $contents.contains('Tag.new('),   'cached file contains tag construction';
+}
+
+# ---- compile-to-cache is idempotent (file mtime unchanged on second call) ----
+
+{
+  my $dir  = fresh-dir;
+  my $haml = HAML.new(:compiled-cache-dir($dir));
+  my $path  = $haml.compile-to-cache(:src("%p hi\n"));
+  my $mtime = $path.modified.Num;
+  sleep 1.1;  # ensure mtime resolution gap
+  my $path2 = $haml.compile-to-cache(:src("%p hi\n"));
+  is $path2.absolute, $path.absolute, 'second compile returns same path';
+  is $path2.modified.Num, $mtime,     'cache file mtime unchanged on hit';
+}
+
+# ---- load-from-cache returns a callable sub ----
+
+{
+  my $dir  = fresh-dir;
+  my $haml = HAML.new(:compiled-cache-dir($dir));
+  my $path = $haml.compile-to-cache(:src("%p hi\n"));
+  my &fn   = $haml.load-from-cache($path);
+  isa-ok &fn, Code, 'load-from-cache returns a Code object';
+  is fn(), HAML.render(:src("%p hi\n")), 'cached sub matches HAML.render';
+}
+
+# ---- render-cached end-to-end ----
+
+{
+  my $dir  = fresh-dir;
+  my $haml = HAML.new(:compiled-cache-dir($dir));
+  my $out  = $haml.render-cached(:src("= \$name\n"), :locals(%(:name<World>)));
+  is $out, "World\n", 'render-cached produces expected output';
+}
+
+{
+  my $dir  = fresh-dir;
+  my $haml = HAML.new(:compiled-cache-dir($dir));
+  my $src  = "%div\n  %p hi\n  %p bye\n";
+  is $haml.render-cached(:$src), HAML.render(:$src),
+     'render-cached matches interpreter on nested tags';
+}
+
+# ---- env override ----
+
+{
+  my $dir = fresh-dir;
+  temp %*ENV<HAML_COMPILED_CACHE> = $dir.absolute;
+  my $haml = HAML.new;
+  is $haml.compiled-cache-dir.absolute, $dir.absolute,
+     'HAML_COMPILED_CACHE env overrides the default';
+}
+
+# ---- clear-compiled-cache ----
+
+{
+  my $dir  = fresh-dir;
+  my $haml = HAML.new(:compiled-cache-dir($dir));
+  $haml.compile-to-cache(:src("%p one\n"));
+  $haml.compile-to-cache(:src("%p two\n"));
+  $haml.compile-to-cache(:src("%p three\n"));
+
+  my $count = $haml.clear-compiled-cache;
+  is $count, 3, 'clear-compiled-cache returns count of removed files';
+
+  ok !$haml.compiled-cache-path(:src("%p one\n")).e,
+     'cleared cache no longer has previous entries';
+}
+
+# ---- xhtml round-trip via cache ----
+
+{
+  my $dir  = fresh-dir;
+  my $cfg  = Template::HAML::Config.new(:format<xhtml>);
+  my $haml = HAML.new(:compiled-cache-dir($dir), :config($cfg));
+  is $haml.render-cached(:src("%br\n")), HAML.render(:src("%br\n"), :config($cfg)),
+     'cached xhtml render preserves config';
+}

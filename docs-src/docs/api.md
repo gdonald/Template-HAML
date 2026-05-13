@@ -32,6 +32,121 @@ used) or an instance method (the instance's stored config is used unless
 `:config` is passed at the call site). Construct an instance via
 `HAML.new(:config(...))` to reuse the same config across renders.
 
+## `HAML.compile-source-to-raku`
+
+```raku
+use Template::HAML;
+
+my Str $raku-source = HAML.compile-source-to-raku(:src("%p hi\n"));
+my &compiled        = EVAL $raku-source;
+my Str $html        = compiled(%(:name<World>));
+```
+
+Compiles a HAML source string to a self-contained Raku source string. The
+emitted source defines an anonymous sub with the signature
+
+```raku
+sub (%locals = (), Template::HAML::Config :$config, :$ctx --> Str)
+```
+
+When `EVAL`ed, the emitted source returns that sub. Calling it produces the
+same HTML that `HAML.render(:src(...), :%locals, :config(...))` would.
+
+| Parameter | Type    | Description                                                         |
+|-----------|---------|---------------------------------------------------------------------|
+| `:src`    | `Str:D` | The HAML source to compile.                                          |
+| `:config` | `Template::HAML::Config` | Optional configuration baked into the emitted output. |
+
+The emitted code rebuilds the parse tree with the per-class constructors in
+`Template::HAML::*` and runs `Template::HAML::Renderer` on it, so feature
+coverage matches the interpreter exactly. The `:$ctx` parameter (a
+`Template::HAML::Context`) is plumbed through `$*HAML-CTX` so that helper
+functions like `yield` and `render(:partial)` work from the compiled sub.
+
+This is the substrate for cached/compiled templates; on-disk caching,
+invalidation, and source-line error mapping land in subsequent phases of
+the roadmap.
+
+## On-disk compiled-template cache
+
+The emitter from [`compile-source-to-raku`](#hamlcompile-source-to-raku) can be
+written to a per-user cache directory and loaded back on subsequent runs,
+skipping the parse + emit step. This is opt-in; `HAML.render` does not
+consult the cache. Stale entries are not yet invalidated automatically —
+see [`clear-compiled-cache`](#clear-compiled-cache) below.
+
+### `HAML.new(:compiled-cache-dir(...))`
+
+```raku
+my $haml = HAML.new(:compiled-cache-dir('/var/cache/Template-HAML'.IO));
+```
+
+Default cache directory resolution order:
+
+1. The constructor's `:compiled-cache-dir` argument.
+2. The `HAML_COMPILED_CACHE` environment variable.
+3. `$*TMPDIR/Template-HAML/`.
+
+### `HAML.compiled-cache-key`
+
+```raku
+my $key = $haml.compiled-cache-key(:src("%p hi\n"));
+my $key = $haml.compiled-cache-key(:src(...), :config(...));
+```
+
+Returns a 16-character hex digest of `(source, config)`. Stable across
+processes; changes whenever either input changes.
+
+### `HAML.compiled-cache-path`
+
+```raku
+my IO::Path $path = $haml.compiled-cache-path(:src(...), :config(...));
+```
+
+Returns the absolute path where the compiled artifact for `(src, config)`
+would live. Layout: `<cache-dir>/<first-2-chars-of-key>/<key>.raku-haml`.
+The 2-char shard avoids one large directory.
+
+### `HAML.compile-to-cache`
+
+```raku
+my IO::Path $path = $haml.compile-to-cache(:src(...), :config(...));
+```
+
+If the cache file already exists, returns its path unchanged (the file is
+not rewritten). Otherwise, parses the source, emits Raku, writes it to the
+cache path, and returns the path.
+
+### `HAML.load-from-cache`
+
+```raku
+my &fn = $haml.load-from-cache($path);
+my $html = fn(%locals, :config($cfg));
+```
+
+Reads the cached file and `EVAL`s it, returning the anonymous sub that the
+emitter produced.
+
+### `HAML.render-cached`
+
+```raku
+my $html = $haml.render-cached(:src(...), :%locals, :config(...));
+```
+
+Convenience wrapper: `compile-to-cache` + `load-from-cache` + invocation
+with the appropriate `Template::HAML::Context` plumbed through `$*HAML-CTX`.
+
+### `HAML.clear-compiled-cache`
+
+```raku
+my Int $removed = $haml.clear-compiled-cache;
+```
+
+Removes every `.raku-haml` file under the cache directory and returns the
+count. Empty shard directories are removed too. Use this when configuration
+changes, after upgrading Template::HAML, or any time the cache is suspected
+of being stale.
+
 ## `register-filter`
 
 ```raku
@@ -66,6 +181,8 @@ The implementation is split across several modules under `lib/Template/HAML/`. T
 | `Template::HAML::Eval`       | EVALs embedded Raku expressions with caching.                 |
 | `Template::HAML::Multiline`  | Pre-grammar pass that joins continued code lines (trailing comma / unbalanced brackets). |
 | `Template::HAML::Renderer`   | Walks the parse tree and emits HTML.                          |
+| `Template::HAML::Codegen`    | Emits Raku source that reconstructs the parse tree and renders it.  |
+| `Template::HAML::Cache`      | Cache-key hashing and on-disk layout for compiled templates.        |
 | `Template::HAML::Filter`     | AST node representing a filter line and its dedented body.    |
 | `Template::HAML::Filters`    | Filter registry plus the built-in filter handlers.            |
 | `Template::HAML::Config`     | Per-render configuration: format, escape options, output style, etc. |

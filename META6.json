@@ -13,6 +13,8 @@
     "Template::HAML": "lib/Template/HAML.rakumod",
     "Template::HAML::Actions": "lib/Template/HAML/Actions.rakumod",
     "Template::HAML::CLI": "lib/Template/HAML/CLI.rakumod",
+    "Template::HAML::Cache": "lib/Template/HAML/Cache.rakumod",
+    "Template::HAML::Codegen": "lib/Template/HAML/Codegen.rakumod",
     "Template::HAML::Comment": "lib/Template/HAML/Comment.rakumod",
     "Template::HAML::Config": "lib/Template/HAML/Config.rakumod",
     "Template::HAML::Context": "lib/Template/HAML/Context.rakumod",
