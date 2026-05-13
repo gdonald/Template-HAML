@@ -45,6 +45,20 @@ sub compute-cache-key(
   $h.fmt('%016x');
 }
 
+sub compute-file-cache-key(
+  IO::Path:D $path,
+  Numeric:D  $mtime,
+  Template::HAML::Config $config,
+  --> Str
+) is export {
+  my $material =
+    $path.absolute
+    ~ "\x[1F]" ~ $mtime.Str
+    ~ "\x[1E]" ~ config-fingerprint($config);
+  my $h = fnv1a64($material);
+  $h.fmt('%016x');
+}
+
 sub default-cache-dir(--> IO::Path) is export {
   my $env = %*ENV<HAML_COMPILED_CACHE>;
   return $env.IO if $env.defined && $env.chars;

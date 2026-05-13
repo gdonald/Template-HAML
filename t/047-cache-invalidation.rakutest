@@ -1,0 +1,139 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Template::HAML::Cache;
+use Template::HAML::Config;
+use Test;
+
+plan 16;
+
+sub fresh-dir(--> IO::Path) {
+  my $base = $*TMPDIR.add('Template-HAML-fc-' ~ (now.Rat * 1_000_000).Int ~ '-' ~ ((^1_000_000).pick));
+  $base.mkdir;
+  $base;
+}
+
+sub fresh-haml-file(IO::Path $root, Str $body --> IO::Path) {
+  my $f = $root.add('tpl-' ~ (^1_000_000).pick ~ '.haml');
+  $f.spurt($body);
+  $f;
+}
+
+# file cache key stability
+{
+  my $dir   = fresh-dir;
+  my $tpl   = fresh-haml-file($dir, "%p hi\n");
+  my $haml  = HAML.new(:compiled-cache-dir($dir.add('cache')));
+  my $a     = $haml.compiled-cache-key-for-file(:file($tpl.absolute));
+  my $b     = $haml.compiled-cache-key-for-file(:file($tpl.absolute));
+  is $a, $b, 'file cache key is stable when file unchanged';
+  is $a.chars, 16, 'file cache key is 16 hex chars';
+  ok $a ~~ /^ <[0..9 a..f]>+ $/, 'file cache key is hex';
+}
+
+# mtime change -> different key
+{
+  my $dir  = fresh-dir;
+  my $tpl  = fresh-haml-file($dir, "%p hi\n");
+  my $haml = HAML.new(:compiled-cache-dir($dir.add('cache')));
+  my $a    = $haml.compiled-cache-key-for-file(:file($tpl.absolute));
+
+  sleep 1.1;
+  $tpl.spurt("%p hi\n");  # rewrite same content, mtime bumps
+  my $b    = $haml.compiled-cache-key-for-file(:file($tpl.absolute));
+  isnt $a, $b, 'mtime change yields a different cache key';
+}
+
+# content change (which also bumps mtime) -> different key + recompile
+{
+  my $dir  = fresh-dir;
+  my $tpl  = fresh-haml-file($dir, "%p hi\n");
+  my $haml = HAML.new(:compiled-cache-dir($dir.add('cache')));
+  my $p1   = $haml.compile-file-to-cache(:file($tpl.absolute));
+  ok $p1.e, 'compile-file-to-cache wrote the file';
+  my $contents1 = $p1.slurp;
+
+  sleep 1.1;
+  $tpl.spurt("%p bye\n");
+  my $p2 = $haml.compile-file-to-cache(:file($tpl.absolute));
+  isnt $p2.absolute, $p1.absolute, 'changed source produces a new cache path';
+  ok $p2.e, 'new cache file exists';
+  my $contents2 = $p2.slurp;
+  isnt $contents1, $contents2, 'cached emitted Raku differs after source change';
+}
+
+# compile-file-to-cache idempotent when file unchanged
+{
+  my $dir  = fresh-dir;
+  my $tpl  = fresh-haml-file($dir, "%p hello\n");
+  my $haml = HAML.new(:compiled-cache-dir($dir.add('cache')));
+  my $p1   = $haml.compile-file-to-cache(:file($tpl.absolute));
+  my $m1   = $p1.modified.Num;
+  sleep 1.1;
+  my $p2   = $haml.compile-file-to-cache(:file($tpl.absolute));
+  is $p2.absolute, $p1.absolute, 'second compile returns same path when file unchanged';
+  is $p2.modified.Num, $m1, 'cache file mtime unchanged on hit';
+}
+
+# render-file-cached end-to-end
+{
+  my $dir  = fresh-dir;
+  my $tpl  = fresh-haml-file($dir, "%p\n  = \$name\n");
+  my $haml = HAML.new(:compiled-cache-dir($dir.add('cache')));
+  my $out  = $haml.render-file-cached(
+    :file($tpl.absolute),
+    :locals(%(:name<World>)),
+  );
+  is $out, HAML.new.render(:file($tpl.absolute), :locals(%(:name<World>))),
+  'render-file-cached matches interpreter output';
+}
+
+# render-file-cached re-renders after the file changes
+{
+  my $dir  = fresh-dir;
+  my $tpl  = fresh-haml-file($dir, "%p one\n");
+  my $haml = HAML.new(:compiled-cache-dir($dir.add('cache')));
+  is $haml.render-file-cached(:file($tpl.absolute)), "<p>one</p>\n",
+  'first render returns initial output';
+
+  sleep 1.1;
+  $tpl.spurt("%p two\n");
+  is $haml.render-file-cached(:file($tpl.absolute)), "<p>two</p>\n",
+  'second render reflects updated file content';
+}
+
+# config affects file cache key
+{
+  my $dir  = fresh-dir;
+  my $tpl  = fresh-haml-file($dir, "%br\n");
+  my $h-html5 = HAML.new(
+    :compiled-cache-dir($dir.add('cache')),
+    :config(Template::HAML::Config.new(:format<html5>)),
+  );
+  my $h-xhtml = HAML.new(
+    :compiled-cache-dir($dir.add('cache')),
+    :config(Template::HAML::Config.new(:format<xhtml>)),
+  );
+  my $a = $h-html5.compiled-cache-key-for-file(:file($tpl.absolute));
+  my $b = $h-xhtml.compiled-cache-key-for-file(:file($tpl.absolute));
+  isnt $a, $b, 'config affects file cache key';
+}
+
+# file resolution honors search-paths
+{
+  my $dir   = fresh-dir;
+  my $views = $dir.add('views');
+  $views.mkdir;
+  my $tpl   = $views.add('home.haml');
+  $tpl.spurt("%p home\n");
+
+  my $haml = HAML.new(
+    :compiled-cache-dir($dir.add('cache')),
+    :search-paths($views.absolute),
+  );
+  my $path = $haml.compile-file-to-cache(:file<home>);
+  ok $path.e, 'compile-file-to-cache resolved bare template name via search-paths';
+  is $haml.render-file-cached(:file<home>), "<p>home</p>\n",
+  'render-file-cached resolves via search-paths';
+}

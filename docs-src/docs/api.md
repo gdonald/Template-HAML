@@ -72,8 +72,19 @@ the roadmap.
 The emitter from [`compile-source-to-raku`](#hamlcompile-source-to-raku) can be
 written to a per-user cache directory and loaded back on subsequent runs,
 skipping the parse + emit step. This is opt-in; `HAML.render` does not
-consult the cache. Stale entries are not yet invalidated automatically —
-see [`clear-compiled-cache`](#clear-compiled-cache) below.
+consult the cache.
+
+Invalidation is automatic for both flavors of the API:
+
+* String-based cache (`render-cached(:src)`): the cache key embeds a 64-bit
+  hash of the source string, so changing the source produces a different key
+  and a clean cache miss.
+* File-based cache (`render-file-cached(:file)`): the cache key embeds the
+  file's mtime, so editing the file produces a different key and a clean
+  cache miss — no slurp + re-hash is needed on a cache hit.
+
+Stale entries left behind on disk are not garbage-collected automatically; see
+[`clear-compiled-cache`](#clear-compiled-cache) below.
 
 ### `HAML.new(:compiled-cache-dir(...))`
 
@@ -135,6 +146,26 @@ my $html = $haml.render-cached(:src(...), :%locals, :config(...));
 
 Convenience wrapper: `compile-to-cache` + `load-from-cache` + invocation
 with the appropriate `Template::HAML::Context` plumbed through `$*HAML-CTX`.
+
+### File-based cache API
+
+The same on-disk layout is reused for cached compilations keyed by file
+path + mtime + config, so editing the template file is enough to invalidate.
+
+```raku
+my IO::Path $path = $haml.compiled-cache-path-for-file(:file<views/home>);
+my IO::Path $path = $haml.compile-file-to-cache(:file<views/home>);
+my Str      $html = $haml.render-file-cached(:file<views/home>, :%locals);
+```
+
+File names are resolved through `:search-paths` and the same extension
+fallbacks as `HAML.render(:file)` (bare name, `.haml`, `.html.haml`, partial
+`_name` variants). The cache key changes whenever the resolved file's mtime
+changes, so touching the file or editing it both force a recompile.
+
+`render-file-cached` plumbs `:current-dir` through to the
+`Template::HAML::Context` so that `render(:partial)` inside the template
+resolves relative paths the same way `HAML.render(:file)` does.
 
 ### `HAML.clear-compiled-cache`
 

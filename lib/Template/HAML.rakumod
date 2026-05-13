@@ -223,6 +223,44 @@ class HAML is export {
     fn(%locals, :config($cfg), :$ctx);
   }
 
+  method !resolve-file-for-cache(Str:D $file --> IO::Path) {
+    my $resolved = self.resolve-template($file);
+    $resolved.IO;
+  }
+
+  method compiled-cache-key-for-file(Str:D :$file!, Template::HAML::Config :$config --> Str) {
+    my $cfg  = $config // ($!config // Template::HAML::Config.new);
+    my $path = self!resolve-file-for-cache($file);
+    compute-file-cache-key($path, $path.modified.Num, $cfg);
+  }
+
+  method compiled-cache-path-for-file(Str:D :$file!, Template::HAML::Config :$config --> IO::Path) {
+    my $key = self.compiled-cache-key-for-file(:$file, :$config);
+    cache-path($!compiled-cache-dir, $key);
+  }
+
+  method compile-file-to-cache(Str:D :$file!, Template::HAML::Config :$config --> IO::Path) {
+    my $cfg  = $config // ($!config // Template::HAML::Config.new);
+    my $path = self.compiled-cache-path-for-file(:$file, :config($cfg));
+    return $path if $path.e;
+    my $src  = self!resolve-file-for-cache($file).slurp;
+    my $code = self.compile-source-to-raku(:$src, :config($cfg));
+    write-cache-file($path, $code);
+    $path;
+  }
+
+  method render-file-cached(Str:D :$file!, :%locals, Template::HAML::Config :$config --> Str) {
+    my $cfg     = $config // ($!config // Template::HAML::Config.new);
+    my $resolved = self!resolve-file-for-cache($file);
+    my $path    = self.compile-file-to-cache(:$file, :config($cfg));
+    my &fn      = self.load-from-cache($path);
+    my $ctx     = Template::HAML::Context.new(
+      :haml(self),
+      :current-dir($resolved.dirname),
+    );
+    fn(%locals, :config($cfg), :$ctx);
+  }
+
   method clear-compiled-cache(--> Int) {
     my $root = $!compiled-cache-dir;
     return 0 unless $root.e;
