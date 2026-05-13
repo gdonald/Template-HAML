@@ -63,9 +63,11 @@ coverage matches the interpreter exactly. The `:$ctx` parameter (a
 `Template::HAML::Context`) is plumbed through `$*HAML-CTX` so that helper
 functions like `yield` and `render(:partial)` work from the compiled sub.
 
-This is the substrate for cached/compiled templates; on-disk caching,
-invalidation, and source-line error mapping land in subsequent phases of
-the roadmap.
+This is the substrate for cached/compiled templates. The emitted code
+preserves source line and column information on every node, so eval
+failures inside compiled templates raise an `X::HAML::Eval` whose `.line`
+and `.column` point back to the originating HAML template — the same as
+the interpreter.
 
 ## On-disk compiled-template cache
 

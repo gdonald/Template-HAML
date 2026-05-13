@@ -1,0 +1,143 @@
+
+use v6.d;
+use lib 'lib';
+use MONKEY-SEE-NO-EVAL;
+use Template::HAML;
+use Template::HAML::Codegen;
+use Template::HAML::Config;
+use Template::HAML::X;
+use Test;
+
+plan 24;
+
+sub trap-eval(&body) {
+  try { body(); CATCH { when X::HAML::Eval { return $_ } } }
+  Nil;
+}
+
+sub compile-source(Str $src, Template::HAML::Config :$config) {
+  my $code = HAML.compile-source-to-raku(:$src, :$config);
+  EVAL $code;
+}
+
+sub fresh-dir(--> IO::Path) {
+  my $base = $*TMPDIR.add('Template-HAML-em-' ~ (now.Rat * 1_000_000).Int ~ '-' ~ ((^1_000_000).pick));
+  $base.mkdir;
+  $base;
+}
+
+sub fresh-file(IO::Path $root, Str $body --> IO::Path) {
+  my $f = $root.add('tpl-' ~ (^1_000_000).pick ~ '.haml');
+  $f.spurt($body);
+  $f;
+}
+
+# ---- direct codegen path: = statement ----
+{
+  my $src = "%p first\n= no_such_sub_xyzzy()\n";
+  my &fn  = compile-source($src);
+  my $err = trap-eval({ fn(%(), :ctx(Nil)) });
+  ok $err.defined,             'eval failure caught in compiled = statement';
+  is $err.line, 2,             '= statement: line points to template line';
+}
+
+# ---- direct codegen path: != statement (raw) ----
+{
+  my $src = "%p hi\n%p body\n!= boom_xyzzy()\n";
+  my &fn  = compile-source($src);
+  my $err = trap-eval({ fn(%(), :ctx(Nil)) });
+  ok $err.defined,             '!= statement reports failure';
+  is $err.line, 3,             '!= statement: line maps to template line 3';
+}
+
+# ---- &= statement ----
+{
+  my $src = "\n\n&= boom_xyzzy()\n";
+  my &fn  = compile-source($src);
+  my $err = trap-eval({ fn(%(), :ctx(Nil)) });
+  ok $err.defined,             '&= statement reports failure';
+  is $err.line, 3,             '&= statement: line maps to template line 3';
+}
+
+# ---- == interpolation statement ----
+{
+  my $src = "%p first\n%p second\n== bad: #\{boom_xyzzy()}\n";
+  my &fn  = compile-source($src);
+  my $err = trap-eval({ fn(%(), :ctx(Nil)) });
+  ok $err.defined,             '== interpolation reports failure';
+  is $err.line, 3,             '== interpolation: line maps to template line';
+}
+
+# ---- silent statement evaluated in control flow head ----
+{
+  my $src = "%p ok\n- if boom_xyzzy()\n  %p inside\n";
+  my &fn  = compile-source($src);
+  my $err = trap-eval({ fn(%(), :ctx(Nil)) });
+  ok $err.defined,             'if-condition reports failure';
+  is $err.line, 2,             'if-condition: line maps to template line 2';
+}
+
+# ---- for loop iterator eval ----
+{
+  my $src = "\n- for boom_xyzzy() -> \$i\n  %li= \$i\n";
+  my &fn  = compile-source($src);
+  my $err = trap-eval({ fn(%(), :ctx(Nil)) });
+  ok $err.defined,             'for-iterator reports failure';
+  is $err.line, 2,             'for-iterator: line maps to template line 2';
+}
+
+# ---- while statement ----
+{
+  my $src = "%p first\n- while boom_xyzzy()\n  %p loop\n";
+  my &fn  = compile-source($src);
+  my $err = trap-eval({ fn(%(), :ctx(Nil)) });
+  ok $err.defined,             'while statement reports failure';
+  is $err.line, 2,             'while statement: line maps to template line 2';
+}
+
+# ---- attribute splat eval ----
+{
+  my $src = Q[%p ok] ~ "\n" ~ Q[%a{|boom_xyzzy()} link] ~ "\n";
+  my &fn  = compile-source($src);
+  my $err = trap-eval({ fn(%(), :ctx(Nil)) });
+  ok $err.defined,             'attribute splat reports failure';
+  is $err.line, 2,             'attribute splat: line maps to template line 2';
+}
+
+# ---- given/when eval ----
+{
+  my $src = "%p ok\n- given 1\n  - when boom_xyzzy()\n    %p inside\n";
+  my &fn  = compile-source($src);
+  my $err = trap-eval({ fn(%(), :ctx(Nil)) });
+  ok $err.defined,             'when clause reports failure';
+  is $err.line, 3,             'when clause: line maps to template line 3';
+}
+
+# ---- interpolated plain text ----
+{
+  my $src = "%p ok\n#\{boom_xyzzy()}\n";
+  my &fn  = compile-source($src);
+  my $err = trap-eval({ fn(%(), :ctx(Nil)) });
+  ok $err.defined,             'interpolated plain text reports failure';
+  is $err.line, 2,             'interpolated plain text: line maps to template line 2';
+}
+
+# ---- end-to-end via render-cached preserves line mapping ----
+{
+  my $dir  = fresh-dir;
+  my $haml = HAML.new(:compiled-cache-dir($dir));
+  my $src  = "%p first\n%p second\n= boom_xyzzy()\n";
+  my $err  = trap-eval({ $haml.render-cached(:$src) });
+  ok $err.defined,             'render-cached eval failure caught';
+  is $err.line, 3,             'render-cached: line maps to template line 3';
+}
+
+# ---- end-to-end via render-file-cached preserves line mapping ----
+{
+  my $dir  = fresh-dir;
+  my $tpl  = fresh-file($dir, "%p first\n%p second\n%p third\n= boom_xyzzy()\n");
+  my $haml = HAML.new(:compiled-cache-dir($dir.add('cache')));
+  my $err  = trap-eval({ $haml.render-file-cached(:file($tpl.absolute)) });
+  ok $err.defined,             'render-file-cached eval failure caught';
+  is $err.line, 4,             'render-file-cached: line maps to template line 4';
+}
