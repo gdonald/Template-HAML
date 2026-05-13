@@ -9,6 +9,7 @@ class Statement is export {
   has Str $.loop-var = '';
   has Str $.loop-iter = '';
   has Int $.output-indent-width = 2;
+  has Bool $.is-bare-ident = False;
 
   submethod BUILD(
     Int :$!indent, Str :$!op, Str :$!expr,
@@ -17,6 +18,7 @@ class Statement is export {
     Str :$!loop-var = '',
     Str :$!loop-iter = '',
     Int :$!output-indent-width = 2,
+    Bool :$!is-bare-ident = False,
   ) {}
 
   method get-indent(Int :$offset = 0) {

@@ -227,14 +227,17 @@ class Actions is export {
     my $expr   = $/<expr>.Str.trim;
 
     my %ctrl = parse-control($op, $expr);
+    my $final-expr = %ctrl<expr>;
+    my $is-bare-ident = so $final-expr ~~ /^ <[A..Za..z_]> <[\w \-]>* $/;
 
     my $object = Statement.new(
       :$indent, :$op, :$line, :$column,
-      expr      => %ctrl<expr>,
+      expr      => $final-expr,
       kind      => %ctrl<kind>,
       loop-var  => %ctrl<loop-var>  // '',
       loop-iter => %ctrl<loop-iter> // '',
       :output-indent-width($!output-indent-width),
+      :$is-bare-ident,
     );
     self.add-node($object);
     $!seen-content = True;

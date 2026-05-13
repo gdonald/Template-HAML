@@ -9,8 +9,13 @@ use Template::HAML::Context;
 use Template::HAML::Multiline;
 use Template::HAML::Node;
 use Template::HAML::Renderer;
+use Template::HAML::ViewContext;
 use Template::HAML::Grammar;
 use Template::HAML::X;
+
+sub default-user-context() {
+  Template::HAML::ViewContext.new;
+}
 
 class HAML is export {
   has Template::HAML::Config $.config;
@@ -39,15 +44,21 @@ class HAML is export {
     };
   }
 
-  multi method render(HAML:U: Str:D :$src!, :%locals, Template::HAML::Config :$config) {
+  multi method render(HAML:U: Str:D :$src!, :%locals, Template::HAML::Config :$config, :$context) {
     my $cfg = $config // Template::HAML::Config.new;
-    my $ctx = Template::HAML::Context.new(:haml(self.WHAT));
+    my $ctx = Template::HAML::Context.new(
+      :haml(self.WHAT),
+      :user-context($context // default-user-context()),
+    );
     self!do-render-src($src, %locals, $cfg, $ctx);
   }
 
-  multi method render(HAML:D: Str:D :$src!, :%locals, Template::HAML::Config :$config) {
+  multi method render(HAML:D: Str:D :$src!, :%locals, Template::HAML::Config :$config, :$context) {
     my $cfg = $config // $!config // Template::HAML::Config.new;
-    my $ctx = Template::HAML::Context.new(:haml(self));
+    my $ctx = Template::HAML::Context.new(
+      :haml(self),
+      :user-context($context // default-user-context()),
+    );
     self!do-render-src($src, %locals, $cfg, $ctx);
   }
 
@@ -57,12 +68,14 @@ class HAML is export {
     :$layout,
     :%locals,
     Template::HAML::Config :$config,
+    :$context,
   ) {
     my $cfg  = $config // $!config // Template::HAML::Config.new;
     my $path = self.resolve-template($file);
     my $ctx  = Template::HAML::Context.new(
       :haml(self),
       :current-dir($path.IO.dirname),
+      :user-context($context // default-user-context()),
     );
 
     my $src = $path.IO.slurp;
@@ -215,11 +228,14 @@ class HAML is export {
     EVAL read-cache-file($path);
   }
 
-  method render-cached(Str:D :$src!, :%locals, Template::HAML::Config :$config --> Str) {
+  method render-cached(Str:D :$src!, :%locals, Template::HAML::Config :$config, :$context --> Str) {
     my $cfg  = $config // ($!config // Template::HAML::Config.new);
     my $path = self.compile-to-cache(:$src, :config($cfg));
     my &fn   = self.load-from-cache($path);
-    my $ctx  = Template::HAML::Context.new(:haml(self.WHAT === HAML ?? self.WHAT !! self));
+    my $ctx  = Template::HAML::Context.new(
+      :haml(self.WHAT === HAML ?? self.WHAT !! self),
+      :user-context($context // default-user-context()),
+    );
     fn(%locals, :config($cfg), :$ctx);
   }
 
@@ -249,7 +265,7 @@ class HAML is export {
     $path;
   }
 
-  method render-file-cached(Str:D :$file!, :%locals, Template::HAML::Config :$config --> Str) {
+  method render-file-cached(Str:D :$file!, :%locals, Template::HAML::Config :$config, :$context --> Str) {
     my $cfg     = $config // ($!config // Template::HAML::Config.new);
     my $resolved = self!resolve-file-for-cache($file);
     my $path    = self.compile-file-to-cache(:$file, :config($cfg));
@@ -257,6 +273,7 @@ class HAML is export {
     my $ctx     = Template::HAML::Context.new(
       :haml(self),
       :current-dir($resolved.dirname),
+      :user-context($context // default-user-context()),
     );
     fn(%locals, :config($cfg), :$ctx);
   }

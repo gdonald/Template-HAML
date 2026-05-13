@@ -104,7 +104,8 @@ sub ser-statement(Statement:D $s --> Str) {
     ':expr('                ~ raku-str($s.expr // '')      ~ ')',
     ':kind('                ~ raku-str($s.kind // 'expression') ~ ')',
     ':loop-var('            ~ raku-str($s.loop-var // '')  ~ ')',
-    ':loop-iter('           ~ raku-str($s.loop-iter // '') ~ ')';
+    ':loop-iter('           ~ raku-str($s.loop-iter // '') ~ ')',
+    ':is-bare-ident('       ~ ser-bool($s.is-bare-ident)   ~ ')';
   'Statement.new(' ~ @parts.join(', ') ~ ')';
 }
 

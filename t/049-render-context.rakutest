@@ -1,0 +1,152 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Template::HAML::HelpersRole;
+use Template::HAML::ViewContext;
+use Test;
+
+class MyView does Template::HAML::HelpersRole {
+  has Str $.title = 'Hello';
+  method greeting { 'world' }
+  method user-count { 42 }
+  method site-name { 'MySite' }
+  method is-admin  { True }
+  method shout($s) { $s.uc }
+}
+
+subtest 'bare ident: locals win over context', {
+  my $src = q:to/HAML/;
+  %h1
+    = title
+  HAML
+
+  my $out = HAML.render(
+    :src($src),
+    :context(MyView.new(:title('Default'))),
+    :locals(%(title => 'FromLocal')),
+  );
+  like $out, /'<h1>'\n? \s* 'FromLocal'/, 'local shadows context method';
+}
+
+subtest 'bare ident: falls through to context method', {
+  my $src = q:to/HAML/;
+  %p
+    = greeting
+  HAML
+
+  my $out = HAML.render(:src($src), :context(MyView.new));
+  like $out, /'<p>'\n? \s* 'world'/, 'context method resolves bare ident';
+}
+
+subtest 'bare ident: hyphenated method on context', {
+  my $src = q:to/HAML/;
+  %span
+    = user-count
+  HAML
+
+  my $out = HAML.render(:src($src), :context(MyView.new));
+  like $out, /'<span>'\n? \s* '42'/, 'hyphenated method name';
+}
+
+subtest 'bare ident in if condition', {
+  my $src = q:to/HAML/;
+  - if is-admin
+    %p admin
+  - else
+    %p user
+  HAML
+
+  my $out = HAML.render(:src($src), :context(MyView.new));
+  like $out, /'<p>admin</p>'/, 'bare ident in if condition';
+}
+
+subtest 'bare ident with sigil-style locals also works', {
+  my $src = q:to/HAML/;
+  %p
+    = $name
+  HAML
+
+  my $out = HAML.render(:src($src), :locals(%(name => 'sigil-form')));
+  like $out, /'sigil-form'/, 'sigil-style local untouched';
+}
+
+subtest 'unknown bare ident with context: falls through to eval (fail-loud)', {
+  my $src = q:to/HAML/;
+  %p
+    = unknown-name-xyz
+  HAML
+
+  dies-ok {
+    HAML.render(:src($src), :context(MyView.new));
+  }, 'missing name fails loud via eval';
+}
+
+subtest 'default context still resolves built-in helpers', {
+  my $src = q:to/HAML/;
+  %div
+    != surround('[', ']', { 'inner' })
+  HAML
+
+  my $out = HAML.render(:src($src));
+  like $out, /'[inner]'/, 'helpers still work without explicit context';
+}
+
+subtest 'ViewContext exposes built-in helpers as methods', {
+  my $vc = Template::HAML::ViewContext.new;
+  ok $vc.^can('surround'),         'surround method present';
+  ok $vc.^can('html-safe'),        'html-safe method present';
+  ok $vc.^can('escape-once'),      'escape-once method present';
+  ok $vc.^can('list-of'),          'list-of method present';
+  ok $vc.^can('find-and-preserve'),'find-and-preserve method present';
+}
+
+subtest 'render with HAML instance + :context', {
+  my $haml = HAML.new;
+  my $src  = q:to/HAML/;
+  %p
+    = greeting
+  HAML
+
+  my $out = $haml.render(:src($src), :context(MyView.new));
+  like $out, /'world'/, 'instance render accepts :context';
+}
+
+subtest 'render-cached with :context', {
+  my $haml = HAML.new(
+    :cache(False),
+    :compiled-cache-dir($*TMPDIR.add('haml-ctx-' ~ time).IO),
+  );
+  my $src = q:to/HAML/;
+  %p
+    = site-name
+  HAML
+
+  my $out = $haml.render-cached(:src($src), :context(MyView.new));
+  like $out, /'MySite'/, 'compiled-cache flow accepts :context';
+  $haml.clear-compiled-cache;
+}
+
+subtest 'subclass-style extension via role composition', {
+  my $vc = MyView.new(:title('T'));
+  is $vc.shout('hi'),  'HI',  'custom method on subclass';
+  is $vc.surround('(', ')', { 'x' }), '(x)', 'inherited helper still works';
+}
+
+subtest 'codegen round-trip preserves bare-ident lookup', {
+  use MONKEY-SEE-NO-EVAL;
+  my $src = q:to/HAML/;
+  %p
+    = greeting
+  HAML
+
+  my $code = HAML.compile-source-to-raku(:$src);
+  my &fn   = EVAL $code;
+
+  use Template::HAML::Context;
+  my $ctx = Template::HAML::Context.new(:user-context(MyView.new));
+  my $out = fn(%(), :ctx($ctx));
+  like $out, /'world'/, 'compiled template resolves bare ident via ctx';
+}
+
+done-testing;

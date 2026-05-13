@@ -99,6 +99,13 @@ A handful of helper subroutines (`html-safe`, `escape-once`, `surround`,
 `precede`, `succeed`, `list-of`, `find-and-preserve`, `capture-haml`) are
 preloaded into the eval scope. See [Helpers](helpers.md).
 
+## Bare identifiers and the render context
+
+An expression that is just a single bare identifier (no sigil, no parens) is
+resolved against locals first, then against methods on the
+[render context](context.md). See [Render context](context.md) for the full
+rules and how to plug in your own helper methods.
+
 ## Errors
 
 Compilation or runtime failures inside embedded code are wrapped in

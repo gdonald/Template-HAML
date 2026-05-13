@@ -21,6 +21,24 @@ sub html-escape(Str $s --> Str) {
     .subst("'", '&#39;', :g);
 }
 
+sub lookup-bare-ident(Str $name, %locals) {
+  return (True, %locals{$name}) if %locals{$name}:exists;
+  my $ctx  = (try { $*HAML-CTX }) // Nil;
+  my $user = $ctx.defined ?? $ctx.user-context !! Nil;
+  if $user.defined && $user.^can($name) {
+    return (True, $user."$name"());
+  }
+  (False, Nil);
+}
+
+sub eval-haml-or-ctx(Str $code, Bool $bare, %locals, Int :$line, Int :$column) {
+  if $bare {
+    my ($found, $value) = lookup-bare-ident($code, %locals);
+    return $value if $found;
+  }
+  eval-haml($code, %locals, :$line, :$column);
+}
+
 sub resolve-attrs(@attrs, %locals) {
   @attrs.map(-> $p {
     my $v = $p.value;
@@ -427,8 +445,8 @@ class Renderer is export {
     my $first-obj = $first.object;
     my $body-offset = $offset + 1;
 
-    my $cond = eval-haml(
-      $first-obj.expr, %locals,
+    my $cond = eval-haml-or-ctx(
+      $first-obj.expr, $first-obj.is-bare-ident, %locals,
       :line($first-obj.line), :column($first-obj.column),
     );
     $cond = !$cond if $first-obj.kind eq 'unless';
@@ -443,8 +461,8 @@ class Renderer is export {
       last unless $o.defined && $o ~~ Statement;
       if $o.kind eq 'elsif' {
         unless $matched {
-          my $c = eval-haml(
-            $o.expr, %locals,
+          my $c = eval-haml-or-ctx(
+            $o.expr, $o.is-bare-ident, %locals,
             :line($o.line), :column($o.column),
           );
           if $c {
@@ -521,8 +539,8 @@ class Renderer is export {
     }
 
     my @*HAML-CONCAT;
-    my $value = eval-haml(
-      $obj.expr, %locals,
+    my $value = eval-haml-or-ctx(
+      $obj.expr, $obj.is-bare-ident, %locals,
       :line($obj.line), :column($obj.column),
     );
     my $buffered = @*HAML-CONCAT.join('');
@@ -564,8 +582,8 @@ class Renderer is export {
 
   method render-repeat(Node:D $node, %locals, Int $offset) {
     my $obj = $node.object;
-    my $n = eval-haml(
-      $obj.expr, %locals,
+    my $n = eval-haml-or-ctx(
+      $obj.expr, $obj.is-bare-ident, %locals,
       :line($obj.line), :column($obj.column),
     );
     my $count = ($n // 0).Int;
@@ -582,8 +600,8 @@ class Renderer is export {
     my $obj = $node.object;
     my $out = '';
     my $iters = 0;
-    while eval-haml(
-      $obj.expr, %locals,
+    while eval-haml-or-ctx(
+      $obj.expr, $obj.is-bare-ident, %locals,
       :line($obj.line), :column($obj.column),
     ) {
       $out ~= self.render-children($node, %locals, $offset + 1);
@@ -594,8 +612,8 @@ class Renderer is export {
 
   method render-given(Node:D $node, %locals, Int $offset) {
     my $obj = $node.object;
-    my $topic = eval-haml(
-      $obj.expr, %locals,
+    my $topic = eval-haml-or-ctx(
+      $obj.expr, $obj.is-bare-ident, %locals,
       :line($obj.line), :column($obj.column),
     );
 

@@ -7,6 +7,7 @@ has Str $.yield-content is rw = '';
 has Int $.partial-depth is rw = 0;
 has Int $.partial-depth-limit is rw = 100;
 has Str $.current-dir is rw;
+has $.user-context is rw;
 
 method set-content(Str $name, Str $value) {
   %!content-blocks{$name} = $value;

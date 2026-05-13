@@ -24,6 +24,7 @@ my Str $html = HAML.render(:src("%br\n"), :config($cfg));
 | `:src`    | `Str:D` | The HAML source to parse and render.                                 |
 | `:locals` | `%h`    | Optional name → value map; each key is bound as a `$name` lexical visible to embedded Raku in `=`/`-`/`!=`/`&=` lines. |
 | `:config` | `Template::HAML::Config` | Optional rendering options. See [Configuration](syntax/config.md). |
+| `:context`| any     | Optional view-context object. Bare-identifier expressions resolve against its methods. Defaults to `Template::HAML::ViewContext.new`. See [Render context](syntax/context.md). |
 
 Returns the rendered HTML as a `Str`.
 
