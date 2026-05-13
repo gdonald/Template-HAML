@@ -485,8 +485,22 @@ class Actions is export {
     make %h;
   }
 
+  method attr-splat($/) {
+    my ($line, $column) = pos-to-line-col($/);
+    my $expr = $/<splat-body>.Str.trim;
+    make AttrSplat.new(:$expr, :$line, :$column);
+  }
+
+  method attr-item($/) {
+    if $/<attr-splat>.defined {
+      make $/<attr-splat>.made;
+    } else {
+      make $/<pair>.made;
+    }
+  }
+
   method params-hash($/) {
-    make ($/<pair> // ()).list.map({ .made }).list;
+    make ($/<attr-item> // ()).list.map({ .made }).list;
   }
 
   method html-bool-attr($/) {

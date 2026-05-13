@@ -39,6 +39,108 @@ sub resolve-attrs(@attrs, %locals) {
   }).list;
 }
 
+sub normalize-splat-value($v) {
+  return $v unless $v.defined;
+  if $v ~~ Pair {
+    return Pair.new($v.key, normalize-splat-value($v.value));
+  }
+  if $v ~~ Associative {
+    return $v.keys.sort.map({ Pair.new($_, normalize-splat-value($v{$_})) }).list;
+  }
+  if $v ~~ Positional {
+    return $v.list.map({ normalize-splat-value($_) }).list;
+  }
+  $v;
+}
+
+sub splat-to-pairs($v) {
+  return () unless $v.defined;
+  return ($v,)                                                if $v ~~ Pair;
+  return $v.keys.sort.map({ Pair.new($_, $v{$_}) }).list      if $v ~~ Associative;
+  return $v.list.grep(* ~~ Pair)                              if $v ~~ Positional;
+  ();
+}
+
+sub expand-splats(@attrs, %locals) {
+  my @out;
+  for @attrs -> $a {
+    if $a ~~ AttrSplat {
+      my $val = eval-haml(
+        $a.expr, %locals,
+        :line($a.line), :column($a.column),
+      );
+      for splat-to-pairs($val) -> $p {
+        @out.push: Pair.new($p.key, normalize-splat-value($p.value));
+      }
+    } else {
+      @out.push: $a;
+    }
+  }
+  @out;
+}
+
+sub flatten-class-vals($v) {
+  return () unless $v.defined;
+  if $v ~~ Positional && $v !~~ Pair {
+    return $v.list.flatmap({ flatten-class-vals($_) });
+  }
+  return () if $v === False;
+  return ($v.Str,) if $v === True;
+  $v.Str.split(/\s+/).grep(*.chars).list;
+}
+
+sub flatten-id-vals($v) {
+  return () unless $v.defined;
+  if $v ~~ Positional && $v !~~ Pair {
+    return $v.list.flatmap({ flatten-id-vals($_) });
+  }
+  my $s = $v.Str;
+  $s.chars ?? ($s,) !! ();
+}
+
+sub merge-attr-pairs(@pairs, :@shorthand-classes = (), :@shorthand-ids = ()) {
+  my @order;
+  my %slot;
+  my @class-vals;
+  my @id-vals;
+  my $has-class = False;
+  my $has-id    = False;
+
+  for @pairs -> $p {
+    if $p.key eq 'class' {
+      @class-vals.append: flatten-class-vals($p.value);
+      unless $has-class { @order.push: 'class'; $has-class = True }
+    } elsif $p.key eq 'id' {
+      @id-vals.append: flatten-id-vals($p.value);
+      unless $has-id { @order.push: 'id'; $has-id = True }
+    } else {
+      @order.push: $p.key unless %slot{$p.key}:exists;
+      %slot{$p.key} = $p.value;
+    }
+  }
+
+  if @shorthand-classes.elems {
+    @class-vals.append: @shorthand-classes;
+    unless $has-class { @order.push: 'class'; $has-class = True }
+  }
+  if @shorthand-ids.elems {
+    @id-vals.prepend: @shorthand-ids;
+    unless $has-id { @order.push: 'id'; $has-id = True }
+  }
+
+  my @out;
+  for @order -> $k {
+    if $k eq 'class' {
+      @out.push: 'class' => @class-vals.unique.join(' ');
+    } elsif $k eq 'id' {
+      @out.push: 'id' => @id-vals.join('_');
+    } else {
+      @out.push: $k => %slot{$k};
+    }
+  }
+  @out;
+}
+
 sub camel-to-snake(Str $s --> Str) {
   $s.subst(/ (<[a..z 0..9]>) (<[A..Z]>) /, -> $/ { $0 ~ '_' ~ $1.Str.lc }, :g).lc;
 }
@@ -204,7 +306,18 @@ class Renderer is export {
       ).throw;
     }
 
-    my @resolved = resolve-attrs($obj.attrs, %locals);
+    my $has-splat = $obj.attrs.grep({ $_ ~~ AttrSplat }).elems > 0;
+    my @expanded  = $has-splat ?? expand-splats($obj.attrs, %locals) !! $obj.attrs.list;
+    my @resolved  = resolve-attrs(@expanded, %locals);
+    if $has-splat {
+      my @sh-classes = $obj ~~ Tag ?? $obj.classes.list !! ();
+      my @sh-ids     = $obj ~~ Tag ?? $obj.ids.list     !! ();
+      @resolved = merge-attr-pairs(
+        @resolved,
+        :shorthand-classes(@sh-classes),
+        :shorthand-ids(@sh-ids),
+      );
+    }
     if $obj ~~ Tag && $obj.obj-ref-args.elems {
       my ($cls, $id) = compute-obj-ref($obj, %locals);
       @resolved = inject-obj-ref-attrs(@resolved, $cls, $id);

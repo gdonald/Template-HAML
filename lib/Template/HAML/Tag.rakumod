@@ -21,6 +21,12 @@ sub camel-to-kebab(Str $s --> Str) {
   $s.subst(/ (<[a..z 0..9]>) (<[A..Z]>) /, -> $/ { $0 ~ '-' ~ $1.Str.lc }, :g).lc;
 }
 
+class AttrSplat is export {
+  has Str $.expr;
+  has Int $.line   = 0;
+  has Int $.column = 0;
+}
+
 class Tag is export {
   has Int  $.indent;
   has Int  $.output-indent-width = 2;
@@ -83,7 +89,7 @@ class Tag is export {
   }
 
   method find-attr-index(Str $key) {
-    @!attrs.first({ .key eq $key }, :k);
+    @!attrs.first({ $_ ~~ Pair && .key eq $key }, :k);
   }
 
   method find-attr-value(Str $key) {
@@ -106,7 +112,12 @@ class Tag is export {
       !! $s;
   }
 
+  method has-splat(--> Bool) {
+    so @!attrs.first({ $_ ~~ AttrSplat });
+  }
+
   method merge-shorthands {
+    return if self.has-splat;
     if @!ids.elems {
       my @parts;
       @parts.push: self.maybe-interp($_) for @!ids;
@@ -143,18 +154,19 @@ class Tag is export {
   }
 
   method ordered-attrs(:@attrs = @!attrs) {
+    my @pairs = @attrs.grep(* ~~ Pair);
     my @out;
     my %seen;
 
-    if (my $id = @attrs.first({ .key eq 'id' })).defined {
+    if (my $id = @pairs.first({ .key eq 'id' })).defined {
       @out.push: $id;
       %seen<id> = True;
     }
-    if (my $cls = @attrs.first({ .key eq 'class' })).defined {
+    if (my $cls = @pairs.first({ .key eq 'class' })).defined {
       @out.push: $cls;
       %seen<class> = True;
     }
-    for @attrs -> $p {
+    for @pairs -> $p {
       next if %seen{$p.key};
       @out.push: $p;
     }

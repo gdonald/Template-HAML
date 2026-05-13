@@ -63,7 +63,19 @@ grammar Grammar is export {
   token pair-rocket { <rocket-key> \s* '=>' \s* <value> }
   token pair        { <pair-rocket> | <pair-bare> }
 
-  token params-hash { '{' \s* [ <pair> [ \s* ',' \s* <pair> ]* \s* ','? \s* ]? '}' }
+  token splat-body  {
+    [
+      | "'" [ \\ . | <-[\\']> ]* "'"
+      | '"' [ \\ . | <-[\\"]> ]* '"'
+      | '[' <splat-body>? ']'
+      | '(' <splat-body>? ')'
+      | '{' <splat-body>? '}'
+      | <-[ \[ \] \( \) \{ \} \n ' " , ]>
+    ]+
+  }
+  token attr-splat  { '|' \s* <splat-body> }
+  token attr-item   { <attr-splat> | <pair> }
+  token params-hash { '{' \s* [ <attr-item> [ \s* ',' \s* <attr-item> ]* \s* ','? \s* ]? '}' }
 
   token html-bool-attr  { <hyphen-name> }
   token html-keyed-attr { <hyphen-name> \s* '=' \s* <quoted-string> }

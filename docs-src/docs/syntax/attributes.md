@@ -110,6 +110,87 @@ Content and child indentation pick up after the closing brace:
 
 Source line numbers are preserved across multi-line hashes, so children render and report at their actual line in the source.
 
+## Attribute splat (`|$expr`)
+
+Prefix any expression inside `{ ... }` with `|` to merge its result into the
+tag's attributes:
+
+```raku
+HAML.render(
+  :src('%a{|$attrs} link' ~ "\n"),
+  :locals(%(attrs => %( :href('/'), :title('home') ))),
+);
+```
+
+```html
+<a href='/' title='home'>link</a>
+```
+
+The splat expression is plain Raku. Locals are bound with the `$` sigil, so
+write `|$attrs`, `|$obj.attrs`, `|$mk()`, and so on. The expression must
+evaluate to one of:
+
+- a `Hash` (keys are emitted in alphabetical order),
+- a single `Pair`,
+- a list of `Pair`s (emitted in declaration order).
+
+### Composes with literal pairs
+
+Splats interleave freely with literal `key: value` entries. Within a single
+tag, later entries override earlier ones for the same key:
+
+```haml
+%a{href: '/from-literal', |$attrs} go
+```
+
+If `$attrs<href>` is `/from-splat`, the rendered `href` is `/from-splat`.
+Reverse the order to make the literal win:
+
+```haml
+%a{|$attrs, href: '/wins'} go
+```
+
+### Multiple splats
+
+`%tag{|$a, |$b}` is valid. Later splats override earlier ones for the same
+non-`class`/non-`id` key.
+
+### `class:` and `id:` accumulate
+
+Splatted `class:` values merge with shorthand classes and any literal `class:`
+entry — duplicates are removed and the result is space-joined. Splatted `id:`
+values concatenate with shorthand ids and literal `id:` entries using `_`.
+
+```haml
+%div.a{class: 'b', |$h} hi
+```
+
+With `$h<class>` set to `'c'`, the rendered class is `'b c a'` (literal and
+splat in declaration order, shorthand classes appended).
+
+```haml
+%div#one{id: 'two', |$h}
+```
+
+With `$h<id>` set to `'three'`, the rendered id is `'one_two_three'`
+(shorthand ids first, then literal and splat values in declaration order).
+
+### Nested hashes work too
+
+Splatting a hash whose values include another hash under `data:` or `aria:`
+expands into the same hyphenated attributes as a literal nested hash:
+
+```raku
+HAML.render(
+  :src('%a{|$h}' ~ "\n"),
+  :locals(%(h => %( :data({ :id(1), :role('main') }) ))),
+);
+```
+
+```html
+<a data-id='1' data-role='main'></a>
+```
+
 ## `data:` / `aria:` hyphenation
 
 By default, keys under `data:` and `aria:` hashes are emitted verbatim:

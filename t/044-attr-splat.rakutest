@@ -1,0 +1,173 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Test;
+
+plan 22;
+
+# merge an attribute hash from a Raku variable
+my %attrs1 = href => '/about', title => 'About';
+is HAML.render(:src(Q[%a{|$attrs} link] ~ "\n"), :locals(%(attrs => %attrs1))),
+   "<a href='/about' title='About'>link</a>\n",
+   'splat merges a hash of attributes into the tag';
+
+# splat alongside literal hash entries
+my %attrs2 = title => 'Splatted';
+is HAML.render(
+     :src(Q[%a{href: '/', |$attrs} go] ~ "\n"),
+     :locals(%(attrs => %attrs2))
+   ),
+   "<a href='/' title='Splatted'>go</a>\n",
+   'splat composes with literal pairs';
+
+# later splat wins on key collision with literal pair
+my %attrs3 = href => '/from-splat';
+is HAML.render(
+     :src(Q[%a{href: '/from-literal', |$attrs} go] ~ "\n"),
+     :locals(%(attrs => %attrs3))
+   ),
+   "<a href='/from-splat'>go</a>\n",
+   'later splat overrides earlier literal pair';
+
+# literal pair after splat overrides
+my %attrs4 = href => '/from-splat';
+is HAML.render(
+     :src(Q[%a{|$attrs, href: '/wins'} go] ~ "\n"),
+     :locals(%(attrs => %attrs4))
+   ),
+   "<a href='/wins'>go</a>\n",
+   'literal pair after splat overrides splat value';
+
+# splat class: merges with shorthand classes
+my %sh1 = class => 'b';
+is HAML.render(:src(Q[%div.a{|$h} hi] ~ "\n"), :locals(%(h => %sh1))),
+   "<div class='b a'>hi</div>\n",
+   'splat class merges with shorthand class';
+
+# splat class + literal class + shorthand class
+my %sh2 = class => 'c';
+is HAML.render(
+     :src(Q[%div.a{class: 'b', |$h} hi] ~ "\n"),
+     :locals(%(h => %sh2))
+   ),
+   "<div class='b c a'>hi</div>\n",
+   'splat class merges with shorthand and literal class';
+
+# splat id: concatenates with shorthand ids
+my %sh3 = id => 'two';
+is HAML.render(:src(Q[%div#one{|$h}] ~ "\n"), :locals(%(h => %sh3))),
+   "<div id='one_two'></div>\n",
+   'splat id concatenates with shorthand id';
+
+# splat id + literal id + shorthand id
+my %sh4 = id => 'three';
+is HAML.render(
+     :src(Q[%div#one{id: 'two', |$h}] ~ "\n"),
+     :locals(%(h => %sh4))
+   ),
+   "<div id='one_two_three'></div>\n",
+   'splat id concatenates with literal and shorthand id';
+
+# multiple splats, later wins on collision; classes accumulate
+my %a = href => '/a', class => 'x';
+my %b = href => '/b', class => 'y';
+is HAML.render(
+     :src(Q[%a{|$a, |$b} hi] ~ "\n"),
+     :locals(%(a => %a, b => %b))
+   ),
+   "<a class='x y' href='/b'>hi</a>\n",
+   'multiple splats: later wins, classes accumulate';
+
+my %ids-a = id => 'one';
+my %ids-b = id => 'two';
+is HAML.render(
+     :src(Q[%div{|$a, |$b}] ~ "\n"),
+     :locals(%(a => %ids-a, b => %ids-b))
+   ),
+   "<div id='one_two'></div>\n",
+   'multiple splats: ids accumulate with underscore';
+
+# splat boolean attribute
+my %bool = disabled => True, type => 'submit';
+is HAML.render(:src(Q[%input{|$h}/] ~ "\n"), :locals(%(h => %bool))),
+   "<input disabled type='submit'>\n",
+   'splat supports boolean attributes';
+
+# splat False attribute is omitted
+my %hide = disabled => False, type => 'submit';
+is HAML.render(:src(Q[%input{|$h}/] ~ "\n"), :locals(%(h => %hide))),
+   "<input type='submit'>\n",
+   'splat False attribute is omitted';
+
+# splat with class as array
+my %ca = class => ['a', 'b'];
+is HAML.render(:src(Q[%div.zz{|$h} hi] ~ "\n"), :locals(%(h => %ca))),
+   "<div class='a b zz'>hi</div>\n",
+   'splat class as array merges with shorthand';
+
+# splat with data hash hyphenates children
+my %da = data => { id => 1, role => 'main' };
+is HAML.render(:src(Q[%a{|$h}] ~ "\n"), :locals(%(h => %da))),
+   "<a data-id='1' data-role='main'></a>\n",
+   'splat data: hash expands to data-* attributes';
+
+# empty splat hash leaves tag untouched
+my %empty = ();
+is HAML.render(:src(Q[%a{|$h, href: '/'} link] ~ "\n"), :locals(%(h => %empty))),
+   "<a href='/'>link</a>\n",
+   'empty splat hash is a no-op';
+
+# splat from a callable local (parens balanced)
+my &mk = sub () { %( :href('/fn'), :title('fn') ) };
+is HAML.render(:src(Q[%a{|$mk()} link] ~ "\n"), :locals(%(mk => &mk))),
+   "<a href='/fn' title='fn'>link</a>\n",
+   'splat from invocation of a callable local';
+
+# splat alongside attribute string interpolation
+my %x = title => 'spat';
+is HAML.render(
+     :src(Q[%a{href: "/u/#{$id}", |$h} go] ~ "\n"),
+     :locals(%(id => 7, h => %x))
+   ),
+   "<a href='/u/7' title='spat'>go</a>\n",
+   'splat composes with interpolated literal value';
+
+# multi-line params hash with splat
+my $src-ml = q:to/HAML/;
+%a{
+  href: '/',
+  |$h
+} go
+HAML
+my %ml = title => 'multiline';
+is HAML.render(:src($src-ml), :locals(%(h => %ml))),
+   "<a href='/' title='multiline'>go</a>\n",
+   'splat inside multi-line attribute hash';
+
+# literal-splat-literal: last literal wins
+my %ovr = href => '/middle';
+is HAML.render(
+     :src(Q[%a{href: '/first', |$h, href: '/last'} go] ~ "\n"),
+     :locals(%(h => %ovr))
+   ),
+   "<a href='/last'>go</a>\n",
+   'literal after splat wins, declaration order preserved';
+
+# splat with a single Pair
+my $pair = ('lang' => 'en');
+is HAML.render(:src(Q[%html{|$p}] ~ "\n"), :locals(%(p => $pair))),
+   "<html lang='en'></html>\n",
+   'splat from a single Pair';
+
+# splat with a list of Pairs
+my @pairs = ('lang' => 'en'), ('dir' => 'ltr');
+is HAML.render(:src(Q[%html{|$p}] ~ "\n"), :locals(%(p => @pairs))),
+   "<html lang='en' dir='ltr'></html>\n",
+   'splat from a list of Pairs';
+
+# splat values are HTML-escaped at render time
+my %xss = title => q{he said "hi"};
+my $r = HAML.render(:src(Q[%a{|$h}] ~ "\n"), :locals(%(h => %xss)));
+ok $r.contains('&quot;hi&quot;'),
+   'splat values are HTML-escaped';
