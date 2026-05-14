@@ -203,28 +203,52 @@ class Codegen is export {
     @lines.List;
   }
 
+  method !uses(--> List) {
+    (
+      'use Template::HAML::Comment;',
+      'use Template::HAML::Config;',
+      'use Template::HAML::Doctype;',
+      'use Template::HAML::Filter;',
+      'use Template::HAML::Interpolation;',
+      'use Template::HAML::Node;',
+      'use Template::HAML::Plain;',
+      'use Template::HAML::Renderer;',
+      'use Template::HAML::Statement;',
+      'use Template::HAML::Tag;',
+    ).List;
+  }
+
+  method !body-lines(Node:D $tree --> List) {
+    my @lines;
+    @lines.push: '  my $cfg = $config // ' ~ self!ser-config ~ ';';
+    @lines.push: '  my $tree = Node.new;';
+    @lines.append: self!walk-children($tree, '$tree');
+    @lines.push: '  my $*HAML-CTX = $ctx;';
+    @lines.push: '  Renderer.new(:%locals, :config($cfg)).render($tree);';
+    @lines.List;
+  }
+
   method emit(Node:D $tree --> Str) {
     $!sym = 0;
     my @lines;
-    @lines.push: 'use Template::HAML::Comment;';
-    @lines.push: 'use Template::HAML::Config;';
-    @lines.push: 'use Template::HAML::Doctype;';
-    @lines.push: 'use Template::HAML::Filter;';
-    @lines.push: 'use Template::HAML::Interpolation;';
-    @lines.push: 'use Template::HAML::Node;';
-    @lines.push: 'use Template::HAML::Plain;';
-    @lines.push: 'use Template::HAML::Renderer;';
-    @lines.push: 'use Template::HAML::Statement;';
-    @lines.push: 'use Template::HAML::Tag;';
+    @lines.append: self!uses;
     @lines.push: '';
     @lines.push: 'sub (%locals = %(), Template::HAML::Config :$config, :$ctx --> Str) {';
-    @lines.push: '  my $cfg = $config // ' ~ self!ser-config ~ ';';
-    @lines.push: '  my $tree = Node.new;';
+    @lines.append: self!body-lines($tree);
+    @lines.push: '}';
 
-    @lines.append: self!walk-children($tree, '$tree');
+    @lines.join("\n") ~ "\n";
+  }
 
-    @lines.push: '  my $*HAML-CTX = $ctx;';
-    @lines.push: '  Renderer.new(:%locals, :config($cfg)).render($tree);';
+  method emit-module(Node:D $tree, Str:D :$module-name! --> Str) {
+    $!sym = 0;
+    my @lines;
+    @lines.push: 'unit module ' ~ $module-name ~ ';';
+    @lines.push: '';
+    @lines.append: self!uses;
+    @lines.push: '';
+    @lines.push: 'our sub render(%locals = %(), Template::HAML::Config :$config, :$ctx --> Str) is export {';
+    @lines.append: self!body-lines($tree);
     @lines.push: '}';
 
     @lines.join("\n") ~ "\n";

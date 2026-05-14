@@ -89,9 +89,17 @@ Invalidation is automatic for both flavors of the API:
 Stale entries left behind on disk are not garbage-collected automatically; see
 [`clear-compiled-cache`](#clear-compiled-cache) below.
 
+Each cache file is a self-contained Raku `unit module` exposing an
+`our sub render`. The cache directory is registered as a
+`CompUnit::Repository::FileSystem`, so first-load goes through Raku's
+normal `require` pipeline — which means MoarVM precompiles the cached
+module into `<cache-dir>/.precomp/` and reuses the bytecode across
+processes. Subsequent fresh interpreters loading the same cache dir
+skip the parse-and-compile of the generated Raku source as well.
+
 On top of the on-disk cache, each unique `(src, config)` or `(file, mtime,
 config)` pair produces a compiled `&fn` closure that is memoized in-process,
-so the cache file is `EVAL`'d at most once per process per template. See
+so the cache file is loaded at most once per process per template. See
 [`compiled-fn-cache-size`](#hamlcompiled-fn-cache-size) and
 [`clear-compiled-fn-cache`](#hamlclear-compiled-fn-cache).
 
@@ -124,8 +132,12 @@ my IO::Path $path = $haml.compiled-cache-path(:src(...), :config(...));
 ```
 
 Returns the absolute path where the compiled artifact for `(src, config)`
-would live. Layout: `<cache-dir>/<first-2-chars-of-key>/<key>.raku-haml`.
-The 2-char shard avoids one large directory.
+would live. Layout: `<cache-dir>/Template/HAML/Compiled/T<key>.rakumod`.
+The `T` prefix on the basename keeps the module name a valid Raku
+identifier; the `Template/HAML/Compiled/` nesting matches the module name
+so the cache dir can be used directly as a
+`CompUnit::Repository::FileSystem` prefix. MoarVM stores precompiled
+bytecode for each cached module under `<cache-dir>/.precomp/`.
 
 ### `HAML.compile-to-cache`
 
@@ -144,8 +156,10 @@ my &fn = $haml.load-from-cache($path);
 my $html = fn(%locals, :config($cfg));
 ```
 
-Reads the cached file and `EVAL`s it, returning the anonymous sub that the
-emitter produced.
+Loads the cached module (via `CompUnit::Repository::FileSystem.need`) and
+returns its `&render` sub. The first load in a fresh process triggers
+MoarVM precompilation under `<cache-dir>/.precomp/`; subsequent processes
+that point at the same cache dir reuse that precompiled bytecode.
 
 ### `HAML.render-cached`
 
@@ -157,7 +171,7 @@ Convenience wrapper: `compile-to-cache` + `load-from-cache` + invocation
 with the appropriate `Template::HAML::Context` plumbed through `$*HAML-CTX`.
 
 The compiled `&fn` is memoized in-process by cache key, so a cache file is
-`EVAL`'d at most once per process per `(src, config)` tuple. Subsequent calls
+loaded at most once per process per `(src, config)` tuple. Subsequent calls
 skip disk I/O entirely and reuse the in-memory closure. The memoization is
 shared across `HAML` instances in the same process — different
 `:compiled-cache-dir` values do not produce duplicate entries when the cache
@@ -185,7 +199,7 @@ resolves relative paths the same way `HAML.render(:file)` does.
 
 Like `render-cached`, the compiled `&fn` is memoized in-process by cache key
 (which includes the file's mtime). An edited file produces a new key and a
-fresh `EVAL`; an unchanged file reuses the in-memory closure.
+fresh load through `require`; an unchanged file reuses the in-memory closure.
 
 ### `HAML.clear-compiled-cache`
 
@@ -193,10 +207,12 @@ fresh `EVAL`; an unchanged file reuses the in-memory closure.
 my Int $removed = $haml.clear-compiled-cache;
 ```
 
-Removes every `.raku-haml` file under the cache directory and returns the
-count. Empty shard directories are removed too. Use this when configuration
-changes, after upgrading Template::HAML, or any time the cache is suspected
-of being stale. The in-process `&fn` memoization is cleared as well.
+Removes every cached `.rakumod` file under `<cache-dir>/Template/HAML/Compiled/`
+and deletes the `<cache-dir>/.precomp/` tree, then returns the count of
+removed cache modules. Empty `Template/HAML/Compiled/` parent directories
+are pruned too. Use this when configuration changes, after upgrading
+Template::HAML, or any time the cache is suspected of being stale. The
+in-process `&fn` memoization is cleared as well.
 
 ### `HAML.compiled-fn-cache-size`
 
@@ -216,8 +232,9 @@ my Int $cleared = $haml.clear-compiled-fn-cache;
 
 Drops every in-process memoized `&fn` and returns the number of entries that
 were removed. The on-disk cache is untouched; the next render rebuilds the
-in-memory entry by `EVAL`'ing the cache file (or recompiling if the file is
-missing).
+in-memory entry by `require`ing the cache module (or recompiling if the file
+is missing). The MoarVM precomp cache under `<cache-dir>/.precomp/` is also
+left in place, so the re-load is bytecode-fast.
 
 ## `register-filter`
 

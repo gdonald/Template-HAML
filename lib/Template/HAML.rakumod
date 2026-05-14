@@ -1,6 +1,4 @@
 
-use MONKEY-SEE-NO-EVAL;
-
 use Template::HAML::Actions;
 use Template::HAML::Cache;
 use Template::HAML::Codegen;
@@ -18,11 +16,44 @@ sub default-user-context() {
 }
 
 my %fn-cache;
+my %repo-cache;
 
 sub fn-cache-clear(--> Int) {
   my $n = %fn-cache.elems;
   %fn-cache = ();
   $n;
+}
+
+sub rm-rf(IO::Path:D $dir) {
+  return unless $dir.e;
+  if $dir.d {
+    for $dir.dir -> $child {
+      rm-rf($child);
+    }
+    $dir.rmdir;
+  } else {
+    $dir.unlink;
+  }
+}
+
+sub cache-repo-for(IO::Path:D $cache-dir --> CompUnit::Repository::FileSystem) {
+  my $abs = $cache-dir.absolute;
+  %repo-cache{$abs} //= CompUnit::Repository::FileSystem.new(
+    :prefix($abs),
+    :next-repo($*REPO),
+  );
+}
+
+sub load-render-fn(IO::Path:D $cache-dir, Str:D $key --> Code) {
+  my $repo     = cache-repo-for($cache-dir);
+  my $mod-name = compiled-module-name($key);
+  my $spec     = CompUnit::DependencySpecification.new(:short-name($mod-name));
+  my $cu       = $repo.need($spec);
+  my $stash    = $cu.handle.globalish-package;
+  for $mod-name.split('::') -> $part {
+    $stash = $stash{$part}.WHO;
+  }
+  $stash<&render>;
 }
 
 class HAML is export {
@@ -225,23 +256,28 @@ class HAML is export {
 
   method compile-to-cache(Str:D :$src!, Template::HAML::Config :$config --> IO::Path) {
     my $cfg  = $config // ($!config // Template::HAML::Config.new);
-    my $path = self.compiled-cache-path(:$src, :config($cfg));
+    my $key  = self.compiled-cache-key(:$src, :config($cfg));
+    my $path = cache-path($!compiled-cache-dir, $key);
     return $path if $path.e;
-    my $code = self.compile-source-to-raku(:$src, :config($cfg));
+    my $tree = self!compile-source($src, $cfg);
+    my $code = Codegen.new(:config($cfg)).emit-module($tree, :module-name(compiled-module-name($key)));
     write-cache-file($path, $code);
     $path;
   }
 
   method load-from-cache(IO::Path:D $path --> Code) {
-    EVAL read-cache-file($path);
+    my $base = $path.basename;
+    $base ~~ s/ '.rakumod' $ //;
+    $base ~~ s/^ 'T' //;
+    load-render-fn($!compiled-cache-dir, $base);
   }
 
   method render-cached(Str:D :$src!, :%locals, Template::HAML::Config :$config, :$context --> Str) {
     my $cfg = $config // ($!config // Template::HAML::Config.new);
     my $key = self.compiled-cache-key(:$src, :config($cfg));
     unless %fn-cache{$key}:exists {
-      my $path = self.compile-to-cache(:$src, :config($cfg));
-      %fn-cache{$key} = self.load-from-cache($path);
+      self.compile-to-cache(:$src, :config($cfg));
+      %fn-cache{$key} = load-render-fn($!compiled-cache-dir, $key);
     }
     my &fn = %fn-cache{$key};
     my $ctx = Template::HAML::Context.new(
@@ -269,10 +305,12 @@ class HAML is export {
 
   method compile-file-to-cache(Str:D :$file!, Template::HAML::Config :$config --> IO::Path) {
     my $cfg  = $config // ($!config // Template::HAML::Config.new);
-    my $path = self.compiled-cache-path-for-file(:$file, :config($cfg));
+    my $key  = self.compiled-cache-key-for-file(:$file, :config($cfg));
+    my $path = cache-path($!compiled-cache-dir, $key);
     return $path if $path.e;
     my $src  = self!resolve-file-for-cache($file).slurp;
-    my $code = self.compile-source-to-raku(:$src, :config($cfg));
+    my $tree = self!compile-source($src, $cfg);
+    my $code = Codegen.new(:config($cfg)).emit-module($tree, :module-name(compiled-module-name($key)));
     write-cache-file($path, $code);
     $path;
   }
@@ -282,8 +320,8 @@ class HAML is export {
     my $resolved = self!resolve-file-for-cache($file);
     my $key      = self.compiled-cache-key-for-file(:$file, :config($cfg));
     unless %fn-cache{$key}:exists {
-      my $path = self.compile-file-to-cache(:$file, :config($cfg));
-      %fn-cache{$key} = self.load-from-cache($path);
+      self.compile-file-to-cache(:$file, :config($cfg));
+      %fn-cache{$key} = load-render-fn($!compiled-cache-dir, $key);
     }
     my &fn = %fn-cache{$key};
     my $ctx = Template::HAML::Context.new(
@@ -296,16 +334,25 @@ class HAML is export {
 
   method clear-compiled-cache(--> Int) {
     fn-cache-clear();
+    %repo-cache{$!compiled-cache-dir.absolute}:delete;
     my $root = $!compiled-cache-dir;
     return 0 unless $root.e;
     my $count = 0;
-    for $root.dir -> $shard {
-      next unless $shard.d;
-      for $shard.dir(:test(/ '.raku-haml' $/)) -> $f {
+    my $compiled-dir = $root.add('Template').add('HAML').add('Compiled');
+    if $compiled-dir.e {
+      for $compiled-dir.dir(:test(/ '.rakumod' $/)) -> $f {
         $f.unlink;
         $count++;
       }
-      $shard.rmdir if $shard.dir.elems == 0;
+      $compiled-dir.rmdir if $compiled-dir.dir.elems == 0;
+      my $haml-parent = $root.add('Template').add('HAML');
+      $haml-parent.rmdir if $haml-parent.e && $haml-parent.dir.elems == 0;
+      my $tpl-parent = $root.add('Template');
+      $tpl-parent.rmdir if $tpl-parent.e && $tpl-parent.dir.elems == 0;
+    }
+    my $precomp = $root.add('.precomp');
+    if $precomp.e && $precomp.d {
+      rm-rf($precomp);
     }
     $count;
   }

@@ -1,0 +1,69 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Test;
+
+plan 6;
+
+sub fresh-dir(--> IO::Path) {
+  my $base = $*TMPDIR.add('Template-HAML-precomp-' ~ (now.Rat * 1_000_000).Int ~ '-' ~ ((^1_000_000).pick));
+  $base.mkdir;
+  $base;
+}
+
+# After render-cached, a .precomp directory exists under the cache dir,
+# proving the cached module was loaded via CompUnit::Repository::FileSystem
+# (which is what enables MoarVM's cross-process precomp cache).
+{
+  my $dir  = fresh-dir;
+  my $haml = HAML.new(:compiled-cache-dir($dir));
+  $haml.clear-compiled-fn-cache;
+  $haml.render-cached(:src("%p hi\n"));
+
+  my $precomp = $dir.add('.precomp');
+  ok $precomp.e && $precomp.d, '.precomp directory created after first render';
+}
+
+# Cached file lives under Template/HAML/Compiled/T<key>.rakumod.
+{
+  my $dir  = fresh-dir;
+  my $haml = HAML.new(:compiled-cache-dir($dir));
+  my $path = $haml.compile-to-cache(:src("%p hello\n"));
+  my $key  = $haml.compiled-cache-key(:src("%p hello\n"));
+
+  is $path.absolute,
+     $dir.add('Template').add('HAML').add('Compiled').add('T' ~ $key ~ '.rakumod').absolute,
+     'cache path is a CompUnit::Repository::FileSystem tree';
+
+  my $contents = $path.slurp;
+  ok $contents.starts-with('unit module Template::HAML::Compiled::T' ~ $key),
+     'cached file is a unit module';
+  ok $contents.contains('our sub render'),
+     'cached module exports a render sub';
+}
+
+# A second process loading the same cache dir produces the same output.
+# Use raku -e in a child process to simulate a fresh interpreter.
+{
+  my $dir  = fresh-dir;
+  my $haml = HAML.new(:compiled-cache-dir($dir));
+  my $src  = "%p\n  Hello, \#\{\$name\}!\n";
+  my $first = $haml.render-cached(:$src, :locals(%(:name<World>)));
+
+  my $lib  = $*CWD.add('lib').absolute;
+  my $cache-abs = $dir.absolute;
+  my $code = qq:to/CHILD/;
+    use lib "$lib";
+    use Template::HAML;
+    my \$haml = HAML.new(:compiled-cache-dir("$cache-abs".IO));
+    my \$out  = \$haml.render-cached(:src("%p\\n  Hello, \\\#\\\{\\\$name\\\}!\\n"), :locals(%(:name<World>)));
+    print \$out;
+    CHILD
+
+  my $proc = run('raku', '-e', $code, :out, :err);
+  my $stdout = $proc.out.slurp(:close);
+  my $stderr = $proc.err.slurp(:close);
+  is $stdout, $first, 'subprocess renders same output via cached module';
+  is $proc.exitcode, 0, "subprocess exited 0 (stderr: $stderr)";
+}

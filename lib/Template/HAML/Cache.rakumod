@@ -66,9 +66,12 @@ sub default-cache-dir(--> IO::Path) is export {
   $tmp.add('Template-HAML');
 }
 
+sub compiled-module-name(Str:D $key --> Str) is export {
+  'Template::HAML::Compiled::T' ~ $key;
+}
+
 sub cache-path(IO::Path $root, Str $key --> IO::Path) is export {
-  my $shard = $key.substr(0, 2);
-  $root.add($shard).add($key ~ '.raku-haml');
+  $root.add('Template').add('HAML').add('Compiled').add('T' ~ $key ~ '.rakumod');
 }
 
 sub ensure-dir(IO::Path $dir) is export {

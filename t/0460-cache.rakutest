@@ -15,8 +15,7 @@ sub fresh-dir(--> IO::Path) {
   $base;
 }
 
-# ---- cache key stability ----
-
+# cache key stability
 {
   my $a = HAML.new.compiled-cache-key(:src("%p hi\n"));
   my $b = HAML.new.compiled-cache-key(:src("%p hi\n"));
@@ -39,21 +38,21 @@ sub fresh-dir(--> IO::Path) {
   isnt $a, $b, 'config affects cache key';
 }
 
-# ---- on-disk layout ----
-
+# on-disk layout
 {
   my $dir   = fresh-dir;
   my $haml  = HAML.new(:compiled-cache-dir($dir));
   my $key   = $haml.compiled-cache-key(:src("%p hi\n"));
   my $path  = $haml.compiled-cache-path(:src("%p hi\n"));
 
-  is $path.basename, $key ~ '.raku-haml',     'cache filename is <key>.raku-haml';
-  is $path.parent.basename, $key.substr(0, 2), 'cache file lives in 2-char shard dir';
+  is $path.basename, 'T' ~ $key ~ '.rakumod',     'cache filename is T<key>.rakumod';
+  is $path.parent.absolute,
+  $dir.add('Template').add('HAML').add('Compiled').absolute,
+  'cache file lives under Template/HAML/Compiled/';
   ok $path.absolute.starts-with($dir.absolute), 'cache path is under configured dir';
 }
 
-# ---- compile-to-cache writes the file ----
-
+# compile-to-cache writes the file
 {
   my $dir  = fresh-dir;
   my $haml = HAML.new(:compiled-cache-dir($dir));
@@ -65,8 +64,7 @@ sub fresh-dir(--> IO::Path) {
   ok $contents.contains('Tag.new('),   'cached file contains tag construction';
 }
 
-# ---- compile-to-cache is idempotent (file mtime unchanged on second call) ----
-
+# compile-to-cache is idempotent (file mtime unchanged on second call)
 {
   my $dir  = fresh-dir;
   my $haml = HAML.new(:compiled-cache-dir($dir));
@@ -78,7 +76,7 @@ sub fresh-dir(--> IO::Path) {
   is $path2.modified.Num, $mtime,     'cache file mtime unchanged on hit';
 }
 
-# ---- load-from-cache returns a callable sub ----
+# load-from-cache returns a callable sub
 
 {
   my $dir  = fresh-dir;
@@ -89,8 +87,7 @@ sub fresh-dir(--> IO::Path) {
   is fn(), HAML.render(:src("%p hi\n")), 'cached sub matches HAML.render';
 }
 
-# ---- render-cached end-to-end ----
-
+# render-cached end-to-end
 {
   my $dir  = fresh-dir;
   my $haml = HAML.new(:compiled-cache-dir($dir));
@@ -103,21 +100,19 @@ sub fresh-dir(--> IO::Path) {
   my $haml = HAML.new(:compiled-cache-dir($dir));
   my $src  = "%div\n  %p hi\n  %p bye\n";
   is $haml.render-cached(:$src), HAML.render(:$src),
-     'render-cached matches interpreter on nested tags';
+  'render-cached matches interpreter on nested tags';
 }
 
-# ---- env override ----
-
+# env override
 {
   my $dir = fresh-dir;
   temp %*ENV<HAML_COMPILED_CACHE> = $dir.absolute;
   my $haml = HAML.new;
   is $haml.compiled-cache-dir.absolute, $dir.absolute,
-     'HAML_COMPILED_CACHE env overrides the default';
+  'HAML_COMPILED_CACHE env overrides the default';
 }
 
-# ---- clear-compiled-cache ----
-
+# clear-compiled-cache
 {
   my $dir  = fresh-dir;
   my $haml = HAML.new(:compiled-cache-dir($dir));
@@ -129,15 +124,14 @@ sub fresh-dir(--> IO::Path) {
   is $count, 3, 'clear-compiled-cache returns count of removed files';
 
   ok !$haml.compiled-cache-path(:src("%p one\n")).e,
-     'cleared cache no longer has previous entries';
+  'cleared cache no longer has previous entries';
 }
 
-# ---- xhtml round-trip via cache ----
-
+# xhtml round-trip via cache
 {
   my $dir  = fresh-dir;
   my $cfg  = Template::HAML::Config.new(:format<xhtml>);
   my $haml = HAML.new(:compiled-cache-dir($dir), :config($cfg));
   is $haml.render-cached(:src("%br\n")), HAML.render(:src("%br\n"), :config($cfg)),
-     'cached xhtml render preserves config';
+  'cached xhtml render preserves config';
 }
