@@ -25,7 +25,7 @@ $h.render(:src("%br\n"));                     # uses the instance config
 | `escape-attrs`        | `True`       | When false, attribute values are emitted raw (only the active quote char is escaped).           |
 | `output-style`        | `'pretty'`   | `pretty` (indented) or `ugly` (single-line, no inter-tag whitespace).                            |
 | `attr-quote`          | `"'"`        | Quote character used around attribute values; `"'"` or `'"'`.                                    |
-| `encoding`            | `'utf-8'`    | Used for `!!! XML` output and any future encoding helpers.                                       |
+| `encoding`            | `'utf-8'`    | Used for `!!! XML` output and to decode `Blob`/file template sources. See [Encoding](#encoding). |
 | `suppress-eval`       | `False`      | When true, `=`, `-`, `!=`, `&=` produce no output and the expression body is not evaluated.     |
 | `cdata`               | `False`      | When true, the `:javascript` and `:css` filters wrap their body in a `CDATA` marker even outside XHTML. |
 | `mime-type`           | `''`         | When set, `:javascript` / `:css` emit a `type="…"` attribute with this value.                    |
@@ -115,6 +115,49 @@ their wrapper tags:
 * `mime-type` sets the `type="…"` attribute on the emitted `<script>` /
   `<style>` tag. When unset, XHTML defaults to `text/javascript` /
   `text/css`; HTML5 omits the attribute.
+
+## Encoding
+
+The `encoding` option controls two things:
+
+* The `encoding=` attribute emitted by `!!! XML`.
+* How template sources are decoded when they arrive as bytes.
+
+Recognized names (case-insensitive, with aliases):
+
+| Canonical      | Aliases                  |
+|----------------|--------------------------|
+| `utf-8`        | `utf8`                   |
+| `utf-16`       | `utf16`                  |
+| `utf-16le`     |                          |
+| `utf-16be`     |                          |
+| `utf-32`       | `utf32`                  |
+| `ascii`        | `us-ascii`               |
+| `iso-8859-1`   | `latin1`, `latin-1`      |
+| `windows-1252` | `cp1252`                 |
+
+Unknown names raise an error at `Config.new` time. Aliases are normalized to
+the canonical form, so `Config.new(:encoding<UTF8>).encoding` returns
+`'utf-8'`.
+
+### Input handling
+
+`render(:src(...))` accepts either a `Str` or a `Blob`:
+
+```raku
+my Blob $bytes = "%p café\n".encode('iso-8859-1');
+my $cfg = Template::HAML::Config.new(:encoding<iso-8859-1>);
+HAML.render(:src($bytes), :config($cfg));   # "<p>café</p>\n"
+```
+
+* A `Str` is used as-is (Raku strings are already Unicode codepoints).
+* A `Blob` is decoded using the configured encoding. If the bytes are not
+  valid for that encoding, `X::HAML::EncodingError` is raised.
+* A leading byte-order mark (U+FEFF) is stripped from both `Str` and decoded
+  `Blob` input.
+
+`render(:file(...))` always reads bytes from disk and runs them through the
+same decode path, so the configured encoding governs file reads as well.
 
 ## `hyphenate-data-attrs`
 

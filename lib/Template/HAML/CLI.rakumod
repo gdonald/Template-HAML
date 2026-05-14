@@ -162,7 +162,7 @@ our sub cmd-render(@args, IO::Handle :$out, IO::Handle :$err --> Int) is export 
         }
       }
       my $haml = HAML.new(:$config);
-      my $src  = $file.IO.slurp;
+      my $src  = $file.IO.slurp(:bin);
       $result = $haml.render(:$src, :%locals);
     }
     @rendered.push($result);

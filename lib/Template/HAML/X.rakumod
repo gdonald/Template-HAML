@@ -101,6 +101,23 @@ class X::HAML::MarkdownBackendMissing is X::HAML {
   }
 }
 
+class X::HAML::InvalidEncoding is X::HAML {
+  has Str $.name;
+  method message {
+    self.loc ~ " unknown encoding '$!name'"
+  }
+}
+
+class X::HAML::EncodingError is X::HAML {
+  has Str $.encoding;
+  has Str $.reason;
+  method message {
+    self.loc
+      ~ " input is not valid $!encoding"
+      ~ ($!reason ?? ": $!reason" !! '')
+  }
+}
+
 class X::HAML::TemplateNotFound is X::HAML {
   has Str $.name;
   has @.search-paths;

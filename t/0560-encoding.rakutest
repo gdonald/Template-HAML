@@ -1,0 +1,126 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Template::HAML::Config;
+use Template::HAML::X;
+use Test;
+
+plan 21;
+
+sub catch-it(&block) {
+  my $caught;
+  {
+    CATCH { default { $caught = $_; } }
+    block();
+  }
+  $caught;
+}
+
+# Config: validate-encoding accepts canonical names
+{
+  my $cfg = Template::HAML::Config.new(:encoding<utf-8>);
+  is $cfg.encoding, 'utf-8', 'utf-8 accepted';
+}
+
+# Config: aliases canonicalize
+{
+  is Template::HAML::Config.new(:encoding<UTF8>).encoding,    'utf-8',      'UTF8 → utf-8';
+  is Template::HAML::Config.new(:encoding<latin1>).encoding,  'iso-8859-1', 'latin1 → iso-8859-1';
+  is Template::HAML::Config.new(:encoding<US-ASCII>).encoding,'ascii',      'US-ASCII → ascii';
+  is Template::HAML::Config.new(:encoding<cp1252>).encoding,  'windows-1252','cp1252 → windows-1252';
+}
+
+# Config: unknown encoding dies
+{
+  dies-ok { Template::HAML::Config.new(:encoding<klingon>) },
+    'unknown encoding name dies';
+  my $e = catch-it({ Template::HAML::Config.new(:encoding<klingon>) });
+  ok $e.message.contains('klingon'), 'error message includes the bad name';
+}
+
+# UTF-8 BOM at start of source is stripped
+{
+  my $src = "\x[FEFF]" ~ "%p hi\n";
+  is HAML.render(:$src), "<p>hi</p>\n", 'BOM at start of Str source is stripped';
+}
+
+# Blob input decodes using configured encoding (utf-8)
+{
+  my Blob $src = "%p café\n".encode('utf-8');
+  is HAML.render(:$src), "<p>café</p>\n", 'utf-8 Blob source decodes';
+}
+
+# Blob input decodes with non-utf-8 encoding
+{
+  my Blob $src = "%p café\n".encode('iso-8859-1');
+  my $cfg = Template::HAML::Config.new(:encoding<iso-8859-1>);
+  is HAML.render(:src($src), :config($cfg)), "<p>café</p>\n",
+    'iso-8859-1 Blob decodes per config';
+}
+
+# Invalid bytes for the configured encoding throw X::HAML::EncodingError
+{
+  my Blob $src = Buf.new(0xFF, 0xFE, 0xFD);   # invalid utf-8 sequence
+  my $e = catch-it({ HAML.render(:$src) });
+  isa-ok $e, X::HAML::EncodingError, 'bad utf-8 bytes throw EncodingError';
+  is $e.encoding, 'utf-8', 'EncodingError carries encoding name';
+}
+
+# Blob with utf-8 BOM is stripped after decode
+{
+  my Blob $src = Buf.new(0xEF, 0xBB, 0xBF) ~ "%p hi\n".encode('utf-8');
+  is HAML.render(:$src), "<p>hi</p>\n", 'BOM in Blob is stripped';
+}
+
+# Non-Str/Blob input is rejected
+{
+  my $e = catch-it({ HAML.render(:src(42)) });
+  ok $e.defined, 'numeric :src is rejected';
+  ok $e.message.contains('Str or Blob'), 'error message names Str or Blob';
+}
+
+# File slurp uses configured encoding
+{
+  my $tmp = $*TMPDIR.add('haml-encoding-' ~ $*PID ~ '.haml');
+  LEAVE $tmp.unlink if $tmp.e;
+  $tmp.spurt("%p café\n".encode('iso-8859-1'));
+  my $cfg  = Template::HAML::Config.new(:encoding<iso-8859-1>);
+  my $haml = HAML.new(:config($cfg));
+  is $haml.render(:file($tmp.absolute)), "<p>café</p>\n",
+    'file slurp honors configured encoding';
+}
+
+# File slurp with mismatched encoding raises EncodingError
+{
+  my $tmp = $*TMPDIR.add('haml-encoding-bad-' ~ $*PID ~ '.haml');
+  LEAVE $tmp.unlink if $tmp.e;
+  $tmp.spurt(Buf.new(0xFF, 0xFE, 0xFD, 0x0A));   # not utf-8
+  my $haml = HAML.new;
+  my $e = catch-it({ $haml.render(:file($tmp.absolute)) });
+  isa-ok $e, X::HAML::EncodingError, 'bad bytes via file path throw EncodingError';
+}
+
+# render-cached accepts a Blob
+{
+  my $tmp-cache = $*TMPDIR.add('haml-encoding-cache-' ~ (now.Rat * 1_000_000).Int);
+  $tmp-cache.mkdir;
+  my Blob $src = "%p café\n".encode('utf-8');
+  my $haml = HAML.new(:compiled-cache-dir($tmp-cache));
+  is $haml.render-cached(:$src), "<p>café</p>\n", 'render-cached accepts Blob';
+}
+
+# X::HAML::InvalidEncoding can be constructed
+{
+  my $e = X::HAML::InvalidEncoding.new(:line(0), :column(0), :name<klingon>);
+  ok $e.message.contains('klingon'), 'InvalidEncoding message names the encoding';
+}
+
+# X::HAML::EncodingError carries reason
+{
+  my $e = X::HAML::EncodingError.new(
+    :line(0), :column(0), :encoding<utf-8>, :reason('bad bytes'),
+  );
+  ok $e.message.contains('utf-8'),     'EncodingError mentions encoding';
+  ok $e.message.contains('bad bytes'), 'EncodingError mentions reason';
+}

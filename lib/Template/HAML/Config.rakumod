@@ -5,6 +5,32 @@ constant @DEFAULT-VOID-ELEMENTS = <
 
 constant @DEFAULT-PRESERVE-ELEMENTS = <pre textarea>;
 
+constant %ENCODING-ALIASES =
+  'utf-8'        => 'utf-8',
+  'utf8'         => 'utf-8',
+  'utf-16'       => 'utf-16',
+  'utf16'        => 'utf-16',
+  'utf-16le'     => 'utf-16le',
+  'utf-16be'     => 'utf-16be',
+  'utf-32'       => 'utf-32',
+  'utf32'        => 'utf-32',
+  'ascii'        => 'ascii',
+  'us-ascii'     => 'ascii',
+  'iso-8859-1'   => 'iso-8859-1',
+  'latin1'       => 'iso-8859-1',
+  'latin-1'      => 'iso-8859-1',
+  'windows-1252' => 'windows-1252',
+  'cp1252'       => 'windows-1252',
+;
+
+sub canonical-encoding(Str:D $name --> Str) is export {
+  %ENCODING-ALIASES{$name.lc} // $name.lc;
+}
+
+sub is-known-encoding(Str:D $name --> Bool) is export {
+  %ENCODING-ALIASES{$name.lc}:exists;
+}
+
 class Template::HAML::Config is export {
   has Str  $.format          is rw = 'html5';
   has Bool $.escape-html     is rw = True;
@@ -38,6 +64,8 @@ class Template::HAML::Config is export {
     self.validate-format($!format);
     self.validate-output-style($!output-style);
     self.validate-attr-quote($!attr-quote);
+    self.validate-encoding($!encoding);
+    $!encoding = canonical-encoding($!encoding);
     @!autoclose = @autoclose.elems ?? @autoclose !! @DEFAULT-VOID-ELEMENTS;
     @!preserve  = @preserve.elems  ?? @preserve  !! @DEFAULT-PRESERVE-ELEMENTS;
   }
@@ -55,6 +83,12 @@ class Template::HAML::Config is export {
   method validate-attr-quote(Str $q) {
     die "invalid attr-quote '$q'; expected ' or \""
       unless $q eq "'" || $q eq '"';
+  }
+
+  method validate-encoding(Str $e) {
+    die "invalid encoding '$e'; expected one of: "
+      ~ %ENCODING-ALIASES.keys.sort.join(', ')
+      unless is-known-encoding($e);
   }
 
   method is-xhtml(--> Bool) { $!format eq 'xhtml' }

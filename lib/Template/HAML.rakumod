@@ -17,6 +17,36 @@ sub default-user-context() {
   Template::HAML::ViewContext.new;
 }
 
+sub strip-bom(Str:D $s --> Str) {
+  return $s.substr(1) if $s.chars && $s.substr(0, 1) eq "\x[FEFF]";
+  $s;
+}
+
+sub decode-input($src, Template::HAML::Config:D $cfg --> Str) {
+  return strip-bom($src) if $src ~~ Str;
+  unless $src ~~ Blob {
+    die "render :src must be a Str or Blob, got " ~ $src.^name;
+  }
+  my $decoded = do {
+    CATCH {
+      default {
+        X::HAML::EncodingError.new(
+          :line(0), :column(0),
+          :encoding($cfg.encoding),
+          :reason(.message),
+        ).throw;
+      }
+    }
+    $src.decode($cfg.encoding);
+  }
+  strip-bom($decoded);
+}
+
+sub slurp-template(IO::Path:D $path, Template::HAML::Config:D $cfg --> Str) {
+  my $bytes = $path.slurp(:bin);
+  decode-input($bytes, $cfg);
+}
+
 my %fn-cache;
 my %repo-cache;
 
@@ -85,22 +115,22 @@ class HAML is export {
     };
   }
 
-  multi method render(HAML:U: Str:D :$src!, :%locals, Template::HAML::Config :$config, :$context) {
+  multi method render(HAML:U: :$src!, :%locals, Template::HAML::Config :$config, :$context) {
     my $cfg = $config // Template::HAML::Config.new;
     my $ctx = Template::HAML::Context.new(
       :haml(self.WHAT),
       :user-context($context // default-user-context()),
     );
-    self!do-render-src($src, %locals, $cfg, $ctx);
+    self!do-render-src(decode-input($src, $cfg), %locals, $cfg, $ctx);
   }
 
-  multi method render(HAML:D: Str:D :$src!, :%locals, Template::HAML::Config :$config, :$context) {
+  multi method render(HAML:D: :$src!, :%locals, Template::HAML::Config :$config, :$context) {
     my $cfg = $config // $!config // Template::HAML::Config.new;
     my $ctx = Template::HAML::Context.new(
       :haml(self),
       :user-context($context // default-user-context()),
     );
-    self!do-render-src($src, %locals, $cfg, $ctx);
+    self!do-render-src(decode-input($src, $cfg), %locals, $cfg, $ctx);
   }
 
   multi method render(
@@ -119,13 +149,13 @@ class HAML is export {
       :user-context($context // default-user-context()),
     );
 
-    my $src = $path.IO.slurp;
+    my $src = slurp-template($path.IO, $cfg);
     my $inner = self!do-render-src($src, %locals, $cfg, $ctx);
 
     return $inner unless $layout.defined;
 
     my $layout-path = self.resolve-template($layout);
-    my $layout-src  = $layout-path.IO.slurp;
+    my $layout-src  = slurp-template($layout-path.IO, $cfg);
     $ctx.yield-content = $inner;
     $ctx.current-dir   = $layout-path.IO.dirname;
     self!do-render-src($layout-src, %locals, $cfg, $ctx);
@@ -216,13 +246,13 @@ class HAML is export {
         return $entry<tree>;
       }
       my $cfg  = $!config // Template::HAML::Config.new;
-      my $src  = $path.IO.slurp;
+      my $src  = slurp-template($path.IO, $cfg);
       my $tree = self!compile-source($src, $cfg);
       %!compiled-cache{$path} = { :$mtime, :$tree };
       return $tree;
     }
     my $cfg = $!config // Template::HAML::Config.new;
-    self!compile-source($path.IO.slurp, $cfg);
+    self!compile-source(slurp-template($path.IO, $cfg), $cfg);
   }
 
   method render-compiled-file(Str:D $path, %locals --> Str) {
@@ -235,34 +265,35 @@ class HAML is export {
     %!compiled-cache = ();
   }
 
-  multi method compile-source-to-raku(HAML:U: Str:D :$src!, Template::HAML::Config :$config --> Str) {
+  multi method compile-source-to-raku(HAML:U: :$src!, Template::HAML::Config :$config --> Str) {
     my $cfg  = $config // Template::HAML::Config.new;
-    my $tree = self!compile-source($src, $cfg);
+    my $tree = self!compile-source(decode-input($src, $cfg), $cfg);
     Codegen.new(:config($cfg)).emit($tree);
   }
 
-  multi method compile-source-to-raku(HAML:D: Str:D :$src!, Template::HAML::Config :$config --> Str) {
+  multi method compile-source-to-raku(HAML:D: :$src!, Template::HAML::Config :$config --> Str) {
     my $cfg  = $config // $!config // Template::HAML::Config.new;
-    my $tree = self!compile-source($src, $cfg);
+    my $tree = self!compile-source(decode-input($src, $cfg), $cfg);
     Codegen.new(:config($cfg)).emit($tree);
   }
 
-  method compiled-cache-key(Str:D :$src!, Template::HAML::Config :$config --> Str) {
+  method compiled-cache-key(:$src!, Template::HAML::Config :$config --> Str) {
     my $cfg = $config // ($!config // Template::HAML::Config.new);
-    compute-cache-key($src, $cfg);
+    compute-cache-key(decode-input($src, $cfg), $cfg);
   }
 
-  method compiled-cache-path(Str:D :$src!, Template::HAML::Config :$config --> IO::Path) {
+  method compiled-cache-path(:$src!, Template::HAML::Config :$config --> IO::Path) {
     my $key = self.compiled-cache-key(:$src, :$config);
     cache-path($!compiled-cache-dir, $key);
   }
 
-  method compile-to-cache(Str:D :$src!, Template::HAML::Config :$config --> IO::Path) {
+  method compile-to-cache(:$src!, Template::HAML::Config :$config --> IO::Path) {
     my $cfg  = $config // ($!config // Template::HAML::Config.new);
-    my $key  = self.compiled-cache-key(:$src, :config($cfg));
+    my $decoded = decode-input($src, $cfg);
+    my $key  = compute-cache-key($decoded, $cfg);
     my $path = cache-path($!compiled-cache-dir, $key);
     return $path if $path.e;
-    my $tree = self!compile-source($src, $cfg);
+    my $tree = self!compile-source($decoded, $cfg);
     my $code = Codegen.new(:config($cfg)).emit-module($tree, :module-name(compiled-module-name($key)));
     write-cache-file($path, $code);
     $path;
@@ -275,11 +306,12 @@ class HAML is export {
     load-render-fn($!compiled-cache-dir, $base);
   }
 
-  method render-cached(Str:D :$src!, :%locals, Template::HAML::Config :$config, :$context --> Str) {
+  method render-cached(:$src!, :%locals, Template::HAML::Config :$config, :$context --> Str) {
     my $cfg = $config // ($!config // Template::HAML::Config.new);
-    my $key = self.compiled-cache-key(:$src, :config($cfg));
+    my $decoded = decode-input($src, $cfg);
+    my $key = compute-cache-key($decoded, $cfg);
     unless %fn-cache{$key}:exists {
-      self.compile-to-cache(:$src, :config($cfg));
+      self.compile-to-cache(:src($decoded), :config($cfg));
       %fn-cache{$key} = load-render-fn($!compiled-cache-dir, $key);
     }
     my &fn = %fn-cache{$key};
@@ -311,7 +343,7 @@ class HAML is export {
     my $key  = self.compiled-cache-key-for-file(:$file, :config($cfg));
     my $path = cache-path($!compiled-cache-dir, $key);
     return $path if $path.e;
-    my $src  = self!resolve-file-for-cache($file).slurp;
+    my $src  = slurp-template(self!resolve-file-for-cache($file), $cfg);
     my $tree = self!compile-source($src, $cfg);
     my $code = Codegen.new(:config($cfg)).emit-module($tree, :module-name(compiled-module-name($key)));
     write-cache-file($path, $code);
