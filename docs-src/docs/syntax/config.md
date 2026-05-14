@@ -31,6 +31,7 @@ $h.render(:src("%br\n"));                     # uses the instance config
 | `mime-type`           | `''`         | When set, `:javascript` / `:css` emit a `type="…"` attribute with this value.                    |
 | `hyphenate-data-attrs`| `False`      | When true, `camelCase` keys under `data:` / `aria:` hashes are emitted as `kebab-case`.          |
 | `output-indent-width` | `2`          | Number of spaces per indent level in pretty output.                                              |
+| `remove-whitespace`   | `False`      | When true, every tag is treated as if both `>` and `<` modifiers were present (except preserved tags keep their inner whitespace). |
 | `autoclose`           | HTML5 voids  | List of element names that auto-self-close: `area base br col embed hr img input link meta param source track wbr`. |
 | `preserve`            | `<pre textarea>` | List of elements whose inner whitespace is preserved.                                       |
 
@@ -75,6 +76,31 @@ Ugly:
 ```html
 <div><p>hi</p></div>
 ```
+
+## remove-whitespace
+
+`remove-whitespace: True` strips whitespace immediately inside and around every
+tag, as if both `>` and `<` whitespace modifiers were applied to every element.
+Tags listed in `preserve` (default: `pre`, `textarea`) retain their inner
+whitespace but still have outer whitespace stripped.
+
+```haml
+%div
+  %p hi
+  %pre
+    line 1
+    line 2
+```
+
+Renders as:
+
+```html
+<div><p>hi</p><pre>&#x000A;  line 1&#x000A;  line 2&#x000A;</pre></div>
+```
+
+Unlike `output-style: 'ugly'`, plain-text lines keep their own newlines, so
+text inside tags reads as written. The two options are independent and may be
+combined.
 
 ## Autoclose
 

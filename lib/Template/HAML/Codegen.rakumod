@@ -186,6 +186,7 @@ class Codegen is export {
     @parts.push: ':mime-type('            ~ raku-str($c.mime-type)    ~ ')';
     @parts.push: ':hyphenate-data-attrs(' ~ ser-bool($c.hyphenate-data-attrs) ~ ')';
     @parts.push: ':output-indent-width('  ~ $c.output-indent-width    ~ ')';
+    @parts.push: ':remove-whitespace('    ~ ser-bool($c.remove-whitespace) ~ ')';
     @parts.push: ':autoclose('            ~ ser-str-list($c.autoclose) ~ ')';
     @parts.push: ':preserve('             ~ ser-str-list($c.preserve)  ~ ')';
     'Template::HAML::Config.new(' ~ @parts.join(', ') ~ ')';

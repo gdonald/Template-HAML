@@ -89,6 +89,12 @@ my $cfg = Template::HAML::Config.new(:preserve('pre', 'textarea', 'code'));
 HAML.render(:src($haml), :config($cfg));
 ```
 
+## Global whitespace removal
+
+To apply `>` and `<` to every tag at once, set `remove-whitespace: True` on the
+config. See [Configuration](config.md#remove-whitespace) for details. Preserved
+tags keep their inner whitespace but still have outer whitespace stripped.
+
 ## Forced preserve `~`
 
 The `~` operator works like `=` (eval and emit), but additionally replaces newlines in the result with `&#x000A;`. This is useful when an interpolated string contains newlines you want to keep literal in the rendered output.

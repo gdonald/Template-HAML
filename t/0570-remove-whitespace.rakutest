@@ -1,0 +1,137 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Template::HAML::Config;
+use Test;
+
+plan 17;
+
+# Default is off
+{
+  my $cfg = Template::HAML::Config.new;
+  is $cfg.remove-whitespace, False, 'remove-whitespace defaults to False';
+}
+
+# Single tag, no children: outer trim removes trailing newline
+{
+  my $cfg = Template::HAML::Config.new(:remove-whitespace);
+  is HAML.render(:src("%p hi\n"), :config($cfg)),
+     "<p>hi</p>",
+     'remove-whitespace strips trailing newline on lone tag';
+}
+
+# Sibling tags: no inter-tag whitespace
+{
+  my $cfg = Template::HAML::Config.new(:remove-whitespace);
+  is HAML.render(:src("%p first\n%p middle\n%p last\n"), :config($cfg)),
+     "<p>first</p><p>middle</p><p>last</p>",
+     'remove-whitespace eats whitespace between siblings';
+}
+
+# Nested tags: inner trim strips indentation
+{
+  my $cfg = Template::HAML::Config.new(:remove-whitespace);
+  is HAML.render(:src("%div\n  %p hi\n"), :config($cfg)),
+     "<div><p>hi</p></div>",
+     'remove-whitespace strips indent inside nested tag';
+}
+
+# Deeper nesting
+{
+  my $cfg = Template::HAML::Config.new(:remove-whitespace);
+  is HAML.render(:src("%div\n  %p\n    %span hi\n"), :config($cfg)),
+     "<div><p><span>hi</span></p></div>",
+     'remove-whitespace strips indent across multiple levels';
+}
+
+# Plain text between tags: surrounding whitespace eaten by tag's trim-outer
+{
+  my $cfg = Template::HAML::Config.new(:remove-whitespace);
+  is HAML.render(:src("%div\n  Hello\n  %p world\n"), :config($cfg)),
+     "<div>Hello<p>world</p></div>",
+     'remove-whitespace collapses whitespace between plain text and tags';
+}
+
+# Void elements
+{
+  my $cfg = Template::HAML::Config.new(:remove-whitespace);
+  is HAML.render(:src("%img\n%img\n%img\n"), :config($cfg)),
+     "<img><img><img>",
+     'remove-whitespace works with void elements';
+}
+
+# Preserved tag retains its inner whitespace
+{
+  my $cfg = Template::HAML::Config.new(:remove-whitespace);
+  is HAML.render(:src("%pre\n  Line 1\n  Line 2\n"), :config($cfg)),
+     "<pre>&#x000A;  Line 1&#x000A;  Line 2&#x000A;</pre>",
+     'preserve list overrides inner trim for <pre>';
+}
+
+# Preserved tag still gets outer trim
+{
+  my $cfg = Template::HAML::Config.new(:remove-whitespace);
+  is HAML.render(:src("%div\n  %pre\n    hi\n"), :config($cfg)),
+     "<div><pre>&#x000A;  hi&#x000A;</pre></div>",
+     'outer trim still applies to preserved tag';
+}
+
+# Configurable preserve list
+{
+  my $cfg = Template::HAML::Config.new(:remove-whitespace, :preserve(['code']));
+  is HAML.render(:src("%code\n  x = 1\n  y = 2\n"), :config($cfg)),
+     "<code>&#x000A;  x = 1&#x000A;  y = 2&#x000A;</code>",
+     'custom preserve list interacts with remove-whitespace';
+}
+
+# Independent of :ugly
+{
+  my $cfg = Template::HAML::Config.new(:remove-whitespace, :output-style<pretty>);
+  is HAML.render(:src("%div\n  %p hi\n"), :config($cfg)),
+     "<div><p>hi</p></div>",
+     'remove-whitespace works under pretty output-style';
+}
+
+# Compatibility with explicit trim modifiers
+{
+  my $cfg = Template::HAML::Config.new(:remove-whitespace);
+  is HAML.render(:src("%p> hi\n%p there\n"), :config($cfg)),
+     "<p>hi</p><p>there</p>",
+     'explicit > modifier coexists with remove-whitespace';
+}
+
+# Attributes still render
+{
+  my $cfg = Template::HAML::Config.new(:remove-whitespace);
+  is HAML.render(:src("%a\{href: '/'\} home\n"), :config($cfg)),
+     "<a href='/'>home</a>",
+     'attributes render normally under remove-whitespace';
+}
+
+# clone-with carries the flag
+{
+  my $cfg  = Template::HAML::Config.new(:remove-whitespace);
+  my $cfg2 = $cfg.clone-with(:format<xhtml>);
+  is $cfg2.remove-whitespace, True, 'clone-with preserves remove-whitespace';
+  is $cfg2.format, 'xhtml', 'clone-with applies override';
+}
+
+# Cache key changes when remove-whitespace toggles
+{
+  use Template::HAML::Cache;
+  my $on  = Template::HAML::Config.new(:remove-whitespace);
+  my $off = Template::HAML::Config.new;
+  isnt compute-cache-key("%p hi\n", $on),
+       compute-cache-key("%p hi\n", $off),
+       'cache key differs when remove-whitespace differs';
+}
+
+# Compiled cache path round-trip
+{
+  my $cfg = Template::HAML::Config.new(:remove-whitespace);
+  my $h   = HAML.new(:config($cfg));
+  is $h.render-cached(:src("%div\n  %p hi\n")),
+     "<div><p>hi</p></div>",
+     'render-cached honors remove-whitespace';
+}

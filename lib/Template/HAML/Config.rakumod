@@ -43,6 +43,7 @@ class Template::HAML::Config is export {
   has Str  $.mime-type       is rw = '';
   has Bool $.hyphenate-data-attrs is rw = False;
   has Int  $.output-indent-width is rw = 2;
+  has Bool $.remove-whitespace is rw = False;
   has @.autoclose            is rw;
   has @.preserve             is rw;
 
@@ -58,6 +59,7 @@ class Template::HAML::Config is export {
     Str  :$!mime-type       = '',
     Bool :$!hyphenate-data-attrs = False,
     Int  :$!output-indent-width = 2,
+    Bool :$!remove-whitespace = False,
     :@autoclose,
     :@preserve,
   ) {
@@ -129,6 +131,7 @@ class Template::HAML::Config is export {
       mime-type           => $!mime-type,
       hyphenate-data-attrs => $!hyphenate-data-attrs,
       output-indent-width => $!output-indent-width,
+      remove-whitespace   => $!remove-whitespace,
       autoclose           => @!autoclose,
       preserve            => @!preserve,
     ;

@@ -345,7 +345,12 @@ class Renderer is export {
     my $open  = $obj.open(:$offset, :attrs(@resolved));
     my $close = $obj.close;
 
-    if $obj.trim-outer {
+    my $is-preserved = $!config.is-preserved($obj.name);
+    my $remove-ws    = $!config.remove-whitespace;
+    my $trim-outer   = $obj.trim-outer || $remove-ws;
+    my $trim-inner   = $obj.trim-inner || ($remove-ws && !$is-preserved);
+
+    if $trim-outer {
       $open  = TRIM-BEFORE ~ $open;
       $close = $close ~ TRIM-AFTER;
     }
@@ -354,12 +359,10 @@ class Renderer is export {
       return $open ~ $close;
     }
 
-    my $is-preserved = $!config.is-preserved($obj.name);
-
     my $out = $open;
     if $node.children.elems {
       $out ~= $content if $content;
-      if $obj.trim-inner {
+      if $trim-inner {
         my $kids = self.render-children($node, %locals, $offset + 1);
         $out ~= $kids.subst(/^ \s+/, '').subst(/\s+ $/, '');
       } elsif $is-preserved {
