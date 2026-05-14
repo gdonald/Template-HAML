@@ -1,0 +1,140 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Template::HAML::Filters;
+use Template::HAML::X;
+use Test;
+
+plan 20;
+
+ok has-filter('markdown'), ':markdown is a registered filter';
+
+nok markdown-backend-registered(),
+  'no markdown backend registered by default';
+
+throws-like { HAML.render(:src(q:to/HAML/)) },
+:markdown
+  # heading
+HAML
+   X::HAML::MarkdownBackendMissing,
+   ':markdown without backend raises MarkdownBackendMissing';
+
+{
+  my $err;
+  try {
+    HAML.render(:src(":markdown\n  # heading\n"));
+    CATCH { default { $err = $_ } }
+  }
+  ok $err.defined && $err ~~ X::HAML::MarkdownBackendMissing,
+    'backend-missing error type';
+  is $err.line, 1, 'backend-missing error carries source line';
+}
+
+register-markdown-backend :handler(-> Str $body --> Str {
+  my @out;
+  for $body.lines -> $ln {
+    if $ln.starts-with('## ') {
+      @out.push: '<h2>' ~ $ln.substr(3) ~ '</h2>';
+    } elsif $ln.starts-with('# ') {
+      @out.push: '<h1>' ~ $ln.substr(2) ~ '</h1>';
+    } elsif $ln.chars == 0 {
+      @out.push: '';
+    } else {
+      @out.push: '<p>' ~ $ln ~ '</p>';
+    }
+  }
+  @out.join("\n");
+});
+
+ok markdown-backend-registered(),
+  'register-markdown-backend installs handler';
+
+is HAML.render(:src(q:to/HAML/)),
+:markdown
+  # Hello
+HAML
+   "<h1>Hello</h1>\n",
+   ':markdown delegates to registered backend';
+
+is HAML.render(:src(q:to/HAML/)),
+:markdown
+  # Hello
+  ## Sub
+  body text
+HAML
+   "<h1>Hello</h1>\n<h2>Sub</h2>\n<p>body text</p>\n",
+   ':markdown multi-line passes whole body to backend';
+
+is HAML.render(:src(q:to/HAML/), :locals(%(name => 'World'))),
+:markdown
+  # Hello, #{$name}!
+HAML
+   "<h1>Hello, World!</h1>\n",
+   ':markdown interpolates #{} before backend';
+
+is HAML.render(:src(q:to/HAML/)),
+%div
+  :markdown
+    # Nested
+HAML
+   "<div>\n  <h1>Nested</h1>\n</div>\n",
+   ':markdown nested under tag inherits indent';
+
+is HAML.render(:src(q:to/HAML/)),
+:markdown
+HAML
+   "",
+   ':markdown with empty body renders nothing';
+
+is HAML.render(:src(q:to/HAML/)),
+%p before
+:markdown
+  # Mid
+%p after
+HAML
+   "<p>before</p>\n<h1>Mid</h1>\n<p>after</p>\n",
+   ':markdown between sibling tags';
+
+{
+  ok clear-markdown-backend(),
+    'clear-markdown-backend returns True when a backend was set';
+  nok markdown-backend-registered(),
+    'clear-markdown-backend removes the handler';
+  nok clear-markdown-backend(),
+    'clear-markdown-backend returns False when no backend was set';
+}
+
+{
+  my $calls = 0;
+  register-markdown-backend :handler(-> Str $body --> Str {
+    $calls++;
+    "X:$body";
+  });
+  is HAML.render(:src(":markdown\n  one\n")),
+     "X:one\n",
+     'replacement backend receives body and its output is emitted verbatim';
+  is $calls, 1, 'replacement backend was invoked exactly once';
+
+  register-markdown-backend :handler(-> Str $body --> Str {
+    "Y:" ~ $body.uc;
+  });
+  is HAML.render(:src(":markdown\n  hi\n")),
+     "Y:HI\n",
+     'register-markdown-backend overrides the previous handler';
+  clear-markdown-backend();
+}
+
+{
+  my $backend = current-markdown-backend();
+  nok $backend.defined,
+    'current-markdown-backend returns undefined when none is registered';
+}
+
+register-markdown-backend :handler(-> Str $body --> Str { $body });
+{
+  my $backend = current-markdown-backend();
+  ok $backend ~~ Callable,
+    'current-markdown-backend returns the registered Callable';
+  clear-markdown-backend();
+}

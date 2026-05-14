@@ -1,6 +1,7 @@
 
 use Template::HAML::Eval;
 use Template::HAML::Interpolation;
+use Template::HAML::X;
 
 unit module Template::HAML::Filters;
 
@@ -116,5 +117,37 @@ register-filter :name<raku>, :handler(-> Str $body, %locals --> Str {
   } else {
     my $val = eval-haml($body, %locals);
     $val.defined ?? $val.Str !! '';
+  }
+});
+
+my &markdown-backend;
+
+sub register-markdown-backend(:&handler!) is export {
+  &markdown-backend = &handler;
+}
+
+sub clear-markdown-backend(--> Bool) is export {
+  my $had = &markdown-backend.defined;
+  &markdown-backend = Callable;
+  $had;
+}
+
+sub markdown-backend-registered(--> Bool) is export {
+  &markdown-backend.defined;
+}
+
+sub current-markdown-backend(--> Callable) is export {
+  &markdown-backend;
+}
+
+register-filter :name<markdown>, :handler(-> Str $body, %locals --> Str {
+  if !$body.chars {
+    '';
+  } else {
+    unless &markdown-backend.defined {
+      X::HAML::MarkdownBackendMissing.new.throw;
+    }
+    my $rendered = markdown-backend(interp-body($body, %locals));
+    $rendered.defined ?? $rendered.Str !! '';
   }
 });

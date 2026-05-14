@@ -85,6 +85,49 @@ renders to:
 line1&#x000A;line2
 ```
 
+### `:markdown`
+
+Renders the body as Markdown by delegating to a user-registered backend.
+Interpolates `#{ ... }` before the body is passed to the backend.
+
+```haml
+:markdown
+  # Hello, #{$name}!
+  body text
+```
+
+`Template::HAML` ships **no** Markdown engine of its own — Raku has several
+viable Markdown libraries and the right choice belongs to the host
+application. Register one with `register-markdown-backend`:
+
+```raku
+use Template::HAML;
+use Template::HAML::Filters;
+use Text::Markdown;  # or any other Markdown engine
+
+register-markdown-backend :handler(-> Str $body --> Str {
+  Text::Markdown.new(:text($body)).render;
+});
+```
+
+The handler signature is `(Str $body --> Str)`. The interpolated body is
+passed in; the returned string is the rendered HTML. The renderer prefixes
+each output line with the filter's own source indent, so a `:markdown` nested
+inside `%div` lines up correctly.
+
+If `:markdown` appears in a template and no backend is registered, render
+fails with `X::HAML::MarkdownBackendMissing`. Related helpers:
+
+| Sub                            | What it does                                          |
+| ------------------------------ | ----------------------------------------------------- |
+| `register-markdown-backend`    | Install or replace the backend handler.               |
+| `clear-markdown-backend`       | Remove the current handler. Returns the previous defined-ness as a `Bool`. |
+| `markdown-backend-registered`  | `True` if a backend is currently installed.           |
+| `current-markdown-backend`     | The current handler, or an undefined `Callable`.      |
+
+Calling `register-markdown-backend` again replaces the previous handler — at
+most one Markdown backend is active per process.
+
 ### `:raku`
 
 Evaluates the body as Raku code with the current locals in scope and emits the
@@ -132,6 +175,7 @@ source indent.
 | `:css`        | yes                     |
 | `:cdata`      | yes                     |
 | `:preserve`   | yes                     |
+| `:markdown`   | yes                     |
 | `:raku`       | no (body is code)       |
 
 ## Indentation

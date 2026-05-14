@@ -396,6 +396,13 @@ class Renderer is export {
     my &handler = lookup-filter($obj.name);
     my $rendered = do {
       my $*HAML-CFG = $!config;
+      CATCH {
+        when X::HAML::MarkdownBackendMissing {
+          X::HAML::MarkdownBackendMissing.new(
+            :line($obj.line), :column($obj.column),
+          ).throw;
+        }
+      }
       handler($obj.body, %locals);
     };
     return '' unless $rendered.defined && $rendered.chars;

@@ -92,6 +92,15 @@ class X::HAML::UnknownFilter is X::HAML {
   }
 }
 
+class X::HAML::MarkdownBackendMissing is X::HAML {
+  method message {
+    self.loc
+      ~ " no markdown backend registered;"
+      ~ " call register-markdown-backend(:&handler) before rendering a :markdown filter"
+      ~ self.caret
+  }
+}
+
 class X::HAML::TemplateNotFound is X::HAML {
   has Str $.name;
   has @.search-paths;
