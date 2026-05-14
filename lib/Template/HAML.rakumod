@@ -8,6 +8,7 @@ use Template::HAML::Multiline;
 use Template::HAML::Node;
 use Template::HAML::Renderer;
 use Template::HAML::ViewContext;
+use Template::HAML::Visitor;
 use Template::HAML::Grammar;
 use Template::HAML::X;
 
@@ -178,7 +179,7 @@ class HAML is export {
     unless $m {
       self!throw-parse-fail($joined, $cfg);
     }
-    $actions.tree;
+    apply-visitors($actions.tree);
   }
 
   method !throw-parse-fail(Str:D $joined, Template::HAML::Config $cfg) {

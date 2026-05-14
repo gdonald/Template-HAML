@@ -1,0 +1,178 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Template::HAML::Node;
+use Template::HAML::Tag;
+use Template::HAML::Visitor;
+use Test;
+
+plan 29;
+
+is visitor-count(), 0, 'no visitors registered by default';
+is visitor-names().elems, 0, 'visitor-names() empty by default';
+nok has-visitor('any'), 'has-visitor returns False when none registered';
+
+LEAVE { clear-visitors() }
+
+{
+  my $calls = 0;
+  register-visitor :handler(-> $tree {
+    $calls++;
+    $tree;
+  });
+
+  HAML.render(:src("%p hi\n"));
+  is $calls, 1, 'registered visitor is invoked on render';
+  is visitor-count(), 1, 'visitor-count reflects registrations';
+
+  clear-visitors();
+  is $calls, 1, 'clear-visitors removes the handler';
+  HAML.render(:src("%p hi\n"));
+  is $calls, 1, 'cleared visitor is no longer invoked';
+}
+
+{
+  register-visitor :name<rename>, :handler(-> $tree {
+    walk-tree($tree, -> $n {
+      if $n.object ~~ Tag && $n.object.name eq 'oldtag' {
+        $n.object.name = 'newtag';
+      }
+    });
+    $tree;
+  });
+
+  is HAML.render(:src("%oldtag hi\n")),
+     "<newtag>hi</newtag>\n",
+     'visitor that mutates Tag names in place';
+
+  ok has-visitor('rename'), 'named visitor is discoverable';
+  is visitor-names().elems, 1, 'named visitor appears in visitor-names';
+  is visitor-names()[0], 'rename', 'visitor-names returns the registered name';
+
+  ok clear-visitor('rename'), 'clear-visitor returns True when removing a named visitor';
+  nok has-visitor('rename'), 'visitor was removed';
+  nok clear-visitor('rename'), 'clear-visitor returns False when no such visitor';
+}
+
+{
+  my @seen-names;
+  register-visitor :handler(-> $tree {
+    walk-tree($tree, -> $n {
+      @seen-names.push: $n.object.name if $n.object ~~ Tag;
+    });
+    $tree;
+  });
+
+  HAML.render(:src(q:to/HAML/));
+  %ul
+    %li one
+    %li two
+  HAML
+
+  is @seen-names.sort.join(','), 'li,li,ul',
+     'walk-tree visits every Tag in the tree';
+  clear-visitors();
+}
+
+{
+  my @order;
+  register-visitor :name<first>,  :handler(-> $t { @order.push: 'first';  $t });
+  register-visitor :name<second>, :handler(-> $t { @order.push: 'second'; $t });
+  register-visitor :name<third>,  :handler(-> $t { @order.push: 'third';  $t });
+
+  HAML.render(:src("%p hi\n"));
+  is @order.join(','), 'first,second,third',
+     'visitors run in registration order';
+  is visitor-count(), 3, 'three visitors registered';
+
+  clear-visitors();
+}
+
+{
+  register-visitor :name<dupe>, :handler(-> $t {
+    walk-tree($t, -> $n {
+      $n.object.name = 'v1' if $n.object ~~ Tag;
+    });
+    $t;
+  });
+  is HAML.render(:src("%p hi\n")), "<v1>hi</v1>\n", 'first handler applies';
+
+  register-visitor :name<dupe>, :handler(-> $t {
+    walk-tree($t, -> $n {
+      $n.object.name = 'v2' if $n.object ~~ Tag;
+    });
+    $t;
+  });
+  is HAML.render(:src("%p hi\n")), "<v2>hi</v2>\n",
+     'registering with same name replaces the handler';
+  is visitor-count(), 1, 'replacement does not duplicate the entry';
+  clear-visitors();
+}
+
+{
+  register-visitor :name<add-class>, :handler(-> $t {
+    walk-tree($t, -> $n {
+      if $n.object ~~ Tag {
+        my $obj = $n.object;
+        my $idx = $obj.find-attr-index('class');
+        if $idx.defined {
+          my $existing = $obj.attrs[$idx].value;
+          $obj.attrs[$idx] = 'class' => "$existing visited";
+        } else {
+          $obj.attrs.push: 'class' => 'visited';
+        }
+      }
+    });
+    $t;
+  });
+
+  is HAML.render(:src("%p hi\n")),
+     qq{<p class='visited'>hi</p>\n},
+     'visitor can inject attributes on every tag';
+
+  is HAML.render(:src("%p.named hi\n")),
+     qq{<p class='named visited'>hi</p>\n},
+     'visitor injection merges with existing attributes';
+
+  clear-visitor('add-class');
+}
+
+{
+  register-visitor :handler(-> $t {
+    walk-tree($t, -> $n {
+      $n.object.name = 'em' if $n.object ~~ Tag && $n.object.name eq 'b';
+    });
+    $t;
+  });
+
+  is HAML.render(:src("%b strong\n")),
+     "<em>strong</em>\n",
+     'anonymous visitor applies';
+  is visitor-count(), 1, 'anonymous visitor still counted';
+  nok visitor-names().elems, 'anonymous visitor not in visitor-names';
+
+  clear-visitors();
+}
+
+{
+  is HAML.render(:src("%p hi\n")), "<p>hi</p>\n",
+     'rendering unaffected when no visitors registered';
+}
+
+{
+  my $original-passed;
+  register-visitor :handler(-> $t {
+    $original-passed = $t.children.elems > 0;
+    $t;
+  });
+  HAML.render(:src("%p one\n%p two\n"));
+  ok $original-passed, 'visitor receives a non-empty tree';
+  clear-visitors();
+}
+
+{
+  register-visitor :name<noop>, :handler(-> $t { $t });
+  is clear-visitors(), 1, 'clear-visitors returns the count it removed';
+  is clear-visitors(), 0, 'clear-visitors on empty returns zero';
+}

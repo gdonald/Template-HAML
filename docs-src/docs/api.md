@@ -256,6 +256,62 @@ applies the filter's own source indent to each line of the result.
 
 See [filters](syntax/filters.md) for the built-in handlers.
 
+## `register-visitor`
+
+```raku
+use Template::HAML;
+use Template::HAML::Visitor;
+use Template::HAML::Tag;
+
+register-visitor :name<rename-b>, :handler(-> $tree {
+  walk-tree($tree, -> $node {
+    if $node.object ~~ Tag && $node.object.name eq 'b' {
+      $node.object.name = 'strong';
+    }
+  });
+  $tree;
+});
+
+HAML.render(:src("%b hi\n"));  # → "<strong>hi</strong>\n"
+```
+
+Registers an AST visitor that runs against the parse tree of every subsequent
+`HAML.render` (and every other compile path: `render-cached`,
+`compile-source-to-raku`, `compile-file`). The handler signature is
+
+```raku
+sub (Template::HAML::Node $tree --> Template::HAML::Node)
+```
+
+The handler may mutate the tree in place and return it, or return a fresh
+`Template::HAML::Node` to replace it entirely. When multiple visitors are
+registered they run in registration order and each one's return value is
+fed into the next.
+
+| Parameter   | Type      | Description                                                  |
+|-------------|-----------|--------------------------------------------------------------|
+| `:handler`  | `Callable`| Tree transformer (required).                                 |
+| `:name`     | `Str`     | Optional. Registering with an existing name replaces the previous handler. Anonymous visitors always append. |
+
+`Template::HAML::Visitor` also exports:
+
+| Sub                              | Description                                                                  |
+|----------------------------------|------------------------------------------------------------------------------|
+| `clear-visitors(--> Int)`        | Remove every registered visitor; returns the number removed.                |
+| `clear-visitor(Str:D $name --> Bool)` | Remove a named visitor; returns whether one was removed.                |
+| `has-visitor(Str:D $name --> Bool)`   | Whether a visitor with that name is registered.                        |
+| `visitor-names()`                | List of registered visitor names (anonymous visitors are not included).      |
+| `visitor-count(--> Int)`         | Total registered visitors, named and anonymous.                              |
+| `walk-tree(Node:D $tree, &cb)`   | Depth-first walk of every `Template::HAML::Node` reachable from `$tree`.    |
+| `apply-visitors(Node:D $tree --> Node)` | Run every registered visitor against `$tree` in order. Called automatically during compilation; exported for tests. |
+
+Visitors run between parsing and rendering, so the renderer always operates
+on the post-visitor tree. They also run before [code generation](#hamlcompile-source-to-raku),
+which means the resulting cached `.rakumod` reflects the transformed tree.
+After registering or changing visitors, call
+[`clear-compiled-cache`](#hamlclear-compiled-cache) so previously cached
+artifacts get rebuilt with the new pipeline.
+
 ## Internal modules
 
 The implementation is split across several modules under `lib/Template/HAML/`. These are not part of the stable public API yet, but documented here for contributors:
@@ -275,6 +331,7 @@ The implementation is split across several modules under `lib/Template/HAML/`. T
 | `Template::HAML::Filter`     | AST node representing a filter line and its dedented body.    |
 | `Template::HAML::Filters`    | Filter registry plus the built-in filter handlers.            |
 | `Template::HAML::Config`     | Per-render configuration: format, escape options, output style, etc. |
+| `Template::HAML::Visitor`    | AST visitor registry; transforms the parse tree before render/codegen. |
 | `Template::HAML::X`          | Exception types raised by the parser.                         |
 
 ## Exceptions
