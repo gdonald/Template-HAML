@@ -15,20 +15,30 @@ sub html-escape(Str $s --> Str) {
 
 my %filters;
 
-sub register-filter(Str :$name!, :&handler!) is export {
+our sub register-filter(Str :$name!, :&handler!) is export {
   %filters{$name} = &handler;
 }
 
-sub lookup-filter(Str $name) is export {
+our sub lookup-filter(Str $name) is export {
   %filters{$name};
 }
 
-sub has-filter(Str $name --> Bool) is export {
+our sub has-filter(Str $name --> Bool) is export {
   %filters{$name}:exists;
 }
 
-sub filter-names(--> Seq) is export {
+our sub filter-names(--> Seq) is export {
   %filters.keys.sort;
+}
+
+our sub filter-count(--> Int) is export {
+  %filters.elems;
+}
+
+our sub clear-filter(Str:D $name --> Bool) is export {
+  return False unless %filters{$name}:exists;
+  %filters{$name}:delete;
+  True;
 }
 
 sub interp-body(Str $body, %locals --> Str) {
@@ -122,21 +132,21 @@ register-filter :name<raku>, :handler(-> Str $body, %locals --> Str {
 
 my &markdown-backend;
 
-sub register-markdown-backend(:&handler!) is export {
+our sub register-markdown-backend(:&handler!) is export {
   &markdown-backend = &handler;
 }
 
-sub clear-markdown-backend(--> Bool) is export {
+our sub clear-markdown-backend(--> Bool) is export {
   my $had = &markdown-backend.defined;
   &markdown-backend = Callable;
   $had;
 }
 
-sub markdown-backend-registered(--> Bool) is export {
+our sub markdown-backend-registered(--> Bool) is export {
   &markdown-backend.defined;
 }
 
-sub current-markdown-backend(--> Callable) is export {
+our sub current-markdown-backend(--> Callable) is export {
   &markdown-backend;
 }
 

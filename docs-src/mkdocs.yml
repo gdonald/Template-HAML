@@ -19,6 +19,7 @@ nav:
     - Render context: syntax/context.md
     - Layouts and partials: syntax/layouts-partials.md
     - Configuration: syntax/config.md
+    - Plugins: syntax/plugins.md
   - API: api.md
   - CLI: cli.md
   - Tests: testing.md

@@ -1,0 +1,272 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Template::HAML::Plugin;
+use Template::HAML::Visitor;
+use Template::HAML::TagTransformers;
+use Template::HAML::Filters;
+use Template::HAML::Tag;
+use Test;
+
+plan 46;
+
+LEAVE {
+  clear-plugins();
+  clear-visitors();
+  clear-tag-transformers();
+  clear-markdown-backend();
+}
+
+is installed-plugins().elems, 0, 'no plugins installed by default';
+is installed-plugin-names().elems, 0, 'installed-plugin-names empty by default';
+nok installed-plugin('any').defined, 'installed-plugin returns undefined for unknown name';
+
+{
+  my $p = Template::HAML::Plugin::Plugin.new(
+    :name<minimal>,
+  );
+  ok $p ~~ Template::HAML::Plugin::Plugin, 'Plugin class is importable';
+  is $p.name, 'minimal', 'Plugin retains :name';
+  nok $p.installed, 'fresh plugin reports installed=False';
+}
+
+{
+  my $calls = 0;
+  my $p = Template::HAML::Plugin::Plugin.new(
+    :name<vis-only>,
+    :visitors([
+      %( :name<rename-b>, :handler(-> $t {
+        walk-tree($t, -> $n {
+          $n.object.name = 'em' if $n.object ~~ Tag && $n.object.name eq 'b';
+        });
+        $calls++;
+        $t;
+      }) ),
+    ]),
+  );
+
+  install-plugin($p);
+  ok $p.installed, 'install marks the plugin installed';
+  ok has-visitor('rename-b'), 'plugin install registered the visitor';
+  is installed-plugin-names().elems, 1, 'installed-plugin-names reflects install';
+  is installed-plugin-names()[0], 'vis-only', 'plugin name appears in installed list';
+  ok installed-plugin('vis-only') === $p, 'installed-plugin returns the plugin';
+
+  is HAML.render(:src("%b strong\n")),
+     "<em>strong</em>\n",
+     'visitor from installed plugin runs during render';
+  is $calls, 1, 'visitor handler was invoked once';
+
+  install-plugin($p);
+  is installed-plugin-names().elems, 1,
+     're-installing the same plugin is idempotent';
+
+  uninstall-plugin($p);
+  nok $p.installed, 'uninstall clears the installed flag';
+  nok has-visitor('rename-b'), 'plugin uninstall removed the visitor';
+  is installed-plugin-names().elems, 0, 'uninstall removes from installed list';
+
+  uninstall-plugin($p);
+  nok $p.installed, 'uninstall is idempotent';
+}
+
+{
+  my $p = Template::HAML::Plugin::Plugin.new(
+    :name<card-plugin>,
+    :tag-transformers([
+      %( :name<card>, :handler(-> $n {
+        $n.object.name = 'div';
+        $n.object.attrs.push: 'class' => 'card';
+        $n;
+      }) ),
+    ]),
+  );
+
+  install-plugin($p);
+  ok has-tag-transformer('card'), 'plugin install registered the tag transformer';
+  is HAML.render(:src("%card hi\n")),
+     qq{<div class='card'>hi</div>\n},
+     'tag transformer from installed plugin runs during render';
+
+  uninstall-plugin($p);
+  nok has-tag-transformer('card'), 'plugin uninstall removed the tag transformer';
+  is HAML.render(:src("%p hi\n")), "<p>hi</p>\n",
+     'rendering returns to unmodified after uninstall';
+}
+
+{
+  my $p = Template::HAML::Plugin::Plugin.new(
+    :name<filter-plugin>,
+    :filters([
+      %( :name<upper>, :handler(-> Str $body, %locals --> Str { $body.uc }) ),
+    ]),
+  );
+
+  install-plugin($p);
+  ok has-filter('upper'), 'plugin install registered the filter';
+  is HAML.render(:src(":upper\n  hello\n")),
+     "HELLO\n",
+     'filter from installed plugin runs during render';
+
+  uninstall-plugin($p);
+  nok has-filter('upper'), 'plugin uninstall removed the filter';
+}
+
+{
+  my $p = Template::HAML::Plugin::Plugin.new(
+    :name<md-plugin>,
+    :markdown-backend(-> Str $body --> Str {
+      '<MD>' ~ $body ~ '</MD>';
+    }),
+  );
+
+  install-plugin($p);
+  ok markdown-backend-registered(),
+     'plugin install registered the markdown backend';
+  is HAML.render(:src(":markdown\n  hi\n")),
+     "<MD>hi</MD>\n",
+     'markdown backend from plugin runs during render';
+
+  uninstall-plugin($p);
+  nok markdown-backend-registered(),
+     'plugin uninstall removed the markdown backend';
+}
+
+{
+  my $p = Template::HAML::Plugin::Plugin.new(
+    :name<combo>,
+    :visitors([
+      %( :name<add-class>, :handler(-> $t {
+        walk-tree($t, -> $n {
+          if $n.object ~~ Tag {
+            $n.object.attrs.push: 'class' => 'visited'
+              unless $n.object.attrs.first({ .key eq 'class' });
+          }
+        });
+        $t;
+      }) ),
+    ]),
+    :tag-transformers([
+      %( :name<widget>, :handler(-> $n {
+        $n.object.name = 'div';
+        $n;
+      }) ),
+    ]),
+    :filters([
+      %( :name<rev>, :handler(-> Str $body, %locals --> Str { $body.flip }) ),
+    ]),
+  );
+
+  install-plugin($p);
+  is HAML.render(:src("%widget hi\n")),
+     qq{<div class='visited'>hi</div>\n},
+     'visitor + tag-transformer compose in a single plugin';
+
+  is HAML.render(:src(":rev\n  abc\n")),
+     "cba\n",
+     'filter from same plugin works alongside other hooks';
+
+  uninstall-plugin($p);
+  nok has-visitor('add-class'),    'combo: visitor cleared on uninstall';
+  nok has-tag-transformer('widget'), 'combo: tag transformer cleared on uninstall';
+  nok has-filter('rev'),            'combo: filter cleared on uninstall';
+}
+
+{
+  my $a = Template::HAML::Plugin::Plugin.new(
+    :name<alpha>,
+    :tag-transformers([
+      %( :name<x>, :handler(-> $n { $n.object.name = 'first'; $n }) ),
+    ]),
+  );
+  my $b = Template::HAML::Plugin::Plugin.new(
+    :name<beta>,
+    :tag-transformers([
+      %( :name<y>, :handler(-> $n { $n.object.name = 'second'; $n }) ),
+    ]),
+  );
+
+  install-plugin($a);
+  install-plugin($b);
+  is installed-plugin-names().sort.join(','), 'alpha,beta',
+     'multiple plugins coexist';
+
+  is clear-plugins(), 2, 'clear-plugins returns count removed';
+  is installed-plugin-names().elems, 0, 'clear-plugins empties the list';
+  nok has-tag-transformer('x'), 'clear-plugins uninstalls each plugin';
+  nok has-tag-transformer('y'), 'clear-plugins uninstalls each plugin';
+  nok $a.installed, 'plugins reflect uninstalled state after clear-plugins';
+  nok $b.installed, 'plugins reflect uninstalled state after clear-plugins';
+}
+
+{
+  dies-ok {
+    Template::HAML::Plugin::Plugin.new(
+      :name<bad>,
+      :visitors([ %( :handler(-> $t { $t }) ) ]),
+    );
+  }, 'visitor entry without :name dies at construction';
+
+  dies-ok {
+    Template::HAML::Plugin::Plugin.new(
+      :name<bad>,
+      :tag-transformers([ %( :name<oops> ) ]),
+    );
+  }, 'tag-transformer entry without :handler dies at construction';
+
+  dies-ok {
+    Template::HAML::Plugin::Plugin.new(
+      :name<bad>,
+      :filters([ %( :handler(-> Str $b, %l --> Str { $b }) ) ]),
+    );
+  }, 'filter entry without :name dies at construction';
+}
+
+{
+  my $tmp = $*TMPDIR.add('haml-plugin-cache-' ~ $*PID ~ '-' ~ time);
+  $tmp.mkdir;
+  LEAVE {
+    for $tmp.dir(:r) -> $f { $f.unlink if $f.f }
+    $tmp.rmdir if $tmp.e;
+  }
+
+  my $p = Template::HAML::Plugin::Plugin.new(
+    :name<cache-card>,
+    :tag-transformers([
+      %( :name<card>, :handler(-> $n {
+        $n.object.name = 'div';
+        $n.object.attrs.push: 'class' => 'card';
+        $n;
+      }) ),
+    ]),
+  );
+  install-plugin($p);
+
+  my $haml = HAML.new(:compiled-cache-dir($tmp));
+  is $haml.render-cached(:src("%card hi\n")),
+     qq{<div class='card'>hi</div>\n},
+     'plugin hooks run through the cached/compiled path';
+  $haml.clear-compiled-cache;
+
+  uninstall-plugin($p);
+}
+
+{
+  my $p = Template::HAML::Plugin::Plugin.new(
+    :name<lookup-test>,
+    :filters([
+      %( :name<lookup>, :handler(-> Str $b, %l --> Str { 'L:' ~ $b }) ),
+    ]),
+  );
+  install-plugin($p);
+
+  ok lookup-filter('lookup') ~~ Callable,
+     're-exported lookup-filter resolves plugin-registered filter';
+  ok lookup-tag-transformer('lookup').^name eq 'Nil',
+     're-exported lookup-tag-transformer returns Nil for unknown';
+
+  uninstall-plugin($p);
+}
+
+done-testing;

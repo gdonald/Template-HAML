@@ -29,6 +29,7 @@
     "Template::HAML::Multiline": "lib/Template/HAML/Multiline.rakumod",
     "Template::HAML::Node": "lib/Template/HAML/Node.rakumod",
     "Template::HAML::Plain": "lib/Template/HAML/Plain.rakumod",
+    "Template::HAML::Plugin": "lib/Template/HAML/Plugin.rakumod",
     "Template::HAML::Renderer": "lib/Template/HAML/Renderer.rakumod",
     "Template::HAML::Statement": "lib/Template/HAML/Statement.rakumod",
     "Template::HAML::Tag": "lib/Template/HAML/Tag.rakumod",

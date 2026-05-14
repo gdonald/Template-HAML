@@ -5,7 +5,7 @@ unit module Template::HAML::Visitor;
 
 my @visitors;
 
-sub register-visitor(:&handler!, Str :$name) is export {
+our sub register-visitor(:&handler!, Str :$name) is export {
   if $name.defined {
     my $idx = @visitors.first({ .key.defined && .key eq $name }, :k);
     if $idx.defined {
@@ -18,32 +18,32 @@ sub register-visitor(:&handler!, Str :$name) is export {
   }
 }
 
-sub clear-visitors(--> Int) is export {
+our sub clear-visitors(--> Int) is export {
   my $n = @visitors.elems;
   @visitors = ();
   $n;
 }
 
-sub clear-visitor(Str:D $name --> Bool) is export {
+our sub clear-visitor(Str:D $name --> Bool) is export {
   my $idx = @visitors.first({ .key.defined && .key eq $name }, :k);
   return False unless $idx.defined;
   @visitors.splice($idx, 1);
   True;
 }
 
-sub has-visitor(Str:D $name --> Bool) is export {
+our sub has-visitor(Str:D $name --> Bool) is export {
   so @visitors.first({ .key.defined && .key eq $name });
 }
 
-sub visitor-names() is export {
+our sub visitor-names() is export {
   @visitors.grep({ .key.defined }).map(*.key).list;
 }
 
-sub visitor-count(--> Int) is export {
+our sub visitor-count(--> Int) is export {
   @visitors.elems;
 }
 
-sub apply-visitors(Node:D $tree --> Node) is export {
+our sub apply-visitors(Node:D $tree --> Node) is export {
   my Node $cur = $tree;
   for @visitors -> $v {
     my $result = $v.value.($cur);
@@ -52,7 +52,7 @@ sub apply-visitors(Node:D $tree --> Node) is export {
   $cur;
 }
 
-sub walk-tree(Node:D $tree, &cb) is export {
+our sub walk-tree(Node:D $tree, &cb) is export {
   &cb($tree);
   walk-tree($_, &cb) for $tree.children;
 }

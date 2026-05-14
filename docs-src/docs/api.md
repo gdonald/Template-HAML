@@ -251,8 +251,15 @@ Registers a custom filter handler. The handler signature is
 dedented to column zero; the handler returns the rendered text. The renderer
 applies the filter's own source indent to each line of the result.
 
-`Template::HAML::Filters` also exports `lookup-filter(Str $name)`,
-`has-filter(Str $name)`, and `filter-names()`.
+`Template::HAML::Filters` also exports:
+
+| Sub                                       | Description                                                              |
+|-------------------------------------------|--------------------------------------------------------------------------|
+| `lookup-filter(Str $name)`                | Returns the handler for a filter name, or undefined.                     |
+| `has-filter(Str $name --> Bool)`          | Whether a filter is registered with that name.                           |
+| `filter-names(--> Seq)`                   | Sorted list of every registered filter name.                             |
+| `filter-count(--> Int)`                   | Number of registered filters (built-in + user-registered).               |
+| `clear-filter(Str:D $name --> Bool)`      | Remove a single filter by name; returns whether one was removed. The built-in filters live in the same registry; clearing one of them is permitted but rarely useful. |
 
 See [filters](syntax/filters.md) for the built-in handlers.
 
@@ -364,6 +371,68 @@ artifacts get rebuilt.
 | `lookup-tag-transformer(Str:D $name)`        | Returns the handler for a tag name, or `Nil` if none is registered.     |
 | `apply-tag-transformers(Node:D $tree --> Node)` | Run dispatch over every matching `Tag` in `$tree`. Called automatically during compilation; exported for tests. |
 
+## `Template::HAML::Plugin`
+
+`Template::HAML::Plugin` is the public, stable surface for bundling related
+hooks — visitors, tag transformers, filters, and the markdown backend — so a
+plugin author can install or remove them atomically. The individual
+`register-*` subs documented above remain available; `Template::HAML::Plugin`
+adds a lifecycle layer on top.
+
+```raku
+use Template::HAML::Plugin;
+
+my $plugin = Template::HAML::Plugin::Plugin.new(
+  :name<my-plugin>,
+  :visitors([
+    %( :name<add-class>, :handler(-> $tree { ...; $tree }) ),
+  ]),
+  :tag-transformers([
+    %( :name<card>, :handler(-> $node {
+      $node.object.name = 'div';
+      $node.object.attrs.push: 'class' => 'card';
+      $node;
+    }) ),
+  ]),
+  :filters([
+    %( :name<upper>, :handler(-> Str $body, %locals --> Str { $body.uc }) ),
+  ]),
+  :markdown-backend(-> Str $body --> Str { ... }),
+);
+
+install-plugin($plugin);
+# ... render with hooks active
+
+uninstall-plugin($plugin);
+```
+
+| Plugin attribute     | Type                                       | Description                                                              |
+|----------------------|--------------------------------------------|--------------------------------------------------------------------------|
+| `:name`              | `Str:D` (required)                         | Identifies the plugin in `installed-plugins`.                            |
+| `:visitors`          | `Array` of `%(:name, :handler)` hashes     | One entry per `register-visitor` call.                                   |
+| `:tag-transformers`  | `Array` of `%(:name, :handler)` hashes     | One entry per `register-tag-transformer` call.                           |
+| `:filters`           | `Array` of `%(:name, :handler)` hashes     | One entry per `register-filter` call.                                    |
+| `:markdown-backend`  | `Callable`                                 | Optional; installs as the global markdown backend.                       |
+
+Each entry hash is validated at `Plugin.new` time — missing `:name` or
+`:handler` raises immediately rather than at install time. Plugin-registered
+visitors are always named (anonymous visitors are only available through
+`Template::HAML::Visitor::register-visitor` directly).
+
+`Template::HAML::Plugin` exports:
+
+| Sub                                       | Description                                                              |
+|-------------------------------------------|--------------------------------------------------------------------------|
+| `install-plugin(Plugin:D $p --> Plugin)`  | Registers every hook the plugin declares. Idempotent.                    |
+| `uninstall-plugin(Plugin:D $p --> Plugin)`| Clears every hook by name. Idempotent.                                   |
+| `installed-plugins()`                     | List of currently installed `Plugin` objects.                            |
+| `installed-plugin-names()`                | List of installed plugin names.                                          |
+| `installed-plugin(Str:D $name)`           | Returns the installed `Plugin` with that name, or the type object.       |
+| `clear-plugins(--> Int)`                  | Uninstalls every plugin in reverse install order. Returns the count.     |
+
+See [Plugins](syntax/plugins.md) for the full lifecycle guarantees, cache
+considerations, and design rationale.
+
 ## Internal modules
 
 The implementation is split across several modules under `lib/Template/HAML/`. These are not part of the stable public API yet, but documented here for contributors:
@@ -385,6 +454,7 @@ The implementation is split across several modules under `lib/Template/HAML/`. T
 | `Template::HAML::Config`     | Per-render configuration: format, escape options, output style, etc. |
 | `Template::HAML::Visitor`    | AST visitor registry; transforms the parse tree before render/codegen. |
 | `Template::HAML::TagTransformers` | Per-tag-name transformer registry; rewrites individual tags before render/codegen. |
+| `Template::HAML::Plugin`     | Public plugin lifecycle: bundles visitors, tag transformers, filters, and the markdown backend behind atomic install/uninstall. |
 | `Template::HAML::X`          | Exception types raised by the parser.                         |
 
 ## Exceptions
