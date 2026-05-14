@@ -312,6 +312,58 @@ After registering or changing visitors, call
 [`clear-compiled-cache`](#hamlclear-compiled-cache) so previously cached
 artifacts get rebuilt with the new pipeline.
 
+## `register-tag-transformer`
+
+```raku
+use Template::HAML;
+use Template::HAML::TagTransformers;
+
+register-tag-transformer :name<card>, :handler(-> $node {
+  $node.object.name = 'div';
+  $node.object.attrs.push: 'class' => 'card';
+  $node;
+});
+
+HAML.render(:src("%card hi\n"));  # → "<div class='card'>hi</div>\n"
+```
+
+Registers a transformer for a specific tag name. Each `Node` in the parse
+tree whose object is a `Template::HAML::Tag` with that name is passed to
+the handler. The handler signature is
+
+```raku
+sub (Template::HAML::Node $node --> Template::HAML::Node)
+```
+
+The handler may either mutate the tag in place and return the same node,
+or return a fresh `Template::HAML::Node` to replace it entirely (in which
+case any original children are *not* re-attached automatically — the
+handler must preserve them if needed). Returning `Nil` keeps the original
+node unchanged.
+
+Tag transformers run after the [visitor pass](#register-visitor) but before
+rendering and code generation, so the cached `.rakumod` reflects the
+expanded form. After registering or changing transformers, call
+[`clear-compiled-cache`](#hamlclear-compiled-cache) so previously cached
+artifacts get rebuilt.
+
+| Parameter   | Type      | Description                                                  |
+|-------------|-----------|--------------------------------------------------------------|
+| `:name`     | `Str:D`   | Tag name to dispatch on (required). Registering with an existing name replaces the previous handler. |
+| `:handler`  | `Callable`| `Node` transformer (required).                              |
+
+`Template::HAML::TagTransformers` also exports:
+
+| Sub                                          | Description                                                              |
+|----------------------------------------------|--------------------------------------------------------------------------|
+| `clear-tag-transformers(--> Int)`            | Remove every registered transformer; returns the number removed.        |
+| `clear-tag-transformer(Str:D $name --> Bool)`| Remove a named transformer; returns whether one was removed.            |
+| `has-tag-transformer(Str:D $name --> Bool)`  | Whether a transformer is registered for that tag name.                  |
+| `tag-transformer-names()`                    | List of registered tag names, in registration order.                    |
+| `tag-transformer-count(--> Int)`             | Total registered transformers.                                          |
+| `lookup-tag-transformer(Str:D $name)`        | Returns the handler for a tag name, or `Nil` if none is registered.     |
+| `apply-tag-transformers(Node:D $tree --> Node)` | Run dispatch over every matching `Tag` in `$tree`. Called automatically during compilation; exported for tests. |
+
 ## Internal modules
 
 The implementation is split across several modules under `lib/Template/HAML/`. These are not part of the stable public API yet, but documented here for contributors:
@@ -332,6 +384,7 @@ The implementation is split across several modules under `lib/Template/HAML/`. T
 | `Template::HAML::Filters`    | Filter registry plus the built-in filter handlers.            |
 | `Template::HAML::Config`     | Per-render configuration: format, escape options, output style, etc. |
 | `Template::HAML::Visitor`    | AST visitor registry; transforms the parse tree before render/codegen. |
+| `Template::HAML::TagTransformers` | Per-tag-name transformer registry; rewrites individual tags before render/codegen. |
 | `Template::HAML::X`          | Exception types raised by the parser.                         |
 
 ## Exceptions

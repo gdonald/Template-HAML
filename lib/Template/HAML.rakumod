@@ -7,6 +7,7 @@ use Template::HAML::Context;
 use Template::HAML::Multiline;
 use Template::HAML::Node;
 use Template::HAML::Renderer;
+use Template::HAML::TagTransformers;
 use Template::HAML::ViewContext;
 use Template::HAML::Visitor;
 use Template::HAML::Grammar;
@@ -179,7 +180,8 @@ class HAML is export {
     unless $m {
       self!throw-parse-fail($joined, $cfg);
     }
-    apply-visitors($actions.tree);
+    my $visited = apply-visitors($actions.tree);
+    apply-tag-transformers($visited);
   }
 
   method !throw-parse-fail(Str:D $joined, Template::HAML::Config $cfg) {

@@ -1,0 +1,184 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Template::HAML::Node;
+use Template::HAML::Tag;
+use Template::HAML::TagTransformers;
+use Test;
+
+plan 31;
+
+is tag-transformer-count(), 0, 'no transformers registered by default';
+is tag-transformer-names().elems, 0, 'tag-transformer-names() empty by default';
+nok has-tag-transformer('card'), 'has-tag-transformer returns False when none registered';
+nok lookup-tag-transformer('card').defined, 'lookup returns Nil when unknown';
+
+LEAVE { clear-tag-transformers() }
+
+{
+  register-tag-transformer :name<card>, :handler(-> $n {
+    $n.object.name = 'div';
+    $n.object.attrs.push: 'class' => 'card';
+    $n;
+  });
+
+  is HAML.render(:src("%card hi\n")),
+     qq{<div class='card'>hi</div>\n},
+     '%card transforms to <div class="card">';
+
+  ok has-tag-transformer('card'), 'has-tag-transformer returns True';
+  is tag-transformer-count(), 1, 'count is 1';
+  is tag-transformer-names()[0], 'card', 'names contains the registered name';
+  ok lookup-tag-transformer('card').defined, 'lookup returns handler';
+
+  clear-tag-transformer('card');
+  nok has-tag-transformer('card'), 'cleared';
+}
+
+{
+  register-tag-transformer :name<card>, :handler(-> $n {
+    $n.object.name = 'div';
+    $n.object.attrs.push: 'class' => 'card';
+    $n;
+  });
+
+  is HAML.render(:src("%p hi\n")),
+     "<p>hi</p>\n",
+     'tags without a registered transformer pass through unchanged';
+
+  clear-tag-transformers();
+}
+
+{
+  register-tag-transformer :name<card>, :handler(-> $n {
+    $n.object.name = 'div';
+    $n.object.attrs.push: 'class' => 'card';
+    $n;
+  });
+
+  is HAML.render(:src("%section\n  %card\n    hello\n")),
+     "<section>\n  <div class='card'>\n    hello\n  </div>\n</section>\n",
+     'transforms nested tags';
+
+  clear-tag-transformers();
+}
+
+{
+  register-tag-transformer :name<x>, :handler(-> $n { $n.object.name = 'a'; $n });
+  is HAML.render(:src("%x hi\n")), "<a>hi</a>\n", 'first handler applies';
+
+  register-tag-transformer :name<x>, :handler(-> $n { $n.object.name = 'b'; $n });
+  is HAML.render(:src("%x hi\n")), "<b>hi</b>\n", 'register with same name replaces';
+  is tag-transformer-count(), 1, 'replacement does not duplicate the entry';
+
+  clear-tag-transformers();
+}
+
+{
+  register-tag-transformer :name<a>, :handler(-> $n { $n });
+  register-tag-transformer :name<b>, :handler(-> $n { $n });
+  is tag-transformer-count(), 2, 'two transformers';
+
+  ok clear-tag-transformer('a'), 'clear-tag-transformer returns True';
+  is tag-transformer-count(), 1, 'count drops after clear';
+  is tag-transformer-names()[0], 'b', 'remaining name is correct';
+  nok clear-tag-transformer('a'), 'clear-tag-transformer returns False when absent';
+
+  clear-tag-transformers();
+}
+
+{
+  register-tag-transformer :name<a>, :handler(-> $n { $n });
+  register-tag-transformer :name<b>, :handler(-> $n { $n });
+  is clear-tag-transformers(), 2, 'clear-tag-transformers returns count removed';
+  is clear-tag-transformers(), 0, 'clear-tag-transformers returns zero on empty';
+}
+
+{
+  register-tag-transformer :name<card>, :handler(-> $n {
+    my $tag = Tag.new(
+      :name<div>,
+      :indent($n.object.indent),
+      :line($n.object.line),
+      :column($n.object.column),
+      :attrs(['class' => 'card', 'data-role' => 'card']),
+      :content($n.object.content),
+    );
+    my $new = Node.new(:object($tag));
+    $new.add-child($_) for $n.children;
+    $new;
+  });
+
+  is HAML.render(:src("%card hi\n")),
+     qq{<div class='card' data-role='card'>hi</div>\n},
+     'handler can return a fresh Node to replace the original';
+
+  is HAML.render(:src("%card\n  %p inside\n")),
+     "<div class='card' data-role='card'>\n  <p>inside</p>\n</div>\n",
+     'replacement Node preserves original children';
+
+  clear-tag-transformers();
+}
+
+{
+  register-tag-transformer :name<dupe>, :handler(-> $n {
+    $n.object.name = 'first';
+    $n;
+  });
+  is HAML.render(:src("%dupe hi\n")), "<first>hi</first>\n", 'first transformer';
+
+  register-tag-transformer :name<dupe>, :handler(-> $n {
+    $n.object.name = 'second';
+    $n;
+  });
+  is HAML.render(:src("%dupe hi\n")), "<second>hi</second>\n",
+     'second registration replaces';
+
+  clear-tag-transformers();
+}
+
+{
+  register-tag-transformer :name<card>, :handler(-> $n {
+    $n.object.name = 'div';
+    $n.object.attrs.push: 'class' => 'card';
+    $n;
+  });
+
+  my $tmp = $*TMPDIR.add('haml-tag-xform-' ~ $*PID ~ '-' ~ time);
+  $tmp.mkdir;
+  LEAVE {
+    for $tmp.dir(:r) -> $f { $f.unlink if $f.f }
+    $tmp.rmdir if $tmp.e;
+  }
+  my $haml = HAML.new(:compiled-cache-dir($tmp));
+  is $haml.render-cached(:src("%card hi\n")),
+     qq{<div class='card'>hi</div>\n},
+     'transformer runs through the cached/compiled path';
+  $haml.clear-compiled-cache;
+
+  is HAML.compile-source-to-raku(:src("%card hi\n")).contains('"div"'), True,
+     'codegen output reflects the transformed tag name';
+
+  clear-tag-transformers();
+}
+
+{
+  register-tag-transformer :name<wrapped>, :handler(-> $n {
+    $n.object.name = 'span';
+    $n;
+  });
+
+  is HAML.render(:src("")), "", 'empty source unaffected';
+  is HAML.render(:src("%p hi\n")), "<p>hi</p>\n",
+     'unrelated source unaffected by registered transformer';
+
+  clear-tag-transformers();
+}
+
+{
+  is HAML.render(:src("%p hi\n")), "<p>hi</p>\n",
+     'rendering unaffected when no transformers registered';
+}
+
+done-testing;

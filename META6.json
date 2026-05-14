@@ -32,6 +32,7 @@
     "Template::HAML::Renderer": "lib/Template/HAML/Renderer.rakumod",
     "Template::HAML::Statement": "lib/Template/HAML/Statement.rakumod",
     "Template::HAML::Tag": "lib/Template/HAML/Tag.rakumod",
+    "Template::HAML::TagTransformers": "lib/Template/HAML/TagTransformers.rakumod",
     "Template::HAML::ViewContext": "lib/Template/HAML/ViewContext.rakumod",
     "Template::HAML::Visitor": "lib/Template/HAML/Visitor.rakumod",
     "Template::HAML::X": "lib/Template/HAML/X.rakumod"
