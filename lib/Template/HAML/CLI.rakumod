@@ -22,6 +22,8 @@ END
 constant RENDER-HELP = q:to/END/;
 Usage: haml render [options] <file>...
 
+A file argument of '-' reads HAML source from standard input.
+
 Options:
   -o <path>             Write output to file instead of stdout
   --locals k=v,k2=v2    Pass template locals (comma-separated key=value)
@@ -36,6 +38,7 @@ Examples:
   haml render view.haml -o out.html
   haml render view.haml --locals name=Alice,age=30
   haml render --format xhtml --ugly view.haml
+  echo '%p hi' | haml render -
 END
 
 constant CHECK-HELP = q:to/END/;
@@ -163,7 +166,7 @@ sub build-config(%opts --> Template::HAML::Config) {
   Template::HAML::Config.new(|%cfg-args);
 }
 
-our sub cmd-render(@args, IO::Handle :$out, IO::Handle :$err --> Int) is export {
+our sub cmd-render(@args, IO::Handle :$out, IO::Handle :$err, IO::Handle :$in --> Int) is export {
   my $parsed;
   {
     CATCH {
@@ -189,27 +192,40 @@ our sub cmd-render(@args, IO::Handle :$out, IO::Handle :$err --> Int) is export 
   my $config       = build-config($parsed<opts>);
   my %locals       = $parsed<opts><locals> // %();
   my $output-path  = $parsed<opts><output>;
+  my $stdin-count  = 0;
 
   my @rendered;
   for $parsed<positional>.list -> $file {
-    unless $file.IO.e {
-      $err.print("haml render: file not found: $file\n");
-      return 1;
+    my $src;
+    my $label = $file;
+    if $file eq '-' {
+      $stdin-count++;
+      if $stdin-count > 1 {
+        $err.print("haml render: '-' (stdin) may be given at most once\n");
+        return 2;
+      }
+      $label = '<stdin>';
+      $src = $in.slurp;
+    } else {
+      unless $file.IO.e {
+        $err.print("haml render: file not found: $file\n");
+        return 1;
+      }
+      $src = $file.IO.slurp(:bin);
     }
     my $result;
     {
       CATCH {
         when X::HAML {
-          $err.print("haml render: $file: " ~ .message ~ "\n");
+          $err.print("haml render: $label: " ~ .message ~ "\n");
           return 1;
         }
         default {
-          $err.print("haml render: $file: " ~ .message ~ "\n");
+          $err.print("haml render: $label: " ~ .message ~ "\n");
           return 1;
         }
       }
       my $haml = HAML.new(:$config);
-      my $src  = $file.IO.slurp(:bin);
       $result = $haml.render(:$src, :%locals);
     }
     @rendered.push($result);
@@ -361,7 +377,7 @@ our sub cmd-fmt(@args, IO::Handle :$out, IO::Handle :$err --> Int) is export {
   $exit;
 }
 
-our sub run(@args, IO::Handle :$out = $*OUT, IO::Handle :$err = $*ERR --> Int) is export {
+our sub run(@args, IO::Handle :$out = $*OUT, IO::Handle :$err = $*ERR, IO::Handle :$in = $*IN --> Int) is export {
   my @a = @args;
   if !@a.elems {
     $err.print(HELP-TEXT);
@@ -369,7 +385,7 @@ our sub run(@args, IO::Handle :$out = $*OUT, IO::Handle :$err = $*ERR --> Int) i
   }
   my $cmd = @a.shift;
   given $cmd {
-    when 'render'                 { return cmd-render(@a, :$out, :$err); }
+    when 'render'                 { return cmd-render(@a, :$out, :$err, :$in); }
     when 'check'                  { return cmd-check(@a, :$out, :$err); }
     when 'fmt'                    { return cmd-fmt(@a,   :$out, :$err); }
     when 'help' | '--help' | '-h' {

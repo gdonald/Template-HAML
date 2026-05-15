@@ -23,6 +23,17 @@ Output goes to standard out. Multiple files are concatenated in the order given.
 haml render view.haml -o view.html
 ```
 
+### Reading from stdin
+
+A file argument of `-` reads HAML source from standard input. This composes with the usual flags:
+
+```sh
+echo '%p hi' | haml render -
+cat view.haml | haml render --locals name=Alice -
+```
+
+`-` may appear at most once per invocation. Parse errors on stdin are reported against the label `<stdin>`.
+
 ### Passing locals
 
 Use `--locals` with a comma-separated list of `key=value` pairs:

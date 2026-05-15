@@ -4,7 +4,7 @@ use lib 'lib';
 use Test;
 use Template::HAML::CLI;
 
-plan 32;
+plan 43;
 
 sub make-tmpdir(--> IO::Path) {
   my $d = $*TMPDIR.add("haml-cli-{$*PID}-{(^999999).pick}");
@@ -12,12 +12,22 @@ sub make-tmpdir(--> IO::Path) {
   $d;
 }
 
-sub capture(@args) {
+sub capture(@args, Str :$stdin) {
   my $tmp     = $*TMPDIR.add("haml-cli-out-{$*PID}-{(^999999).pick}");
   my $tmp-err = $*TMPDIR.add("haml-cli-err-{$*PID}-{(^999999).pick}");
   my $out = $tmp.open(:w);
   my $err = $tmp-err.open(:w);
-  my $exit = Template::HAML::CLI::run(@args, :$out, :$err);
+  my $exit;
+  if $stdin.defined {
+    my $tmp-in = $*TMPDIR.add("haml-cli-in-{$*PID}-{(^999999).pick}");
+    $tmp-in.spurt($stdin);
+    my $in = $tmp-in.open(:r);
+    $exit = Template::HAML::CLI::run(@args, :$out, :$err, :$in);
+    $in.close;
+    $tmp-in.unlink;
+  } else {
+    $exit = Template::HAML::CLI::run(@args, :$out, :$err);
+  }
   $out.close;
   $err.close;
   my $out-text = $tmp.slurp;
@@ -168,4 +178,50 @@ sub capture(@args) {
   my $r = capture(['render', '--bogus', 'foo']);
   isnt $r<exit>, 0, 'unknown render option non-zero exit';
   like $r<err>, /'unknown option'/, 'mentions unknown option';
+}
+
+# render from stdin via '-'
+{
+  my $r = capture(['render', '-'], :stdin("%p hello\n"));
+  is $r<exit>, 0, 'render - exit 0';
+  is $r<out>.chomp, '<p>hello</p>', 'render - reads source from stdin';
+}
+
+# stdin with --locals
+{
+  my $r = capture(['render', '--locals', 'name=Bob', '-'],
+                  :stdin("%p Hi \#\{\$name\}\n"));
+  is $r<exit>, 0, 'render - with locals exit 0';
+  is $r<out>.chomp, '<p>Hi Bob</p>', 'locals threaded through stdin render';
+}
+
+# stdin with -o writes to file
+{
+  my $dir = make-tmpdir;
+  my $out = $dir.add('stdin-out.html');
+  my $r = capture(['render', '-', '-o', $out.Str], :stdin("%h2 stdin\n"));
+  is $r<exit>, 0, 'render - -o exit 0';
+  is $out.slurp.chomp, '<h2>stdin</h2>', 'stdin render written to -o file';
+  $out.unlink;
+  $dir.rmdir;
+}
+
+# parse error on stdin reports <stdin>
+{
+  my $r = capture(['render', '-'], :stdin("\t %p mixed\n  %p indent\n"));
+  isnt $r<exit>, 0, 'bad stdin source non-zero exit';
+  like $r<err>, /'<stdin>'/, 'error label is <stdin>';
+}
+
+# '-' may be given at most once
+{
+  my $r = capture(['render', '-', '-'], :stdin("%p ok\n"));
+  isnt $r<exit>, 0, "two '-' positionals non-zero exit";
+  like $r<err>, /"at most once"/, 'mentions stdin restriction';
+}
+
+# render help mentions stdin
+{
+  my $r = capture(['render', '--help']);
+  like $r<out>, /"standard input"/, 'render help mentions stdin';
 }
