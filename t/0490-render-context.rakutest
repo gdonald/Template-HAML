@@ -127,10 +127,52 @@ subtest 'render-cached with :context', {
   $haml.clear-compiled-cache;
 }
 
-subtest 'subclass-style extension via role composition', {
+subtest 'extension via role composition (does HelpersRole)', {
   my $vc = MyView.new(:title('T'));
-  is $vc.shout('hi'),  'HI',  'custom method on subclass';
+  is $vc.shout('hi'),  'HI',  'custom method on role-composed class';
   is $vc.surround('(', ')', { 'x' }), '(x)', 'inherited helper still works';
+}
+
+subtest 'extension via subclassing ViewContext (is ViewContext)', {
+  my class SubView is Template::HAML::ViewContext {
+    has Str $.page-title = 'Home';
+    method site-name { 'MySite' }
+  }
+
+  my $vc = SubView.new(:page-title('About'));
+  is $vc.site-name,    'MySite', 'custom method on subclass';
+  is $vc.page-title,   'About',  'subclass attribute accessible';
+  is $vc.surround('<', '>', { 'x' }), '<x>',
+                                'inherited helper from ViewContext works';
+
+  my $out = HAML.render(
+    :src("%p\n  = site-name\n"),
+    :context(SubView.new),
+  );
+  like $out, /'MySite'/, 'bare ident resolves via subclassed context';
+}
+
+subtest 'mixing additional roles alongside HelpersRole', {
+  my role Greeter {
+    method hello { 'hi-from-role' }
+  }
+  my role Footer {
+    method footer-text { 'footer-from-role' }
+  }
+  my class MultiView does Template::HAML::HelpersRole does Greeter does Footer {
+  }
+
+  my $vc = MultiView.new;
+  is $vc.hello,       'hi-from-role',     'first mixed role method';
+  is $vc.footer-text, 'footer-from-role', 'second mixed role method';
+  is $vc.surround('[', ']', { 'y' }), '[y]', 'built-in helper still works';
+
+  my $out = HAML.render(
+    :src("%p\n  = hello\n%span\n  = footer-text\n"),
+    :context(MultiView.new),
+  );
+  like $out, /'hi-from-role'/,     'first role method via bare ident';
+  like $out, /'footer-from-role'/, 'second role method via bare ident';
 }
 
 subtest 'codegen round-trip preserves bare-ident lookup', {
