@@ -17,3 +17,4 @@ method content-for(|c)       { &content-for(|c)       }
 method tab-up(|c)            { &tab-up(|c)            }
 method tab-down(|c)          { &tab-down(|c)          }
 method partial(|c)           { &Template::HAML::Helpers::render(|c) }
+method page-class(|c)        { &page-class(|c, :_self(self)) }

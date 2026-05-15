@@ -169,3 +169,40 @@ string.
 The block must return a HAML source string. There is no implicit "HAML block"
 syntax — Ruby HAML's `capture_haml do ... end` form is not available because
 embedded code in this implementation is plain Raku, not HAML.
+
+## `page-class(:$controller, :$action, :$separator = '-', :$prefix = '')`
+
+Emits a default class derived from a controller/action pair, in the Rails
+`page_class` style. Useful as the body class on a layout so per-page styles
+can target `.controller-action` selectors.
+
+With no arguments, `page-class` looks up `controller-name` / `action-name` on
+the current [render context](context.md) (falling back to `controller` /
+`action`). Explicit keyword arguments override the context values. Each value
+is lowercased and non-word characters become single dashes.
+
+```haml
+!!! 5
+%html
+  %body.#{page-class()}
+    = yield
+```
+
+Given a context with `controller-name → 'users'` and `action-name → 'show'`,
+the body opens as:
+
+```html
+<body class="users-show">
+```
+
+Overrides and options:
+
+```raku
+page-class(:controller<users>, :action<show>);          # 'users-show'
+page-class(:controller<users>, :action<show>, :separator<_>); # 'users_show'
+page-class(:controller<users>, :action<show>, :prefix<page>); # 'page-users-show'
+page-class(:controller('Admin::Users'), :action('New Post')); # 'admin-users-new-post'
+```
+
+When neither argument is supplied and the context has no controller/action
+hooks, `page-class` returns the empty string.

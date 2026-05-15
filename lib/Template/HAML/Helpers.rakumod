@@ -185,3 +185,42 @@ sub capture-haml(&block --> Str) is export {
   require ::('Template::HAML');
   ::('HAML').render(:src($template));
 }
+
+sub lookup-from-context($user, @method-names) {
+  return Nil unless $user.defined;
+  for @method-names -> $m {
+    if $user.^can($m) {
+      my $val = $user."$m"();
+      return $val if $val.defined;
+    }
+  }
+  Nil;
+}
+
+sub slugify(Str $s --> Str) {
+  $s.lc.subst(/<-[a..z 0..9]>+/, '-', :g).subst(/^ '-'+ | '-'+ $/, '', :g);
+}
+
+sub page-class(
+  :$controller is copy,
+  :$action     is copy,
+  Str :$separator = '-',
+  Str :$prefix    = '',
+  :$_self,
+  --> Str
+) is export {
+  my $user = $_self;
+  unless $user.defined {
+    my $ctx = current-ctx();
+    $user = $ctx.defined ?? $ctx.user-context !! Nil;
+  }
+
+  $controller //= lookup-from-context($user, <controller-name controller>);
+  $action     //= lookup-from-context($user, <action-name action>);
+
+  my @parts;
+  @parts.push: $prefix     if $prefix.defined && $prefix.Str.chars;
+  @parts.push: $controller if $controller.defined && $controller.Str.chars;
+  @parts.push: $action     if $action.defined && $action.Str.chars;
+  @parts.map({ slugify(.Str) }).grep(*.chars).join($separator);
+}

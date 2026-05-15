@@ -1,0 +1,162 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Template::HAML::Helpers;
+use Template::HAML::HelpersRole;
+use Template::HAML::ViewContext;
+use Test;
+
+class UsersShowCtx does Template::HAML::HelpersRole {
+  method controller-name { 'users' }
+  method action-name     { 'show'  }
+}
+
+class CtrlOnly does Template::HAML::HelpersRole {
+  method controller-name { 'posts' }
+}
+
+class ActionOnly does Template::HAML::HelpersRole {
+  method action-name { 'index' }
+}
+
+class LegacyCtx does Template::HAML::HelpersRole {
+  method controller { 'Admin::Users' }
+  method action     { 'New Post'     }
+}
+
+class EmptyCtx does Template::HAML::HelpersRole {
+  method controller-name { '' }
+  method action-name     { '' }
+}
+
+subtest 'sub: explicit controller + action', {
+  is page-class(:controller<users>, :action<show>),
+     'users-show',
+     'joins with default separator';
+};
+
+subtest 'sub: custom separator', {
+  is page-class(:controller<users>, :action<show>, :separator<_>),
+     'users_show',
+     'uses provided separator';
+};
+
+subtest 'sub: prefix', {
+  is page-class(:controller<users>, :action<show>, :prefix<page>),
+     'page-users-show',
+     'prefix prepended with separator';
+};
+
+subtest 'sub: controller only', {
+  is page-class(:controller<users>), 'users', 'lone controller';
+};
+
+subtest 'sub: action only', {
+  is page-class(:action<show>), 'show', 'lone action';
+};
+
+subtest 'sub: neither, no context', {
+  is page-class(), '', 'empty when nothing to derive';
+};
+
+subtest 'sub: slugifies non-word chars', {
+  is page-class(:controller('Admin::Users'), :action('New Post')),
+     'admin-users-new-post',
+     'colons and spaces become dashes, lowercased';
+};
+
+subtest 'template: derives from user context via shorthand-interp', {
+  my $src = q:to/HAML/;
+  %body.#{page-class()}
+    %p hi
+  HAML
+
+  my $out = HAML.render(:src($src), :context(UsersShowCtx.new));
+  like $out, /'<body class=' <[\"\']> 'users-show' <[\"\']> '>'/,
+    'body class derived from context';
+};
+
+subtest 'template: bare ident resolution via = output', {
+  my $src = q:to/HAML/;
+  %span
+    = page-class
+  HAML
+
+  my $out = HAML.render(:src($src), :context(UsersShowCtx.new));
+  like $out, /'users-show'/, 'bare ident resolves via HelpersRole method';
+};
+
+subtest 'template: only controller available', {
+  my $src = q:to/HAML/;
+  %body.#{page-class()}
+  HAML
+
+  my $out = HAML.render(:src($src), :context(CtrlOnly.new));
+  like $out, /'<body class=' <[\"\']> 'posts' <[\"\']> '>'/,
+    'only-controller renders just controller';
+};
+
+subtest 'template: only action available', {
+  my $src = q:to/HAML/;
+  %body.#{page-class()}
+  HAML
+
+  my $out = HAML.render(:src($src), :context(ActionOnly.new));
+  like $out, /'<body class=' <[\"\']> 'index' <[\"\']> '>'/,
+    'only-action renders just action';
+};
+
+subtest 'template: legacy controller/action method names', {
+  my $src = q:to/HAML/;
+  %body.#{page-class()}
+  HAML
+
+  my $out = HAML.render(:src($src), :context(LegacyCtx.new));
+  like $out, /'<body class=' <[\"\']> 'admin-users-new-post' <[\"\']> '>'/,
+    'controller/action methods used and slugified';
+};
+
+subtest 'template: empty context values', {
+  my $src = q:to/HAML/;
+  %span
+    = page-class()
+  HAML
+
+  my $out = HAML.render(:src($src), :context(EmptyCtx.new));
+  like $out, /'<span>' \s* '</span>'/, 'empty values produce empty string';
+};
+
+subtest 'template: explicit kwargs override context', {
+  my $src = q:to/HAML/;
+  %body.#{page-class(:controller<admin>, :action<dash>)}
+  HAML
+
+  my $out = HAML.render(:src($src), :context(UsersShowCtx.new));
+  like $out, /'<body class=' <[\"\']> 'admin-dash' <[\"\']> '>'/,
+    'kwargs win over context';
+};
+
+subtest 'template: default context returns empty', {
+  my $src = q:to/HAML/;
+  %p
+    = page-class()
+  HAML
+
+  my $out = HAML.render(:src($src));
+  like $out, /'<p>' \s* '</p>'/, 'no controller/action → empty body';
+};
+
+subtest 'HelpersRole exposes page-class', {
+  my $vc = Template::HAML::ViewContext.new;
+  ok $vc.^can('page-class'), 'page-class method present on ViewContext';
+};
+
+subtest 'method form: reads controller-name/action-name from self', {
+  my $vc = UsersShowCtx.new;
+  is $vc.page-class, 'users-show', 'method reads from own state';
+  is $vc.page-class(:controller<a>, :action<b>), 'a-b',
+    'method accepts kwargs override';
+};
+
+done-testing;
