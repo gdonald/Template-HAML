@@ -66,8 +66,32 @@ class X::HAML::DoctypeNotFirst is X::HAML {
 class X::HAML::Eval is X::HAML {
   has Str $.code;
   has Str $.reason;
+  has Str $.block-source;
+  has Int $.block-line;
+
+  method trace-block(--> Str) {
+    return '' unless $!block-source.defined && $!block-source.chars;
+    my @src-lines = $!block-source.lines;
+    my $width = @src-lines.elems.Str.chars;
+    my @rendered = @src-lines.kv.map(-> $i, $l {
+      my $no = ($i + 1).fmt('%' ~ $width ~ 'd');
+      "    $no | $l"
+    });
+    my $header   = "\n  compiled block";
+    my $tpl-line = self.line // '?';
+    my $arrow    = '';
+    if $!block-line.defined && $!block-line >= 1 && $!block-line <= @src-lines.elems {
+      $arrow = " (template line $tpl-line → block line $!block-line)";
+    }
+    $header ~ $arrow ~ ":\n" ~ @rendered.join("\n");
+  }
+
   method message {
-    self.loc ~ " failed to evaluate `$!code`" ~ ($!reason ?? ": $!reason" !! '') ~ self.caret
+    self.loc
+      ~ " failed to evaluate `$!code`"
+      ~ ($!reason ?? ": $!reason" !! '')
+      ~ self.caret
+      ~ self.trace-block
   }
 }
 

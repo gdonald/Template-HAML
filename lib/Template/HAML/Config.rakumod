@@ -44,6 +44,7 @@ class Template::HAML::Config is export {
   has Bool $.hyphenate-data-attrs is rw = False;
   has Int  $.output-indent-width is rw = 2;
   has Bool $.remove-whitespace is rw = False;
+  has Bool $.trace           is rw = False;
   has @.autoclose            is rw;
   has @.preserve             is rw;
 
@@ -60,6 +61,7 @@ class Template::HAML::Config is export {
     Bool :$!hyphenate-data-attrs = False,
     Int  :$!output-indent-width = 2,
     Bool :$!remove-whitespace = False,
+    Bool :$!trace           = False,
     :@autoclose,
     :@preserve,
   ) {
@@ -132,6 +134,7 @@ class Template::HAML::Config is export {
       hyphenate-data-attrs => $!hyphenate-data-attrs,
       output-indent-width => $!output-indent-width,
       remove-whitespace   => $!remove-whitespace,
+      trace               => $!trace,
       autoclose           => @!autoclose,
       preserve            => @!preserve,
     ;

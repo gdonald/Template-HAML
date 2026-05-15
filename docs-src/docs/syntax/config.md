@@ -32,6 +32,7 @@ $h.render(:src("%br\n"));                     # uses the instance config
 | `hyphenate-data-attrs`| `False`      | When true, `camelCase` keys under `data:` / `aria:` hashes are emitted as `kebab-case`.          |
 | `output-indent-width` | `2`          | Number of spaces per indent level in pretty output.                                              |
 | `remove-whitespace`   | `False`      | When true, every tag is treated as if both `>` and `<` modifiers were present (except preserved tags keep their inner whitespace). |
+| `trace`               | `False`      | When true, render-time `X::HAML::Eval` errors include the compiled-block source and a template-line → block-line breadcrumb. See [trace](#trace). |
 | `autoclose`           | HTML5 voids  | List of element names that auto-self-close: `area base br col embed hr img input link meta param source track wbr`. |
 | `preserve`            | `<pre textarea>` | List of elements whose inner whitespace is preserved.                                       |
 
@@ -112,6 +113,37 @@ my $cfg = Template::HAML::Config.new(
   :autoclose(<area base br col embed hr img input link meta param source track wbr custom-tag>),
 );
 ```
+
+## trace
+
+Embedded Raku is evaluated by wrapping each template expression in a closure
+and `EVAL`-ing it. When that closure fails — at compile time (bad Raku) or at
+run time (e.g. an undefined sub) — `X::HAML::Eval` is thrown carrying the
+template line and column.
+
+`trace: True` augments those errors with two extra fields:
+
+* `block-source` — the exact wrapped-closure source that was handed to `EVAL`.
+* `block-line` — the line within that source where the user expression lives
+  (`2`; line 1 is the `-> { ` / `-> $x { ` wrapper).
+
+Both fields render into `.message` as a numbered listing under a
+`compiled block (template line N → block line M):` header, so the user sees
+their template line *and* the surrounding closure shape the renderer
+generated. With `trace: False` (the default) the message is unchanged.
+
+```raku
+my $cfg = Template::HAML::Config.new(:trace);
+HAML.render(:src("= no_such_sub()\n"), :config($cfg));
+# X::HAML::Eval whose .message ends with:
+#   compiled block (template line 1 → block line 2):
+#     1 | -> {
+#     2 | no_such_sub()
+#     3 | }
+```
+
+`trace` is independent of `suppress-eval`: when eval is suppressed, no eval
+happens and the breadcrumb has nothing to attach to.
 
 ## suppress-eval
 

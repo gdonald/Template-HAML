@@ -1,0 +1,115 @@
+
+use v6.d;
+use lib 'lib';
+use MONKEY-SEE-NO-EVAL;
+use Template::HAML;
+use Template::HAML::Codegen;
+use Template::HAML::Config;
+use Template::HAML::Eval;
+use Template::HAML::X;
+use Test;
+
+plan 28;
+
+sub trap-eval(&body) {
+  try { body(); CATCH { when X::HAML::Eval { return $_ } } }
+  Nil;
+}
+
+# Default is off
+{
+  my $cfg = Template::HAML::Config.new;
+  is $cfg.trace, False, 'trace defaults to False';
+}
+
+# clone-with preserves and overrides trace
+{
+  my $cfg = Template::HAML::Config.new(:trace);
+  is $cfg.trace, True, 'trace honored as named arg';
+  my $c2 = $cfg.clone-with(:!trace);
+  is $c2.trace, False, 'clone-with can flip trace off';
+  my $c3 = Template::HAML::Config.new.clone-with(:trace);
+  is $c3.trace, True, 'clone-with can flip trace on';
+}
+
+# trace=False: X::HAML::Eval has no breadcrumb
+{
+  clear-eval-cache();
+  my $cfg = Template::HAML::Config.new;
+  my $src = "%p ok\n= no_such_sub_xyzzy()\n";
+  my $err = trap-eval({ HAML.render(:$src, :config($cfg)) });
+  ok $err.defined,                          'trace off: eval failure raised';
+  is $err.line, 2,                          'trace off: line preserved';
+  nok $err.block-source,                    'trace off: no block-source';
+  nok $err.message.contains('compiled block'), 'trace off: message has no block trace';
+}
+
+# trace=True: X::HAML::Eval carries the wrapped block source
+{
+  clear-eval-cache();
+  my $cfg = Template::HAML::Config.new(:trace);
+  my $src = "%p ok\n= no_such_sub_xyzzy()\n";
+  my $err = trap-eval({ HAML.render(:$src, :config($cfg)) });
+  ok $err.defined,                          'trace on: eval failure raised';
+  is $err.line, 2,                          'trace on: line still 2';
+  ok $err.block-source.defined,             'trace on: block-source defined';
+  ok $err.block-source.contains('no_such_sub_xyzzy'), 'trace on: source contains user code';
+  ok $err.block-source.starts-with('->'),   'trace on: source is a wrapped closure';
+  is $err.block-line, 2,                    'trace on: block-line set to 2';
+  ok $err.message.contains('compiled block'), 'trace on: message includes compiled-block header';
+  ok $err.message.contains('template line 2 → block line 2'), 'trace on: message maps template line to block line';
+}
+
+# trace=True with locals: signature appears in the breadcrumb
+{
+  clear-eval-cache();
+  my $cfg = Template::HAML::Config.new(:trace);
+  my $src = "= boom_xyzzy(\$x)\n";
+  my $err = trap-eval({ HAML.render(:$src, :locals(%(x => 1)), :config($cfg)) });
+  ok $err.defined,                          'trace on (locals): error raised';
+  ok $err.block-source.contains('-> $x'),   'trace on (locals): signature in source';
+}
+
+# Compile-time failure (bad Raku syntax in the body) also gets the trace
+{
+  clear-eval-cache();
+  my $cfg = Template::HAML::Config.new(:trace);
+  my $src = "= 1 +\n";
+  my $err = trap-eval({ HAML.render(:$src, :config($cfg)) });
+  ok $err.defined,                          'trace on: compile-time failure caught';
+  ok $err.block-source.defined,             'trace on: block-source attached on compile failure';
+  ok $err.message.contains('compiled block'), 'trace on: compile-time message has block trace';
+}
+
+# Direct codegen path picks up trace from serialized config
+{
+  clear-eval-cache();
+  my $cfg = Template::HAML::Config.new(:trace);
+  my $src = "%p first\n= no_such_sub_xyzzy()\n";
+  my $code = HAML.compile-source-to-raku(:$src, :config($cfg));
+  my &fn   = EVAL $code;
+  my $err  = trap-eval({ fn(%(), :ctx(Nil)) });
+  ok $err.defined,                          'codegen+trace: error raised';
+  is $err.line, 2,                          'codegen+trace: line maps to template';
+  ok $err.block-source.defined,             'codegen+trace: block-source present';
+}
+
+# Direct codegen path: trace off => no breadcrumb
+{
+  clear-eval-cache();
+  my $cfg = Template::HAML::Config.new;
+  my $src = "%p first\n= no_such_sub_xyzzy()\n";
+  my $code = HAML.compile-source-to-raku(:$src, :config($cfg));
+  my &fn   = EVAL $code;
+  my $err  = trap-eval({ fn(%(), :ctx(Nil)) });
+  ok $err.defined,                          'codegen no-trace: error raised';
+  nok $err.block-source,                    'codegen no-trace: no block-source';
+}
+
+# Direct eval-haml call without a renderer: no breadcrumb (no $*HAML-CFG)
+{
+  clear-eval-cache();
+  my $err = trap-eval({ eval-haml('die "boom"', %(), :line(5), :column(2)) });
+  ok $err.defined,                          'direct eval-haml: error raised';
+  nok $err.block-source,                    'direct eval-haml: no block-source without renderer';
+}

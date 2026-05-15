@@ -266,6 +266,7 @@ class Renderer is export {
 
   method render(Node:D $tree) {
     my Int $*HAML-TAB-OFFSET = 0;
+    my $*HAML-CFG = $!config;
     my $out = self.render-node($tree, %!locals, 0);
     $out = self.apply-trim-markers($out);
     $out = self.compress($out) if $!config.is-ugly;
