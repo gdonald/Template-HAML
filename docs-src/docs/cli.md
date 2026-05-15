@@ -8,6 +8,7 @@ Template::HAML ships with a `haml` script for rendering and checking templates f
 |------------------|-------------------------------------------------------------|
 | `haml render`    | Render one or more HAML files to HTML.                      |
 | `haml check`     | Parse-only sanity check; non-zero exit on parse failure.    |
+| `haml fmt`       | Pretty-print a HAML file in [canonical form](canonical-form.md). |
 | `haml help`      | Top-level help. Also `--help`, `-h`.                        |
 
 ## Rendering
@@ -50,6 +51,24 @@ haml check view.haml
 ```
 
 `check` parses each file and reports `OK` for files that parse cleanly. It exits with a non-zero status if any file fails to parse, so it is suitable for use in pre-commit hooks or CI.
+
+## Formatting
+
+```sh
+haml fmt view.haml
+```
+
+`fmt` pretty-prints each HAML file in [canonical form](canonical-form.md) and writes the result to standard out. Use the following flags to change behavior:
+
+| Flag           | Effect                                                                |
+|----------------|-----------------------------------------------------------------------|
+| `-o <path>`    | Write the formatted result to a file (single input only).             |
+| `--in-place`   | Rewrite each input file with its canonical form.                      |
+| `--check`      | Exit non-zero if any file differs from its canonical form. No output. |
+
+`--check` mode is suitable for CI: it emits no stdout, writes a one-line diagnostic to stderr for each non-canonical file, and exits with status `1` when at least one file is out of form. `--in-place` and `-o` are mutually exclusive, and neither may be combined with `--check`.
+
+The canonical form is idempotent: `haml fmt | haml fmt` always equals `haml fmt`. See the [canonical form spec](canonical-form.md) for the full set of rules.
 
 ## Help
 

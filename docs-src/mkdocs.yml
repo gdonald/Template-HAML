@@ -22,6 +22,7 @@ nav:
     - Plugins: syntax/plugins.md
   - API: api.md
   - CLI: cli.md
+  - Canonical form: canonical-form.md
   - Tests: testing.md
 theme:
   name: 'material'

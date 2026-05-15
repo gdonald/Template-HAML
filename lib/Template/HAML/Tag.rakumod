@@ -34,6 +34,7 @@ class Tag is export {
   has Int  $.column;
   has Str  $.name           is rw;
   has @.attrs;
+  has @.source-attrs;
   has Str  $.content;
   has @.classes             of Str;
   has @.ids                 of Str;
@@ -54,7 +55,8 @@ class Tag is export {
     Int  :$!line, Int :$!column,
     Template::HAML::Config :$!config,
   ) {
-    @!attrs = @attrs.list;
+    @!attrs        = @attrs.list;
+    @!source-attrs = @attrs.list;
     $!config //= Template::HAML::Config.new;
 
     self.merge-shorthands;

@@ -8,6 +8,7 @@ class Comment is export {
   has Str  $.condition = '';
   has Bool $.silent    = False;
   has Bool $.revealed  = False;
+  has Str  $.silent-body = '';
 
   submethod BUILD(
     Int  :$!indent, Int :$!line, Int :$!column,
@@ -16,6 +17,7 @@ class Comment is export {
     Str  :$!condition = '',
     Bool :$!silent    = False,
     Bool :$!revealed  = False,
+    Str  :$!silent-body = '',
   ) {}
 
   method get-indent(Int :$offset = 0) {

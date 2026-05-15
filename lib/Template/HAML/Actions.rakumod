@@ -264,10 +264,28 @@ class Actions is export {
 
   method line:sym<silent-comment>($/) {
     my ($line, $column) = pos-to-line-col($/);
-    my $indent = self.compute-level($/<head>);
+    my $indent   = self.compute-level($/<head>);
+    my $head-len = $/<head>.Str.chars;
+
+    my $raw    = $/.Str.chomp;
+    my @lines  = $raw.split("\n");
+    my $first  = @lines.shift // '';
+    my $text   = $first.substr($head-len + 2);
+
+    my @ws = @lines.grep({ !($_ ~~ /^ \s* $/) }).map({
+      my $m = $_ ~~ /^ \h+/;
+      $m ?? $m.Str.chars !! 0
+    });
+    my $min-ws = @ws.elems ?? @ws.min !! 0;
+
+    my @body = @lines.map(-> $l {
+      $l ~~ /^ \s* $/ ?? '' !! $l.substr($min-ws min $l.chars)
+    });
+    my $silent-body = @body.join("\n");
 
     my $object = Comment.new(
       :$indent, :$line, :$column, :silent,
+      :$text, :$silent-body,
       :output-indent-width($!output-indent-width),
     );
     self.add-node($object);

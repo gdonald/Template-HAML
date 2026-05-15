@@ -22,6 +22,7 @@
     "Template::HAML::Eval": "lib/Template/HAML/Eval.rakumod",
     "Template::HAML::Filter": "lib/Template/HAML/Filter.rakumod",
     "Template::HAML::Filters": "lib/Template/HAML/Filters.rakumod",
+    "Template::HAML::Format": "lib/Template/HAML/Format.rakumod",
     "Template::HAML::Grammar": "lib/Template/HAML/Grammar.rakumod",
     "Template::HAML::Helpers": "lib/Template/HAML/Helpers.rakumod",
     "Template::HAML::HelpersRole": "lib/Template/HAML/HelpersRole.rakumod",

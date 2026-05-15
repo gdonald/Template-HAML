@@ -1,0 +1,146 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML::CLI;
+use Template::HAML::Format;
+use Test;
+
+plan 22;
+
+sub capture(@args) {
+  my $tmp     = $*TMPDIR.add("haml-fmt-out-{$*PID}-{(^999999).pick}");
+  my $tmp-err = $*TMPDIR.add("haml-fmt-err-{$*PID}-{(^999999).pick}");
+  my $out = $tmp.open(:w);
+  my $err = $tmp-err.open(:w);
+  my $exit = Template::HAML::CLI::run(@args, :$out, :$err);
+  $out.close;
+  $err.close;
+  my $out-text = $tmp.slurp;
+  my $err-text = $tmp-err.slurp;
+  $tmp.unlink;
+  $tmp-err.unlink;
+  { :$exit, :out($out-text), :err($err-text) };
+}
+
+sub write-haml(Str:D $content --> Str) {
+  my $path = $*TMPDIR.add("haml-fmt-in-{$*PID}-{(^999999).pick}.haml");
+  $path.spurt($content);
+  $path.Str;
+}
+
+my $nl = "\n";
+
+# help
+{
+  my $r = capture(['fmt', '--help']);
+  is $r<exit>, 0, 'fmt --help exits 0';
+  like $r<out>, /'haml fmt'/, 'fmt help mentions command';
+  like $r<out>, /'--in-place'/, 'fmt help mentions --in-place';
+  like $r<out>, /'--check'/,    'fmt help mentions --check';
+}
+
+# top-level help mentions fmt
+{
+  my $r = capture(['help']);
+  like $r<out>, /'fmt'/, 'top-level help mentions fmt';
+}
+
+# missing file argument
+{
+  my $r = capture(['fmt']);
+  is $r<exit>, 2, 'fmt without args exits 2';
+  like $r<err>, /'missing file argument'/, 'mentions missing arg';
+}
+
+# file not found
+{
+  my $r = capture(['fmt', '/no/such/path-haml-test.haml']);
+  is $r<exit>, 1, 'fmt missing file exits 1';
+  like $r<err>, /'file not found'/, 'mentions file not found';
+}
+
+# render to stdout
+{
+  my $path = write-haml('%p hello' ~ $nl);
+  my $r = capture(['fmt', $path]);
+  is $r<exit>, 0,             'fmt simple file exits 0';
+  is $r<out>, '%p hello' ~ $nl, 'fmt prints canonical output';
+  $path.IO.unlink;
+}
+
+# canonicalization: HTML-style → hash form
+{
+  my $path = write-haml(q{%a(href='/about')} ~ $nl);
+  my $r = capture(['fmt', $path]);
+  is $r<out>, q{%a{href: '/about'}} ~ $nl, 'fmt normalizes HTML-style attrs';
+  $path.IO.unlink;
+}
+
+# -o writes to file
+{
+  my $in  = write-haml('%p hi' ~ $nl);
+  my $out-path = $*TMPDIR.add("haml-fmt-out-{$*PID}-{(^999999).pick}.haml");
+  my $r = capture(['fmt', $in, '-o', $out-path.Str]);
+  is $r<exit>, 0, 'fmt -o exits 0';
+  is $out-path.slurp, '%p hi' ~ $nl, 'fmt -o writes canonical output';
+  $in.IO.unlink;
+  $out-path.unlink;
+}
+
+# --in-place rewrites the file
+{
+  my $path = write-haml('%a(href=\'/\')' ~ $nl);
+  my $r = capture(['fmt', '--in-place', $path]);
+  is $r<exit>, 0, 'fmt --in-place exits 0';
+  is $path.IO.slurp, q{%a{href: '/'}} ~ $nl, 'fmt --in-place rewrites file';
+  $path.IO.unlink;
+}
+
+# --check: file already canonical
+{
+  my $path = write-haml('%p hi' ~ $nl);
+  my $r = capture(['fmt', '--check', $path]);
+  is $r<exit>, 0, 'fmt --check returns 0 when canonical';
+  is $r<out>, '', 'fmt --check produces no stdout';
+  $path.IO.unlink;
+}
+
+# --check: file not canonical
+{
+  my $path = write-haml('%a(href=\'/\')' ~ $nl);
+  my $r = capture(['fmt', '--check', $path]);
+  is $r<exit>, 1, 'fmt --check returns 1 when non-canonical';
+  like $r<err>, /'not in canonical form'/, '--check explains divergence';
+  $path.IO.unlink;
+}
+
+# mutually exclusive flags
+{
+  my $path = write-haml('%p hi' ~ $nl);
+  my $r = capture(['fmt', '--in-place', '-o', '/tmp/x', $path]);
+  is $r<exit>, 2, '--in-place + -o exits 2';
+  $path.IO.unlink;
+}
+
+# end-to-end idempotency on a richer document
+{
+  my $src = '!!! 5'                                ~ $nl
+          ~ '%html'                                ~ $nl
+          ~ '  %head'                              ~ $nl
+          ~ '    %title= $title'                   ~ $nl
+          ~ '  %body'                              ~ $nl
+          ~ '    .container'                       ~ $nl
+          ~ '      %h1 Welcome'                    ~ $nl
+          ~ '      / a comment'                    ~ $nl
+          ~ '      - for $x in @items'             ~ $nl
+          ~ '        %li= $x'                      ~ $nl;
+  my $path = write-haml($src);
+  my $once  = capture(['fmt', $path]);
+  my $second-in = write-haml($once<out>);
+  my $twice = capture(['fmt', $second-in]);
+  is $once<out>, $twice<out>, 'fmt is idempotent end-to-end';
+  $path.IO.unlink;
+  $second-in.IO.unlink;
+}
+
+done-testing;

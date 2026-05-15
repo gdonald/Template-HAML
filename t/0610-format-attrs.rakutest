@@ -1,0 +1,110 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML::Format;
+use Test;
+
+plan 26;
+
+sub fmt(Str:D $src) { format-source($src) }
+
+my $nl = "\n";
+
+is fmt('%p.lead' ~ $nl), '%p.lead' ~ $nl,
+   'single class shorthand';
+
+is fmt('%p.lead.intro' ~ $nl), '%p.lead.intro' ~ $nl,
+   'multiple class shorthand';
+
+is fmt('%section#main' ~ $nl), '%section#main' ~ $nl,
+   'id shorthand';
+
+is fmt('%div.foo' ~ $nl), '.foo' ~ $nl,
+   'implicit div dropped when class shorthand present';
+
+is fmt('%div#bar' ~ $nl), '#bar' ~ $nl,
+   'implicit div dropped when id shorthand present';
+
+is fmt('%div.foo.bar#baz' ~ $nl), '.foo.bar#baz' ~ $nl,
+   'implicit div dropped with class+id shorthand';
+
+is fmt('%p#row.item' ~ $nl), '%p.item#row' ~ $nl,
+   'shorthand reordered to classes-then-id';
+
+is fmt(q{%a{href: '/about'}} ~ $nl),
+   q{%a{href: '/about'}} ~ $nl,
+   'simple hash attribute, single quotes';
+
+is fmt(q{%a{href: '/about', title: 'home'} link} ~ $nl),
+   q{%a{href: '/about', title: 'home'} link} ~ $nl,
+   'multiple attributes with content';
+
+is fmt(q{%input{type: 'text', name: 'email'}} ~ $nl),
+   q{%input{type: 'text', name: 'email'}} ~ $nl,
+   'void tag with attrs (no explicit /)';
+
+is fmt(q{%a(href='/' title='home')} ~ $nl),
+   q{%a{href: '/', title: 'home'}} ~ $nl,
+   'HTML-style attrs normalize to hash form';
+
+is fmt(q{%a{href: :home}} ~ $nl),
+   q{%a{href: 'home'}} ~ $nl,
+   'symbol value normalizes to quoted string';
+
+is fmt(q{%a{href: "/about"}} ~ $nl),
+   q{%a{href: '/about'}} ~ $nl,
+   'double-quoted simple string canonicalizes to single quotes';
+
+is fmt(q{%input{disabled: True}} ~ $nl),
+   q{%input{disabled: True}} ~ $nl,
+   'boolean True attribute preserved';
+
+is fmt(q{%input{checked: False}} ~ $nl),
+   q{%input{checked: False}} ~ $nl,
+   'boolean False attribute preserved';
+
+is fmt(q{%a{class: ['foo', 'bar']}} ~ $nl),
+   q{%a{class: ['foo', 'bar']}} ~ $nl,
+   'array value preserved';
+
+is fmt(q{%a{data: {id: 1, role: 'main'}}} ~ $nl),
+   q{%a{data: {id: 1, role: 'main'}}} ~ $nl,
+   'nested data hash preserved';
+
+is fmt(q{%a{'data-x' => 'y'}} ~ $nl),
+   q{%a{'data-x' => 'y'}} ~ $nl,
+   'hyphenated key uses rocket form';
+
+is fmt(q{%a{|$attrs}} ~ $nl),
+   q{%a{|$attrs}} ~ $nl,
+   'attribute splat preserved';
+
+is fmt(q{%a{href: '/wins', |$attrs}} ~ $nl),
+   q{%a{href: '/wins', |$attrs}} ~ $nl,
+   'literal + splat order preserved';
+
+is fmt(q{%a{|$a, |$b}} ~ $nl),
+   q{%a{|$a, |$b}} ~ $nl,
+   'multiple splats preserved in order';
+
+is fmt(q{%div[$user]} ~ $nl),
+   q{%div[$user]} ~ $nl,
+   'object reference single arg';
+
+is fmt(q{%div[$user, 'greeting']} ~ $nl),
+   q{%div[$user, 'greeting']} ~ $nl,
+   'object reference with prefix';
+
+is fmt(q{%p.lead#hero[$user]{class: 'active'}} ~ $nl),
+   q{%p.lead#hero[$user]{class: 'active'}} ~ $nl,
+   'shorthand + obj-ref + attrs combined';
+
+is fmt(q{%a{href: '/'} home} ~ $nl),
+   fmt(fmt(q{%a{href: '/'} home} ~ $nl)),
+   'fmt is idempotent on attrs';
+
+is fmt(q{%div.foo.bar#baz{x: 1, y: 'two'}} ~ $nl),
+   fmt(fmt(q{%div.foo.bar#baz{x: 1, y: 'two'}} ~ $nl)),
+   'fmt is idempotent on combined shorthand+attrs';
+
+done-testing;

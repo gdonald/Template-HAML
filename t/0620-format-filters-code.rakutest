@@ -1,0 +1,138 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML::Format;
+use Test;
+
+plan 30;
+
+sub fmt(Str:D $src) { format-source($src) }
+
+my $nl = "\n";
+
+# Embedded code
+is fmt('= 1 + 2' ~ $nl),
+   '= 1 + 2' ~ $nl,
+   'expression with =';
+
+is fmt('!= raw' ~ $nl),
+   '!= raw' ~ $nl,
+   'expression with !=';
+
+is fmt('&= forced' ~ $nl),
+   '&= forced' ~ $nl,
+   'expression with &=';
+
+is fmt('~ preserved' ~ $nl),
+   '~ preserved' ~ $nl,
+   'expression with ~';
+
+is fmt('- my $x = 1' ~ $nl),
+   '- my $x = 1' ~ $nl,
+   'silent statement with -';
+
+is fmt('- if $cond' ~ $nl ~ '  %p hi' ~ $nl),
+   '- if $cond' ~ $nl ~ '  %p hi' ~ $nl,
+   'if block';
+
+is fmt('- if $a' ~ $nl ~ '  %p a' ~ $nl ~ '- elsif $b' ~ $nl ~ '  %p b' ~ $nl ~ '- else' ~ $nl ~ '  %p c' ~ $nl),
+   '- if $a' ~ $nl ~ '  %p a' ~ $nl ~ '- elsif $b' ~ $nl ~ '  %p b' ~ $nl ~ '- else' ~ $nl ~ '  %p c' ~ $nl,
+   'if/elsif/else chain';
+
+is fmt('- unless $cond' ~ $nl ~ '  %p hi' ~ $nl),
+   '- unless $cond' ~ $nl ~ '  %p hi' ~ $nl,
+   'unless block';
+
+is fmt('- while $i' ~ $nl ~ '  %p hi' ~ $nl),
+   '- while $i' ~ $nl ~ '  %p hi' ~ $nl,
+   'while loop';
+
+is fmt('- for $x in @items' ~ $nl ~ '  %li hi' ~ $nl),
+   '- for $x in @items' ~ $nl ~ '  %li hi' ~ $nl,
+   'for/in canonical form';
+
+is fmt('- for @items -> $x' ~ $nl ~ '  %li hi' ~ $nl),
+   '- for $x in @items' ~ $nl ~ '  %li hi' ~ $nl,
+   'arrow-block for canonicalizes to for/in';
+
+is fmt('- given $kind' ~ $nl ~ '  - when 1' ~ $nl ~ '    %p one' ~ $nl ~ '  - default' ~ $nl ~ '    %p other' ~ $nl),
+   '- given $kind' ~ $nl ~ '  - when 1' ~ $nl ~ '    %p one' ~ $nl ~ '  - default' ~ $nl ~ '    %p other' ~ $nl,
+   'given/when/default block';
+
+is fmt('- repeat 3' ~ $nl ~ '  %p hi' ~ $nl),
+   '- repeat 3' ~ $nl ~ '  %p hi' ~ $nl,
+   'repeat block';
+
+# Comments
+is fmt('/ Hello' ~ $nl),
+   '/ Hello' ~ $nl,
+   'inline HTML comment';
+
+is fmt('/' ~ $nl ~ '  %p hi' ~ $nl),
+   '/' ~ $nl ~ '  %p hi' ~ $nl,
+   'block HTML comment';
+
+is fmt('/[if IE] only IE' ~ $nl),
+   '/[if IE] only IE' ~ $nl,
+   'inline conditional comment';
+
+is fmt('/[if IE]' ~ $nl ~ '  %p ie' ~ $nl),
+   '/[if IE]' ~ $nl ~ '  %p ie' ~ $nl,
+   'block conditional comment';
+
+is fmt('/![if !IE] text' ~ $nl),
+   '/![if !IE] text' ~ $nl,
+   'revealed conditional comment';
+
+is fmt('-# notes' ~ $nl),
+   '-# notes' ~ $nl,
+   'inline silent comment text preserved';
+
+is fmt('-#' ~ $nl ~ '  arbitrary text $^&*' ~ $nl ~ '  more notes' ~ $nl),
+   '-#' ~ $nl ~ '  arbitrary text $^&*' ~ $nl ~ '  more notes' ~ $nl,
+   'block silent comment body preserved';
+
+is fmt('-# inline' ~ $nl ~ '  body line' ~ $nl),
+   '-# inline' ~ $nl ~ '  body line' ~ $nl,
+   'silent comment with both inline and body';
+
+# Doctype
+is fmt('!!!' ~ $nl),
+   '!!!' ~ $nl,
+   'bare doctype';
+
+is fmt('!!! 5' ~ $nl),
+   '!!! 5' ~ $nl,
+   'HTML5 doctype variant';
+
+is fmt('!!! Strict' ~ $nl),
+   '!!! Strict' ~ $nl,
+   'XHTML Strict doctype';
+
+is fmt('!!! XML' ~ $nl),
+   '!!! XML' ~ $nl,
+   'XML doctype';
+
+is fmt('!!! XML iso-8859-1' ~ $nl),
+   '!!! XML iso-8859-1' ~ $nl,
+   'XML doctype with encoding';
+
+# Filters
+is fmt(':plain' ~ $nl ~ '  hello' ~ $nl),
+   ':plain' ~ $nl ~ '  hello' ~ $nl,
+   'plain filter';
+
+is fmt(':javascript' ~ $nl ~ '  alert(1);' ~ $nl),
+   ':javascript' ~ $nl ~ '  alert(1);' ~ $nl,
+   'javascript filter';
+
+is fmt(':css' ~ $nl ~ '  body { color: red; }' ~ $nl),
+   ':css' ~ $nl ~ '  body { color: red; }' ~ $nl,
+   'css filter';
+
+# Idempotency
+is fmt('!!! 5' ~ $nl ~ '%html' ~ $nl ~ '  %head' ~ $nl ~ '    %title hi' ~ $nl ~ '  %body' ~ $nl ~ '    /' ~ $nl ~ '      %p comment' ~ $nl ~ '    - for $x in @items' ~ $nl ~ '      %li= $x' ~ $nl),
+   fmt(fmt('!!! 5' ~ $nl ~ '%html' ~ $nl ~ '  %head' ~ $nl ~ '    %title hi' ~ $nl ~ '  %body' ~ $nl ~ '    /' ~ $nl ~ '      %p comment' ~ $nl ~ '    - for $x in @items' ~ $nl ~ '      %li= $x' ~ $nl)),
+   'fmt is idempotent on a mixed document';
+
+done-testing;

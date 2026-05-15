@@ -1,0 +1,102 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML::Format;
+use Test;
+
+plan 27;
+
+sub fmt(Str:D $src) { format-source($src) }
+
+is fmt("%p\n"), "%p\n", 'bare tag round-trips';
+
+is fmt("%p hello\n"), "%p hello\n", 'tag with content';
+
+is fmt("%p   hello   \n"), "%p hello\n",
+   'trailing/leading content whitespace collapses to single space';
+
+is fmt("%p\n  %strong inside\n"),
+   "%p\n  %strong inside\n",
+   'nested tag uses 2-space indent';
+
+is fmt("%section\n  %h1 Title\n  %ul\n    %li one\n    %li two\n"),
+   "%section\n  %h1 Title\n  %ul\n    %li one\n    %li two\n",
+   'deep nesting preserved';
+
+is fmt("%p hello\n  %strong world\n"),
+   "%p hello\n  %strong world\n",
+   'inline content with child';
+
+is fmt("%img\n"), "%img\n",
+   'void element emits without explicit /';
+
+is fmt("%img/\n"), "%img\n",
+   'explicit / on void element is dropped (canonical)';
+
+is fmt("%br/\n"), "%br\n",
+   'br void self-close stripped';
+
+is fmt("%div/\n"), "%div/\n",
+   'non-void explicit self-close preserved';
+
+is fmt('%p>' ~ "\n"), '%p>' ~ "\n",
+   'outer trim modifier preserved';
+
+is fmt('%p<' ~ "\n"), '%p<' ~ "\n",
+   'inner trim modifier preserved';
+
+is fmt('%p<>' ~ "\n"), '%p<>' ~ "\n",
+   'combined trim modifier canonical';
+
+is fmt('%p><' ~ "\n"), '%p<>' ~ "\n",
+   '>< canonicalizes to <>';
+
+is fmt("Hello world\n"), "Hello world\n",
+   'top-level plain text';
+
+is fmt("\\%foo\n"), "\\%foo\n",
+   'plain text with leading % keeps backslash';
+
+is fmt("\\.bar\n"), "\\.bar\n",
+   'plain text with leading . keeps backslash';
+
+is fmt("\\#baz\n"), "\\#baz\n",
+   'plain text with leading # keeps backslash';
+
+is fmt("plain1\nplain2\n"),
+   "plain1\nplain2\n",
+   'multiple plain siblings';
+
+is fmt("%p hello\nworld\n"),
+   "%p hello\nworld\n",
+   'tag followed by plain sibling';
+
+is fmt("%div\n  inside text\n"),
+   "%div\n  inside text\n",
+   'plain text as child of tag';
+
+is fmt("Hello   \n"),
+   "Hello\n",
+   'trailing whitespace stripped from plain';
+
+is fmt("\r\n%p hi\r\n"),
+   "%p hi\n",
+   'CRLF and leading blank line normalized';
+
+is fmt("%p one\n\n\n%p two\n"),
+   "%p one\n\n%p two\n",
+   'runs of blank lines collapse to one';
+
+is fmt(""),
+   "",
+   'empty input round-trips to empty';
+
+is fmt("%p one\n%p two\n"),
+   fmt(fmt("%p one\n%p two\n")),
+   'fmt is idempotent on tag siblings';
+
+is fmt("%section\n  %h1 Title\n  %p hello\n    %em inside\n"),
+   fmt(fmt("%section\n  %h1 Title\n  %p hello\n    %em inside\n")),
+   'fmt is idempotent on nested tree';
+
+done-testing;
