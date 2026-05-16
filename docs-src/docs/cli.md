@@ -55,6 +55,26 @@ The values are made available as Raku scalars inside the template (e.g. `#{$name
 | `--escape-html`       | Escape HTML in `=` expressions (default).               |
 | `--no-escape-html`    | Disable HTML escaping for `=` expressions.              |
 | `--ugly`              | Single-line output with no inter-tag whitespace.        |
+| `--stream`            | Stream output incrementally; one chunk per top-level node. |
+
+### Streaming output
+
+`--stream` writes HTML to its destination as each top-level node finishes
+rendering, instead of buffering the whole document and writing once. It is
+useful when piping into a slow consumer or when the document is large enough
+that first-byte latency matters.
+
+```sh
+haml render --stream view.haml
+haml render --stream view.haml -o view.html
+echo '%p hi' | haml render --stream -
+```
+
+`--stream` accepts a single input and cannot be combined with `--watch`
+or `--out-dir`. The same trade-offs that apply to the
+[`render-supply` API](api.md#hamlrender-supply) apply here: trim markers,
+`--ugly`, and `remove-whitespace` operate per chunk, not across the
+full document.
 
 ### Rendering multiple files
 

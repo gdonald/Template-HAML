@@ -1,0 +1,102 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Template::HAML::Config;
+use Test;
+
+plan 15;
+
+# Basic: render-supply returns a Supply that emits chunks
+{
+  my $src = qq:to/HAML/;
+  %section.a
+    %h1 One
+  %section.b
+    %h2 Two
+  HAML
+
+  my $supply = HAML.render-supply(:$src);
+  ok $supply ~~ Supply, 'render-supply returns Supply';
+
+  my @chunks = $supply.list;
+  is @chunks.elems, 2, 'default flush boundary: one chunk per top-level node';
+
+  my $joined = @chunks.join('');
+  my $expected = HAML.render(:$src);
+  is $joined, $expected, 'concatenated chunks equal full render output';
+}
+
+# Top-level nodes with locals work
+{
+  my $src = q:to/HAML/;
+  %h1 Hello #{$name}
+  %p Welcome
+  HAML
+
+  my @chunks = HAML.render-supply(:$src, :locals({:name<World>})).list;
+  is @chunks.elems, 2, 'two top-level chunks';
+  like @chunks[0], /Hello \s+ World/, 'locals interpolation works in chunk';
+  like @chunks[1], /Welcome/, 'second chunk renders';
+}
+
+# flush-depth=0 -> single chunk for whole output
+{
+  my $src = qq:to/HAML/;
+  %p one
+  %p two
+  %p three
+  HAML
+
+  my @chunks = HAML.render-supply(:$src, :flush-depth(0)).list;
+  is @chunks.elems, 1, 'flush-depth=0 emits one chunk';
+  is @chunks[0], HAML.render(:$src), 'chunk equals full render';
+}
+
+# A single top-level node yields a single chunk
+{
+  my $src = qq:to/HAML/;
+  %html
+    %body
+      %h1 Hi
+      %p there
+  HAML
+
+  my @chunks = HAML.render-supply(:$src).list;
+  is @chunks.elems, 1, 'single top-level node = single chunk';
+  is @chunks[0], HAML.render(:$src), 'single chunk matches full render';
+}
+
+# Conditional chains at top level merge into one chunk
+{
+  my $src = qq:to/HAML/;
+  - if \$show
+    %p yes
+  - else
+    %p no
+  HAML
+
+  my @chunks = HAML.render-supply(:$src, :locals({:show(True)})).list;
+  is @chunks.elems, 1, 'if/else at top level emits one chunk';
+  like @chunks[0], /'<p>yes</p>'/, 'true branch rendered';
+}
+
+# Custom context flows through to chunks
+{
+  my $src = q:to/HAML/;
+  %p
+    = page-class()
+  HAML
+
+  my @chunks = HAML.render-supply(:$src).list;
+  is @chunks.elems, 1, 'one chunk';
+  like @chunks[0], /\w+/, 'context helper page-class invoked';
+}
+
+# Instance render-supply works
+{
+  my $haml = HAML.new;
+  my $src = "%p one\n%p two\n";
+  my @chunks = $haml.render-supply(:$src).list;
+  is @chunks.elems, 2, 'instance render-supply emits two chunks';
+}

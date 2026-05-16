@@ -33,6 +33,53 @@ used) or an instance method (the instance's stored config is used unless
 `:config` is passed at the call site). Construct an instance via
 `HAML.new(:config(...))` to reuse the same config across renders.
 
+## `HAML.render-supply`
+
+```raku
+use Template::HAML;
+
+react {
+  whenever HAML.render-supply(:src("%h1 hi\n%p there\n")) -> $chunk {
+    $*OUT.print($chunk);
+  }
+}
+```
+
+Returns a `Supply[Str]` that emits HTML chunks as the renderer walks the
+parse tree. Each top-level node in the source produces one chunk by
+default, so output begins streaming before the entire template finishes
+rendering.
+
+| Parameter       | Type    | Description |
+|-----------------|---------|-------------|
+| `:src`          | `Str:D` / `Blob:D` | HAML source to render. Mutually exclusive with `:file`. |
+| `:file`         | `Str:D` | Template file path (instance method only). Mutually exclusive with `:src`. |
+| `:locals`       | `%h`    | Render-time locals; same semantics as `render`. |
+| `:config`       | `Template::HAML::Config` | Optional rendering options. |
+| `:context`      | any     | View-context object; same semantics as `render`. |
+| `:flush-depth`  | `Int`   | Flush boundary depth. Default `1` (one chunk per top-level node). `0` emits the whole rendered output as a single chunk. |
+
+### Trade-offs vs. `render`
+
+`render-supply` walks the tree the same way `render` does, but commits
+each chunk to the output as it goes. That means a few whole-document
+post-processing passes are weakened or unavailable in streaming mode:
+
+* **Trim markers (`>` / `<`)** apply only within a single chunk. A
+  trim-outer on one top-level node cannot reach across the chunk
+  boundary to chew whitespace produced by the next top-level node.
+* **`output-style => 'ugly'`** runs the compression pass per chunk
+  rather than once on the full document. The visible output is still
+  one line per chunk, but the chunk boundary is preserved.
+* **`remove-whitespace`** has the same per-chunk limitation as ugly
+  mode.
+* **`find-and-preserve`-style global rewrites** (any pass that needs
+  the full output buffer in shape) are not run.
+
+If a template relies on cross-document whitespace rewrites, use
+`render` and write the full result, or set `:flush-depth(0)` to fall
+back to a single-chunk emission.
+
 ## `HAML.compile-source-to-raku`
 
 ```raku

@@ -1,0 +1,75 @@
+
+use v6.d;
+use lib 'lib';
+use Test;
+use Template::HAML::CLI;
+
+plan 10;
+
+sub capture(@args, Str :$stdin) {
+  my $tmp     = $*TMPDIR.add("haml-cli-out-{$*PID}-{(^999999).pick}");
+  my $tmp-err = $*TMPDIR.add("haml-cli-err-{$*PID}-{(^999999).pick}");
+  my $out = $tmp.open(:w);
+  my $err = $tmp-err.open(:w);
+  my $exit;
+  if $stdin.defined {
+    my $tmp-in = $*TMPDIR.add("haml-cli-in-{$*PID}-{(^999999).pick}");
+    $tmp-in.spurt($stdin);
+    my $in = $tmp-in.open(:r);
+    $exit = Template::HAML::CLI::run(@args, :$out, :$err, :$in);
+    $in.close;
+    $tmp-in.unlink;
+  } else {
+    $exit = Template::HAML::CLI::run(@args, :$out, :$err);
+  }
+  $out.close;
+  $err.close;
+  my $out-text = $tmp.slurp;
+  my $err-text = $tmp-err.slurp;
+  $tmp.unlink;
+  $tmp-err.unlink;
+  { :$exit, :out($out-text), :err($err-text) };
+}
+
+sub write-template(Str:D $body --> IO::Path) {
+  my $p = $*TMPDIR.add("haml-stream-{$*PID}-{(^999999).pick}.haml");
+  $p.spurt($body);
+  $p;
+}
+
+# --stream renders a file to stdout
+{
+  my $f = write-template("%h1 Title\n%p body\n");
+  my $r = capture(['render', '--stream', $f.Str]);
+  is $r<exit>, 0, '--stream exits 0';
+  like $r<out>, /'<h1>Title</h1>'/, 'stream output contains h1';
+  like $r<out>, /'<p>body</p>'/, 'stream output contains p';
+  $f.unlink;
+}
+
+# --stream with stdin
+{
+  my $r = capture(['render', '--stream', '-'], :stdin("%p hi\n"));
+  is $r<exit>, 0, '--stream with stdin exits 0';
+  like $r<out>, /'<p>hi</p>'/, 'stream stdin output rendered';
+}
+
+# --stream + -o writes to file
+{
+  my $f = write-template("%p one\n%p two\n");
+  my $out-path = $*TMPDIR.add("haml-stream-out-{$*PID}-{(^999999).pick}.html");
+  my $r = capture(['render', '--stream', '-o', $out-path.Str, $f.Str]);
+  is $r<exit>, 0, '--stream -o exits 0';
+  my $content = $out-path.slurp;
+  like $content, /'<p>one</p>'/, 'output file contains first chunk';
+  like $content, /'<p>two</p>'/, 'output file contains second chunk';
+  $f.unlink;
+  $out-path.unlink;
+}
+
+# --stream rejects --watch
+{
+  my $r = capture(['render', '--stream', '--watch', '-o', 'x.html', 'a.haml']);
+  is $r<exit>, 2, '--stream + --watch exits 2';
+  like $r<err>, /'cannot be combined'/, 'err mentions incompatibility';
+}

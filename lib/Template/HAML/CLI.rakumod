@@ -41,6 +41,9 @@ Options:
   --escape-html         Enable HTML escaping (default)
   --no-escape-html      Disable HTML escaping
   --ugly                Shortcut for --output-style ugly
+  --stream              Emit output incrementally as each top-level node
+                        renders. Cannot be combined with --watch or
+                        --out-dir; only one input is allowed.
   --help, -h            Show this help
 
 Examples:
@@ -164,6 +167,7 @@ sub parse-render-args(@input --> Hash) {
       when '--escape-html'    { %opts<escape-html>  = True;  }
       when '--no-escape-html' { %opts<escape-html>  = False; }
       when '--ugly'           { %opts<output-style> = 'ugly'; }
+      when '--stream'         { %opts<stream> = True; }
       when '--help' | '-h'    { %opts<help> = True; }
       when /^ '--' / | /^ '-' \w / {
         die "haml render: unknown option '$a'\n";
@@ -258,6 +262,29 @@ sub render-file(Str:D $label, $src-blob, $config, %locals, IO::Handle:D $err -->
   $haml.render(:src($src-blob), :%locals);
 }
 
+sub stream-render-file(
+  Str:D $label, $src-blob, $config, %locals,
+  IO::Handle:D $sink, IO::Handle:D $err --> Bool
+) {
+  CATCH {
+    when X::HAML {
+      $err.print("haml render: $label: " ~ .message ~ "\n");
+      return False;
+    }
+    default {
+      $err.print("haml render: $label: " ~ .message ~ "\n");
+      return False;
+    }
+  }
+  my $haml = HAML.new(:$config);
+  react {
+    whenever $haml.render-supply(:src($src-blob), :%locals) -> $chunk {
+      $sink.print($chunk);
+    }
+  }
+  True;
+}
+
 our sub cmd-render(@args, IO::Handle :$out, IO::Handle :$err, IO::Handle :$in --> Int) is export {
   my $parsed;
   {
@@ -286,6 +313,7 @@ our sub cmd-render(@args, IO::Handle :$out, IO::Handle :$err, IO::Handle :$in --
   my $output-path  = $parsed<opts><output>;
   my $out-dir      = $parsed<opts><out-dir>;
   my $watch        = ?$parsed<opts><watch>;
+  my $stream       = ?$parsed<opts><stream>;
   my $poll-ms      = $parsed<opts><poll>         // 0;
   my $max-rebuilds = $parsed<opts><max-rebuilds>;
 
@@ -299,6 +327,10 @@ our sub cmd-render(@args, IO::Handle :$out, IO::Handle :$err, IO::Handle :$in --
   }
   if $out-dir.defined && !$out-dir.IO.d {
     $err.print("haml render: --out-dir directory not found: $out-dir\n");
+    return 2;
+  }
+  if $stream && ($watch || $out-dir.defined) {
+    $err.print("haml render: --stream cannot be combined with --watch or --out-dir\n");
     return 2;
   }
 
@@ -344,9 +376,33 @@ our sub cmd-render(@args, IO::Handle :$out, IO::Handle :$err, IO::Handle :$in --
     $err.print("haml render: -o accepts only a single input; use --out-dir for multiple files\n");
     return 2;
   }
+  if $stream && $multi-file {
+    $err.print("haml render: --stream accepts only a single input\n");
+    return 2;
+  }
 
   if !$output-path.defined && !$out-dir.defined && $multi-file {
     # falls through to stdout concatenation (legacy behavior).
+  }
+
+  if $stream {
+    my $sink = $output-path.defined ?? $output-path.IO.open(:w) !! $out;
+    LEAVE { $sink.close if $output-path.defined && $sink.defined; }
+    my $src;
+    my $label;
+    if @stdin-args.elems {
+      $src   = $in.slurp;
+      $label = '<stdin>';
+    } else {
+      my $file = @all-files[0];
+      unless $file.e {
+        $err.print("haml render: file not found: $file\n");
+        return 1;
+      }
+      $src   = $file.slurp(:bin);
+      $label = $file.Str;
+    }
+    return stream-render-file($label, $src, $config, %locals, $sink, $err) ?? 0 !! 1;
   }
 
   if $watch {

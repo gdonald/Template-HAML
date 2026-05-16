@@ -273,6 +273,46 @@ class Renderer is export {
     $out;
   }
 
+  method render-stream(Node:D $tree, Int :$flush-depth = 1, :$user-ctx --> Supply) {
+    my $self = self;
+    my %locals = %!locals;
+    my $cfg   = $!config;
+    my $ctx-binding = $user-ctx // (try { $*HAML-CTX }) // Nil;
+    supply {
+      my Int $*HAML-TAB-OFFSET = 0;
+      my $*HAML-CFG = $cfg;
+      my $*HAML-CTX = $ctx-binding;
+
+      if $flush-depth <= 0 || !$tree.children.elems {
+        my $out = $self.render-node($tree, %locals, 0);
+        $out = $self.apply-trim-markers($out);
+        $out = $self.compress($out) if $cfg.is-ugly;
+        emit $out if $out.chars;
+      } else {
+        my @kids = $tree.children.list;
+        my $i = 0;
+        while $i < @kids.elems {
+          my $k = @kids[$i];
+          my $obj = $k.object;
+          my $chunk;
+          my $consumed = 1;
+          if $obj.defined && $obj ~~ Statement && ($obj.kind eq 'if' || $obj.kind eq 'unless') {
+            my ($html, $n) = $self.render-conditional-chain(@kids, $i, %locals, 0);
+            $chunk = $html;
+            $consumed = $n;
+          } else {
+            $chunk = $self.render-node($k, %locals, 0);
+          }
+          $chunk = $self.apply-trim-markers($chunk);
+          $chunk = $self.compress($chunk) if $cfg.is-ugly;
+          emit $chunk if $chunk.chars;
+          $i += $consumed;
+        }
+      }
+      done;
+    }
+  }
+
   method apply-trim-markers(Str $html --> Str) {
     my $tb = TRIM-BEFORE;
     my $ta = TRIM-AFTER;

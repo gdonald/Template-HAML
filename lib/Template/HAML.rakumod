@@ -124,6 +124,23 @@ class HAML is export {
     self!do-render-src(decode-input($src, $cfg), %locals, $cfg, $ctx);
   }
 
+  multi method render-supply(
+    HAML:U:
+    :$src!,
+    :%locals,
+    Template::HAML::Config :$config,
+    :$context,
+    Int :$flush-depth = 1,
+    --> Supply
+  ) {
+    my $cfg = $config // Template::HAML::Config.new;
+    my $ctx = Template::HAML::Context.new(
+      :haml(self.WHAT),
+      :user-context($context // default-user-context()),
+    );
+    self!do-render-stream(decode-input($src, $cfg), %locals, $cfg, $ctx, :$flush-depth);
+  }
+
   multi method render(HAML:D: :$src!, :%locals, Template::HAML::Config :$config, :$context) {
     my $cfg = $config // $!config // Template::HAML::Config.new;
     my $ctx = Template::HAML::Context.new(
@@ -131,6 +148,53 @@ class HAML is export {
       :user-context($context // default-user-context()),
     );
     self!do-render-src(decode-input($src, $cfg), %locals, $cfg, $ctx);
+  }
+
+  multi method render-supply(
+    HAML:D:
+    :$src!,
+    :%locals,
+    Template::HAML::Config :$config,
+    :$context,
+    Int :$flush-depth = 1,
+    --> Supply
+  ) {
+    my $cfg = $config // $!config // Template::HAML::Config.new;
+    my $ctx = Template::HAML::Context.new(
+      :haml(self),
+      :user-context($context // default-user-context()),
+    );
+    self!do-render-stream(decode-input($src, $cfg), %locals, $cfg, $ctx, :$flush-depth);
+  }
+
+  multi method render-supply(
+    HAML:D:
+    Str:D :$file!,
+    :$layout,
+    :%locals,
+    Template::HAML::Config :$config,
+    :$context,
+    Int :$flush-depth = 1,
+    --> Supply
+  ) {
+    my $cfg  = $config // $!config // Template::HAML::Config.new;
+    my $path = self.resolve-template($file);
+    my $ctx  = Template::HAML::Context.new(
+      :haml(self),
+      :current-dir($path.IO.dirname),
+      :user-context($context // default-user-context()),
+    );
+    my $src = slurp-template($path.IO, $cfg);
+
+    return self!do-render-stream($src, %locals, $cfg, $ctx, :$flush-depth)
+      unless $layout.defined;
+
+    my $inner       = self!do-render-src($src, %locals, $cfg, $ctx);
+    my $layout-path = self.resolve-template($layout);
+    my $layout-src  = slurp-template($layout-path.IO, $cfg);
+    $ctx.yield-content = $inner;
+    $ctx.current-dir   = $layout-path.IO.dirname;
+    self!do-render-stream($layout-src, %locals, $cfg, $ctx, :$flush-depth);
   }
 
   multi method render(
@@ -196,6 +260,19 @@ class HAML is export {
 
     my $*HAML-CTX = $ctx;
     Renderer.new(:%locals, :config($cfg)).render($tree);
+  }
+
+  method !do-render-stream(
+    Str:D $src,
+    %locals,
+    Template::HAML::Config $cfg,
+    $ctx,
+    Int :$flush-depth = 1,
+    --> Supply
+  ) {
+    my $tree = self!compile-source($src, $cfg);
+    my $renderer = Renderer.new(:%locals, :config($cfg));
+    $renderer.render-stream($tree, :$flush-depth, :user-ctx($ctx));
   }
 
   method !compile-source(Str:D $src, Template::HAML::Config $cfg) {
