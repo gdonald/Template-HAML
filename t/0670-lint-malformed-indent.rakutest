@@ -1,0 +1,88 @@
+
+use v6.d;
+use lib 'lib';
+use Test;
+use Template::HAML::Lint;
+use Template::HAML::CLI;
+
+plan 17;
+
+sub diags-for(:$src --> List) {
+  my $rule   = Template::HAML::Lint::MalformedIndentRule.new;
+  my $linter = Template::HAML::Lint::Linter.new(:rules(($rule,)));
+  $linter.lint(:$src).list;
+}
+
+# Clean source produces no diagnostics.
+{
+  my @d = diags-for(:src("%p hi\n%p there\n"));
+  is @d.elems, 0, 'clean source has no diagnostics';
+}
+
+# Trailing spaces are flagged.
+{
+  my @d = diags-for(:src("%p hi   \n"));
+  is @d.elems, 1, 'trailing spaces flagged';
+  is @d[0].rule, 'malformed-indent', 'rule id is malformed-indent';
+  is @d[0].line, 1, 'diagnostic on line 1';
+  is @d[0].column, 6, 'column points at start of trailing whitespace';
+  like @d[0].message, /'trailing whitespace'/, 'message describes trailing whitespace';
+}
+
+# Trailing tab is flagged.
+{
+  my @d = diags-for(:src("%p hi\t\n"));
+  is @d.elems, 1, 'trailing tab flagged';
+  like @d[0].message, /'trailing whitespace'/, 'tab counts as trailing whitespace';
+}
+
+# Whitespace-only "blank" line is flagged distinctly.
+{
+  my @d = diags-for(:src("%p one\n   \n%p two\n"));
+  is @d.elems, 1, 'one diagnostic for the all-whitespace line';
+  is @d[0].line, 2, 'diagnostic points to the offending blank line';
+  like @d[0].message, /'blank line contains whitespace'/,
+       'message names the whitespace-only blank line case';
+}
+
+# Genuinely empty blank lines are fine.
+{
+  my @d = diags-for(:src("%p one\n\n%p two\n"));
+  is @d.elems, 0, 'empty blank line is not flagged';
+}
+
+# Multiple lines of trailing whitespace get separate diagnostics.
+{
+  my @d = diags-for(:src("%p a \n%p b  \n%p c\n"));
+  is @d.elems, 2, 'two distinct trailing-whitespace diagnostics';
+  is @d[0].line, 1, 'first on line 1';
+  is @d[1].line, 2, 'second on line 2';
+}
+
+# CLI integration.
+sub capture(@args) {
+  my $tmp     = $*TMPDIR.add("haml-mi-out-{$*PID}-{(^999999).pick}");
+  my $tmp-err = $*TMPDIR.add("haml-mi-err-{$*PID}-{(^999999).pick}");
+  my $out = $tmp.open(:w);
+  my $err = $tmp-err.open(:w);
+  my $exit = Template::HAML::CLI::run(@args, :$out, :$err);
+  $out.close;
+  $err.close;
+  my $out-text = $tmp.slurp;
+  my $err-text = $tmp-err.slurp;
+  $tmp.unlink;
+  $tmp-err.unlink;
+  { :$exit, :out($out-text), :err($err-text) };
+}
+
+{
+  my $dir  = $*TMPDIR.add("haml-mi-{$*PID}-{(^999999).pick}");
+  $dir.mkdir;
+  my $file = $dir.add('messy.haml');
+  $file.spurt("%p hi   \n");
+  my $r = capture(['lint', $file.Str]);
+  is $r<exit>, 1, 'CLI flags trailing whitespace with exit 1';
+  like $r<out>, /'malformed-indent'/, 'CLI output names the rule';
+  $file.unlink;
+  $dir.rmdir;
+}

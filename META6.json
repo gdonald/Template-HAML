@@ -27,6 +27,7 @@
     "Template::HAML::Helpers": "lib/Template/HAML/Helpers.rakumod",
     "Template::HAML::HelpersRole": "lib/Template/HAML/HelpersRole.rakumod",
     "Template::HAML::Interpolation": "lib/Template/HAML/Interpolation.rakumod",
+    "Template::HAML::Lint": "lib/Template/HAML/Lint.rakumod",
     "Template::HAML::Multiline": "lib/Template/HAML/Multiline.rakumod",
     "Template::HAML::Node": "lib/Template/HAML/Node.rakumod",
     "Template::HAML::Plain": "lib/Template/HAML/Plain.rakumod",

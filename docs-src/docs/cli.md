@@ -9,6 +9,7 @@ Template::HAML ships with a `haml` script for rendering and checking templates f
 | `haml render`    | Render one or more HAML files to HTML.                      |
 | `haml check`     | Parse-only sanity check; non-zero exit on parse failure.    |
 | `haml fmt`       | Pretty-print a HAML file in [canonical form](canonical-form.md). |
+| `haml lint`      | Static analysis; non-zero exit on diagnostics.              |
 | `haml help`      | Top-level help. Also `--help`, `-h`.                        |
 
 ## Rendering
@@ -81,6 +82,65 @@ haml fmt view.haml
 
 The canonical form is idempotent: `haml fmt | haml fmt` always equals `haml fmt`. See the [canonical form spec](canonical-form.md) for the full set of rules.
 
+## Linting
+
+```sh
+haml lint view.haml
+```
+
+`lint` parses each HAML file and runs the registered lint rules over the parse tree and source. Diagnostics are written to standard out, one per line, in the form:
+
+```
+path:line:col: severity: message (rule-id)
+```
+
+A file argument of `-` reads source from standard input; the diagnostic path becomes `<stdin>`.
+
+### Exit codes
+
+| Code | Meaning                                                            |
+|------|--------------------------------------------------------------------|
+| `0`  | No diagnostics reported.                                            |
+| `1`  | At least one diagnostic reported, or a file failed to parse.       |
+| `2`  | Invocation error (bad option, missing file argument).              |
+
+### Built-in rules
+
+| Rule                  | What it catches                                                 |
+|-----------------------|-----------------------------------------------------------------|
+| `deprecated-syntax`   | Use of the dropped `:ruby` filter (suggests `:raku`).           |
+| `malformed-indent`    | Trailing whitespace on a line, and whitespace-only blank lines. |
+| `unused-locals`       | A key in `--locals` that the template never references.         |
+
+### Declaring expected locals
+
+The `unused-locals` rule needs to know which locals the template will receive. Pass the expected keys with `--locals` (the same syntax as `haml render`); values are accepted but ignored:
+
+```sh
+haml lint --locals name,age,role view.haml
+```
+
+A key listed in `--locals` that is never referenced as `$key` in the template produces an `unused-locals` warning. Without `--locals`, the rule sleeps.
+
+### Extending the rule set
+
+Library users can register additional rules:
+
+```raku
+use Template::HAML::Lint;
+
+class MyRule does Template::HAML::Lint::Rule {
+  method id(--> Str) { 'my-rule' }
+  method check(:$tree, :$src, :%locals --> List) {
+    # ... return a list of Template::HAML::Lint::Diagnostic
+  }
+}
+
+Template::HAML::Lint::register-rule(MyRule.new);
+```
+
+Registered rules run in addition to the built-ins. `clear-rules()` removes them.
+
 ## Help
 
 Each subcommand has its own help:
@@ -89,4 +149,6 @@ Each subcommand has its own help:
 haml --help
 haml render --help
 haml check --help
+haml lint --help
+haml fmt --help
 ```

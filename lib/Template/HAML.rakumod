@@ -277,6 +277,16 @@ class HAML is export {
     Codegen.new(:config($cfg)).emit($tree);
   }
 
+  multi method parse-source(HAML:U: :$src!, Template::HAML::Config :$config --> Node) {
+    my $cfg  = $config // Template::HAML::Config.new;
+    self!compile-source(decode-input($src, $cfg), $cfg);
+  }
+
+  multi method parse-source(HAML:D: :$src!, Template::HAML::Config :$config --> Node) {
+    my $cfg  = $config // $!config // Template::HAML::Config.new;
+    self!compile-source(decode-input($src, $cfg), $cfg);
+  }
+
   method compiled-cache-key(:$src!, Template::HAML::Config :$config --> Str) {
     my $cfg = $config // ($!config // Template::HAML::Config.new);
     compute-cache-key(decode-input($src, $cfg), $cfg);

@@ -2,6 +2,7 @@
 use Template::HAML;
 use Template::HAML::Config;
 use Template::HAML::Format;
+use Template::HAML::Lint;
 use Template::HAML::X;
 
 unit module Template::HAML::CLI;
@@ -13,10 +14,10 @@ Commands:
   render <file>...   Render HAML file(s) to HTML
   check  <file>...   Parse-only; exit non-zero on parse failure
   fmt    <file>...   Pretty-print HAML in canonical form
+  lint   <file>...   Static analysis; non-zero exit on diagnostics
   help [<command>]   Show help (also --help, -h)
 
-Run 'haml render --help', 'haml check --help', or 'haml fmt --help'
-for command-specific options.
+Run 'haml <command> --help' for command-specific options.
 END
 
 constant RENDER-HELP = q:to/END/;
@@ -52,6 +53,31 @@ Options:
 Examples:
   haml check view.haml
   haml check views/*.haml
+END
+
+constant LINT-HELP = q:to/END/;
+Usage: haml lint [options] <file>...
+
+Runs registered lint rules against each HAML file and reports
+diagnostics. A file argument of '-' reads HAML source from standard
+input.
+
+Exit codes:
+  0   No diagnostics reported.
+  1   At least one diagnostic reported (or a file failed to parse).
+  2   Invocation error (bad option, missing file argument, etc.).
+
+Options:
+  --locals k=v,k2=v2    Declare locals the template expects. Used by
+                        rules such as 'unused-locals'. Values are
+                        optional; only keys are inspected.
+  --help, -h            Show this help
+
+Examples:
+  haml lint view.haml
+  haml lint --locals name,age view.haml
+  haml lint views/*.haml
+  echo '%p hi' | haml lint -
 END
 
 constant FMT-HELP = q:to/END/;
@@ -134,6 +160,27 @@ sub parse-fmt-args(@input --> Hash) {
       when '--help' | '-h' { %opts<help>     = True; }
       when /^ '--' / | /^ '-' \w / {
         die "haml fmt: unknown option '$a'\n";
+      }
+      default { @positional.push($a); }
+    }
+  }
+  { :%opts, :@positional };
+}
+
+sub parse-lint-args(@input --> Hash) {
+  my @args = @input;
+  my %opts;
+  my @positional;
+  while @args.elems {
+    my $a = @args.shift;
+    given $a {
+      when '--locals' {
+        die "haml lint: --locals requires an argument\n" unless @args.elems;
+        %opts<locals> = parse-locals(@args.shift);
+      }
+      when '--help' | '-h' { %opts<help> = True; }
+      when /^ '--' / | /^ '-' \w / {
+        die "haml lint: unknown option '$a'\n";
       }
       default { @positional.push($a); }
     }
@@ -289,6 +336,73 @@ our sub cmd-check(@args, IO::Handle :$out, IO::Handle :$err --> Int) is export {
   $exit;
 }
 
+our sub cmd-lint(@args, IO::Handle :$out, IO::Handle :$err, IO::Handle :$in --> Int) is export {
+  my $parsed;
+  {
+    CATCH {
+      default {
+        $err.print(.message);
+        return 2;
+      }
+    }
+    $parsed = parse-lint-args(@args);
+  }
+
+  if $parsed<opts><help> {
+    $out.print(LINT-HELP);
+    return 0;
+  }
+
+  unless $parsed<positional>.elems {
+    $err.print("haml lint: missing file argument\n");
+    $err.print(LINT-HELP);
+    return 2;
+  }
+
+  my $exit        = 0;
+  my $stdin-count = 0;
+  my %locals      = $parsed<opts><locals> // %();
+  for $parsed<positional>.list -> $file {
+    my $src;
+    my $label = $file;
+    if $file eq '-' {
+      $stdin-count++;
+      if $stdin-count > 1 {
+        $err.print("haml lint: '-' (stdin) may be given at most once\n");
+        return 2;
+      }
+      $label = '<stdin>';
+      $src = $in.slurp;
+    } else {
+      unless $file.IO.e {
+        $err.print("haml lint: file not found: $file\n");
+        $exit = 1;
+        next;
+      }
+      $src = $file.IO.slurp(:bin);
+    }
+
+    my @diags;
+    {
+      CATCH {
+        default {
+          $err.print("haml lint: $label: " ~ .message ~ "\n");
+          $exit = 1;
+          next;
+        }
+      }
+      my $linter = Template::HAML::Lint::Linter.new;
+      @diags = $linter.lint(:$src, :path($label), :%locals).list;
+    }
+
+    for @diags -> $d {
+      $out.print($d.format ~ "\n");
+    }
+    $exit = 1 if @diags.elems;
+  }
+  $exit;
+}
+
 our sub cmd-fmt(@args, IO::Handle :$out, IO::Handle :$err --> Int) is export {
   my $parsed;
   {
@@ -388,12 +502,14 @@ our sub run(@args, IO::Handle :$out = $*OUT, IO::Handle :$err = $*ERR, IO::Handl
     when 'render'                 { return cmd-render(@a, :$out, :$err, :$in); }
     when 'check'                  { return cmd-check(@a, :$out, :$err); }
     when 'fmt'                    { return cmd-fmt(@a,   :$out, :$err); }
+    when 'lint'                   { return cmd-lint(@a,  :$out, :$err, :$in); }
     when 'help' | '--help' | '-h' {
       if @a.elems {
         given @a[0] {
           when 'render' { $out.print(RENDER-HELP); return 0; }
           when 'check'  { $out.print(CHECK-HELP);  return 0; }
           when 'fmt'    { $out.print(FMT-HELP);    return 0; }
+          when 'lint'   { $out.print(LINT-HELP);   return 0; }
           default {
             $err.print("haml help: unknown command '{ @a[0] }'\n");
             $err.print(HELP-TEXT);

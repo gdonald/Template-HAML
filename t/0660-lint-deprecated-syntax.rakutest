@@ -1,0 +1,74 @@
+
+use v6.d;
+use lib 'lib';
+use Test;
+use Template::HAML::Lint;
+use Template::HAML::CLI;
+
+plan 13;
+
+sub diags-for(:$src --> List) {
+  my $rule   = Template::HAML::Lint::DeprecatedSyntaxRule.new;
+  my $linter = Template::HAML::Lint::Linter.new(:rules(($rule,)));
+  $linter.lint(:$src).list;
+}
+
+# `:ruby` filter (top-level, no body) is flagged.
+{
+  my $src = ":ruby\n";
+  my @d = diags-for(:$src);
+  is @d.elems, 1, ':ruby alone triggers one diagnostic';
+  is @d[0].rule, 'deprecated-syntax', 'rule id is deprecated-syntax';
+  is @d[0].severity, 'warning', 'severity is warning';
+  is @d[0].line, 1, 'diagnostic points to line 1';
+  like @d[0].message, /':ruby'/, 'message names the dropped filter';
+  like @d[0].message, /':raku'/, 'message suggests :raku replacement';
+}
+
+# `:ruby` indented inside a tag, with body lines, is flagged on the :ruby line.
+{
+  my $src = "%div\n  :ruby\n    say 'hi'\n";
+  my @d = diags-for(:$src);
+  is @d.elems, 1, 'one diagnostic regardless of body line count';
+  is @d[0].line, 2, 'reports the :ruby header line, not body lines';
+  is @d[0].column, 3, 'column points past indent to start of ":ruby"';
+}
+
+# Lines that merely mention "ruby" or use :raku are not flagged.
+{
+  my @d = diags-for(:src(":raku\n  say 'ok'\n"));
+  is @d.elems, 0, ':raku is not flagged';
+}
+
+{
+  my @d = diags-for(:src("%p contains :ruby word in text\n"));
+  is @d.elems, 0, 'text mentioning :ruby is not flagged';
+}
+
+# CLI integration.
+sub capture(@args) {
+  my $tmp     = $*TMPDIR.add("haml-dep-out-{$*PID}-{(^999999).pick}");
+  my $tmp-err = $*TMPDIR.add("haml-dep-err-{$*PID}-{(^999999).pick}");
+  my $out = $tmp.open(:w);
+  my $err = $tmp-err.open(:w);
+  my $exit = Template::HAML::CLI::run(@args, :$out, :$err);
+  $out.close;
+  $err.close;
+  my $out-text = $tmp.slurp;
+  my $err-text = $tmp-err.slurp;
+  $tmp.unlink;
+  $tmp-err.unlink;
+  { :$exit, :out($out-text), :err($err-text) };
+}
+
+{
+  my $dir  = $*TMPDIR.add("haml-dep-{$*PID}-{(^999999).pick}");
+  $dir.mkdir;
+  my $file = $dir.add('legacy.haml');
+  $file.spurt("%div\n  :ruby\n    puts 'legacy'\n");
+  my $r = capture(['lint', $file.Str]);
+  is $r<exit>, 1, 'CLI flags :ruby with exit 1';
+  like $r<out>, /'deprecated-syntax'/, 'CLI output names the rule';
+  $file.unlink;
+  $dir.rmdir;
+}

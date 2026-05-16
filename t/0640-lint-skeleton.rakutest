@@ -1,0 +1,147 @@
+
+use v6.d;
+use lib 'lib';
+use Test;
+use Template::HAML::Lint;
+use Template::HAML::Node;
+use Template::HAML::CLI;
+
+plan 25;
+
+# Diagnostic.format produces a `path:line:col: severity: msg (rule)` line.
+{
+  my $d = Template::HAML::Lint::Diagnostic.new(
+    :rule<example>, :severity<warning>,
+    :line(3), :column(5),
+    :message('something fishy'),
+    :path('view.haml'),
+  );
+  is $d.format, 'view.haml:3:5: warning: something fishy (example)',
+     'Diagnostic.format renders all fields';
+}
+
+{
+  my $d = Template::HAML::Lint::Diagnostic.new(
+    :rule<x>, :line(1), :column(1), :message('m'),
+  );
+  is $d.format, '<input>:1:1: warning: m (x)',
+     'Diagnostic.format uses <input> when path is undefined';
+  is $d.severity, 'warning', 'severity defaults to warning';
+}
+
+# Linter with no rules returns empty diagnostics on a valid template.
+{
+  my $linter = Template::HAML::Lint::Linter.new(:rules(()));
+  my @diags  = $linter.lint(:src("%p hi\n"), :path<v.haml>);
+  is @diags.elems, 0, 'no-rules linter reports nothing on valid source';
+}
+
+# Linter surfaces parse errors as a 'parse-error' diagnostic.
+{
+  my $linter = Template::HAML::Lint::Linter.new(:rules(()));
+  my @diags  = $linter.lint(:src("\t %p mixed\n  %p indent\n"), :path<bad.haml>);
+  is @diags.elems, 1, 'parse error yields one diagnostic';
+  is @diags[0].rule, 'parse-error', 'rule id is parse-error';
+  is @diags[0].severity, 'error', 'parse failure has severity=error';
+  is @diags[0].path, 'bad.haml', 'parse-error carries path';
+}
+
+# A custom rule runs against the parsed tree.
+{
+  my class NoisyRule does Template::HAML::Lint::Rule {
+    method id(--> Str) { 'noisy' }
+    method check(Node :$tree, Str :$src, :%locals --> List) {
+      (Template::HAML::Lint::Diagnostic.new(
+        :rule<noisy>, :severity<warning>, :line(1), :column(1),
+        :message('hello from the rule'),
+      ),).List;
+    }
+  }
+  my $linter = Template::HAML::Lint::Linter.new(:rules((NoisyRule.new,)));
+  my @diags  = $linter.lint(:src("%p hi\n"), :path<x.haml>);
+  is @diags.elems, 1, 'custom rule contributes one diagnostic';
+  is @diags[0].rule, 'noisy', 'diagnostic carries rule id';
+  is @diags[0].path, 'x.haml', 'diagnostic carries linter-supplied path';
+}
+
+# register-rule / clear-rules manage default rule registry.
+{
+  my class CountRule does Template::HAML::Lint::Rule {
+    method id(--> Str) { 'count' }
+    method check(Node :$tree, Str :$src, :%locals --> List) { () }
+  }
+  Template::HAML::Lint::clear-rules;
+  is Template::HAML::Lint::registered-rules.elems, 0, 'clear-rules empties the registry';
+  Template::HAML::Lint::register-rule(CountRule.new);
+  is Template::HAML::Lint::registered-rules.elems, 1, 'register-rule adds a rule';
+  Template::HAML::Lint::clear-rules;
+  is Template::HAML::Lint::registered-rules.elems, 0, 'clear-rules removes the rule';
+}
+
+# CLI: `lint` is listed in top-level help.
+sub capture(@args, Str :$stdin) {
+  my $tmp     = $*TMPDIR.add("haml-lint-out-{$*PID}-{(^999999).pick}");
+  my $tmp-err = $*TMPDIR.add("haml-lint-err-{$*PID}-{(^999999).pick}");
+  my $out = $tmp.open(:w);
+  my $err = $tmp-err.open(:w);
+  my $exit;
+  if $stdin.defined {
+    my $tmp-in = $*TMPDIR.add("haml-lint-in-{$*PID}-{(^999999).pick}");
+    $tmp-in.spurt($stdin);
+    my $in = $tmp-in.open(:r);
+    $exit = Template::HAML::CLI::run(@args, :$out, :$err, :$in);
+    $in.close;
+    $tmp-in.unlink;
+  } else {
+    $exit = Template::HAML::CLI::run(@args, :$out, :$err);
+  }
+  $out.close;
+  $err.close;
+  my $out-text = $tmp.slurp;
+  my $err-text = $tmp-err.slurp;
+  $tmp.unlink;
+  $tmp-err.unlink;
+  { :$exit, :out($out-text), :err($err-text) };
+}
+
+{
+  my $r = capture(['help']);
+  like $r<out>, /'lint'/, 'top-level help lists lint';
+}
+
+{
+  my $r = capture(['lint', '--help']);
+  is $r<exit>, 0, 'lint --help exit 0';
+  like $r<out>, /'Usage: haml lint'/, 'lint help mentions usage';
+  like $r<out>, /'Exit codes'/, 'lint help documents exit codes';
+}
+
+# CLI: no rules registered → valid source exits 0 with no output.
+{
+  Template::HAML::Lint::clear-rules;
+  my $dir  = $*TMPDIR.add("haml-lint-{$*PID}-{(^999999).pick}");
+  $dir.mkdir;
+  my $file = $dir.add('ok.haml');
+  $file.spurt("%p ok\n");
+  my $r = capture(['lint', $file.Str]);
+  is $r<exit>, 0, 'lint clean file exit 0';
+  is $r<out>, '', 'no diagnostics on clean file';
+  $file.unlink;
+  $dir.rmdir;
+}
+
+# CLI: missing file argument is an invocation error (exit 2).
+{
+  my $r = capture(['lint']);
+  is $r<exit>, 2, 'missing args exit 2';
+  like $r<err>, /'missing file argument'/, 'mentions missing argument';
+}
+
+# CLI: parse failure on stdin → exit 1 with `<stdin>` label.
+{
+  Template::HAML::Lint::clear-rules;
+  my $r = capture(['lint', '-'], :stdin("\t %p mixed\n  %p indent\n"));
+  is $r<exit>, 1, 'parse failure on stdin exits 1';
+  like $r<out>, /'<stdin>'/,      'diagnostic labels stdin';
+  like $r<out>, /'parse-error'/,  'diagnostic carries parse-error rule id';
+}
