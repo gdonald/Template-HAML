@@ -1,0 +1,190 @@
+
+use v6.d;
+use lib 'lib';
+use Test;
+use Template::HAML::CLI;
+use Template::HAML::Watch;
+
+plan 27;
+
+sub make-tmpdir(--> IO::Path) {
+  my $d = $*TMPDIR.add("haml-watch-{$*PID}-{(^999999).pick}");
+  $d.mkdir;
+  $d;
+}
+
+sub capture(@args) {
+  my $tmp     = $*TMPDIR.add("haml-watch-out-{$*PID}-{(^999999).pick}");
+  my $tmp-err = $*TMPDIR.add("haml-watch-err-{$*PID}-{(^999999).pick}");
+  my $out = $tmp.open(:w);
+  my $err = $tmp-err.open(:w);
+  my $exit = Template::HAML::CLI::run(@args, :$out, :$err);
+  $out.close;
+  $err.close;
+  my $out-text = $tmp.slurp;
+  my $err-text = $tmp-err.slurp;
+  $tmp.unlink;
+  $tmp-err.unlink;
+  { :$exit, :out($out-text), :err($err-text) };
+}
+
+# glob-match basics
+{
+  ok glob-match('*.haml', 'view.haml'),       'glob *.haml matches view.haml';
+  ok glob-match('*.haml', 'a-b_c.haml'),      'glob *.haml matches a-b_c.haml';
+  nok glob-match('*.haml', 'view.txt'),       'glob *.haml does not match view.txt';
+  ok glob-match('view.?aml', 'view.haml'),    'glob ? matches a single char';
+  nok glob-match('view.?aml', 'view.heml2'),  'glob ? does not match two chars';
+  ok glob-match('a*b*c', 'azbzbcc'),          'glob backtracks on multiple stars';
+}
+
+# split-pattern + expand-inputs (no --watch needed)
+{
+  my $dir = make-tmpdir;
+  $dir.add('one.haml').spurt("%p one\n");
+  $dir.add('two.haml').spurt("%p two\n");
+  $dir.add('three.txt').spurt("not haml\n");
+
+  my @hits = Template::HAML::Watch::expand-inputs([$dir.add('*.haml').Str]).list;
+  is @hits.elems, 2, 'glob expands to two .haml files';
+
+  my @sorted = @hits.map(*.basename).sort;
+  is @sorted.join(','), 'one.haml,two.haml', 'glob hit set is correct';
+
+  for $dir.dir -> $f { $f.unlink }
+  $dir.rmdir;
+}
+
+# render with --out-dir (no watch): mirrored names
+{
+  my $dir     = make-tmpdir;
+  my $out-dir = make-tmpdir;
+  $dir.add('a.haml').spurt("%p a\n");
+  $dir.add('b.haml').spurt("%h1 b\n");
+
+  my $r = capture(['render', $dir.add('*.haml').Str, '--out-dir', $out-dir.Str]);
+  is $r<exit>, 0, '--out-dir exit 0';
+  is $out-dir.add('a.html').slurp.chomp, '<p>a</p>',  'a.haml mirrored to a.html';
+  is $out-dir.add('b.html').slurp.chomp, '<h1>b</h1>', 'b.haml mirrored to b.html';
+
+  for $dir.dir -> $f { $f.unlink }
+  $dir.rmdir;
+  for $out-dir.dir -> $f { $f.unlink }
+  $out-dir.rmdir;
+}
+
+# -o + --out-dir is rejected
+{
+  my $dir = make-tmpdir;
+  my $f   = $dir.add('x.haml');
+  $f.spurt("%p\n");
+  my $r = capture(['render', $f.Str, '-o', 'out.html', '--out-dir', $dir.Str]);
+  isnt $r<exit>, 0, '-o + --out-dir non-zero exit';
+  like $r<err>, /'mutually exclusive'/, 'mentions mutually exclusive';
+  $f.unlink;
+  $dir.rmdir;
+}
+
+# --watch requires -o or --out-dir
+{
+  my $dir = make-tmpdir;
+  my $f   = $dir.add('x.haml');
+  $f.spurt("%p\n");
+  my $r = capture(['render', $f.Str, '--watch']);
+  isnt $r<exit>, 0, '--watch without target non-zero exit';
+  like $r<err>, /'requires -o or --out-dir'/, 'mentions requirement';
+  $f.unlink;
+  $dir.rmdir;
+}
+
+# --max-rebuilds 0: render once and exit (no event loop)
+{
+  my $dir     = make-tmpdir;
+  my $out-dir = make-tmpdir;
+  $dir.add('p.haml').spurt("%p hello\n");
+  my $r = capture(['render', $dir.add('*.haml').Str, '--out-dir', $out-dir.Str,
+                   '--watch', '--poll', '50', '--max-rebuilds', '0']);
+  is $r<exit>, 0, 'watch --max-rebuilds 0 exits cleanly';
+  is $out-dir.add('p.html').slurp.chomp, '<p>hello</p>', 'initial render written';
+  for $dir.dir -> $f { $f.unlink }
+  $dir.rmdir;
+  for $out-dir.dir -> $f { $f.unlink }
+  $out-dir.rmdir;
+}
+
+# polling backend: edit triggers re-render
+{
+  my $dir     = make-tmpdir;
+  my $out-dir = make-tmpdir;
+  my $src     = $dir.add('v.haml');
+  $src.spurt("%p one\n");
+
+  my $done = Promise.new;
+  my $exit;
+  my $err-text = '';
+  start {
+    my $tmp-err = $*TMPDIR.add("haml-watch-err-{$*PID}-{(^999999).pick}");
+    my $err     = $tmp-err.open(:w);
+    my $out     = IO::Handle.new(:path('/dev/null'.IO)).open(:w);
+    $exit = Template::HAML::CLI::run(
+      ['render', $dir.add('*.haml').Str, '--out-dir', $out-dir.Str,
+       '--watch', '--poll', '50', '--max-rebuilds', '1'],
+      :$out, :$err);
+    $out.close;
+    $err.close;
+    $err-text = $tmp-err.slurp;
+    $tmp-err.unlink;
+    $done.keep(True);
+  }
+
+  sleep 0.2;
+  $src.spurt("%p two\n");
+
+  my $ok = await Promise.anyof($done, Promise.in(8));
+  ok $done.status ~~ Kept, 'watcher exited after one rebuild (polling)';
+  if $done.status ~~ Kept {
+    is $exit, 0, 'watcher exit 0 (polling)';
+    is $out-dir.add('v.html').slurp.chomp, '<p>two</p>', 'polling picked up edit';
+  } else {
+    skip 'watcher did not exit in time (polling)', 2;
+  }
+
+  for $dir.dir -> $f { $f.unlink }
+  $dir.rmdir;
+  for $out-dir.dir -> $f { $f.unlink }
+  $out-dir.rmdir;
+}
+
+# glob matching no files is an error
+{
+  my $dir = make-tmpdir;
+  my $r = capture(['render', $dir.add('*.haml').Str]);
+  isnt $r<exit>, 0, 'no matching glob non-zero exit';
+  like $r<err>, /'matched no files'/, 'mentions no matches';
+  $dir.rmdir;
+}
+
+# --poll requires a positive integer
+{
+  my $dir = make-tmpdir;
+  my $f   = $dir.add('x.haml');
+  $f.spurt("%p\n");
+  my $r = capture(['render', $f.Str, '-o', 'x.html', '--watch', '--poll', 'abc']);
+  isnt $r<exit>, 0, 'bad --poll non-zero exit';
+  like $r<err>, /'--poll'/, 'mentions --poll';
+  $f.unlink;
+  $dir.rmdir;
+}
+
+# stdin with --watch is rejected
+{
+  my $r = capture(['render', '-', '--watch', '-o', 'x.html']);
+  isnt $r<exit>, 0, 'stdin + --watch non-zero exit';
+  like $r<err>, /'stdin'/, 'mentions stdin';
+}
+
+# render help mentions --watch
+{
+  my $r = capture(['render', '--help']);
+  like $r<out>, /'--watch'/, 'render help mentions --watch';
+}

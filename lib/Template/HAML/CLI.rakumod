@@ -3,6 +3,7 @@ use Template::HAML;
 use Template::HAML::Config;
 use Template::HAML::Format;
 use Template::HAML::Lint;
+use Template::HAML::Watch;
 use Template::HAML::X;
 
 unit module Template::HAML::CLI;
@@ -25,8 +26,16 @@ Usage: haml render [options] <file>...
 
 A file argument of '-' reads HAML source from standard input.
 
+File arguments may also be globs (e.g. 'views/*.haml'); when more than
+one file matches, --out-dir is required so each output goes to its own
+file.
+
 Options:
   -o <path>             Write output to file instead of stdout
+  --out-dir <dir>       Write each input to <dir>/<basename>.html
+  --watch               Re-render on change. Requires -o or --out-dir.
+  --poll <ms>           Use polling (interval in ms) instead of
+                        filesystem notifications when --watch is set.
   --locals k=v,k2=v2    Pass template locals (comma-separated key=value)
   --format <fmt>        html5 (default), html4, or xhtml
   --escape-html         Enable HTML escaping (default)
@@ -39,6 +48,8 @@ Examples:
   haml render view.haml -o out.html
   haml render view.haml --locals name=Alice,age=30
   haml render --format xhtml --ugly view.haml
+  haml render 'views/*.haml' --out-dir build/
+  haml render 'views/*.haml' --out-dir build/ --watch
   echo '%p hi' | haml render -
 END
 
@@ -122,6 +133,25 @@ sub parse-render-args(@input --> Hash) {
       when '-o' {
         die "haml render: -o requires a path\n" unless @args.elems;
         %opts<output> = @args.shift;
+      }
+      when '--out-dir' {
+        die "haml render: --out-dir requires a path\n" unless @args.elems;
+        %opts<out-dir> = @args.shift;
+      }
+      when '--watch'  { %opts<watch> = True; }
+      when '--poll'   {
+        die "haml render: --poll requires a millisecond value\n" unless @args.elems;
+        my $v = @args.shift;
+        die "haml render: --poll value must be a positive integer\n"
+          unless $v ~~ /^ <[0..9]>+ $/ && $v.Int > 0;
+        %opts<poll> = $v.Int;
+      }
+      when '--max-rebuilds' {
+        die "haml render: --max-rebuilds requires an integer\n" unless @args.elems;
+        my $v = @args.shift;
+        die "haml render: --max-rebuilds value must be a non-negative integer\n"
+          unless $v ~~ /^ <[0..9]>+ $/;
+        %opts<max-rebuilds> = $v.Int;
       }
       when '--locals' {
         die "haml render: --locals requires an argument\n" unless @args.elems;
@@ -213,6 +243,21 @@ sub build-config(%opts --> Template::HAML::Config) {
   Template::HAML::Config.new(|%cfg-args);
 }
 
+sub render-file(Str:D $label, $src-blob, $config, %locals, IO::Handle:D $err --> Str) {
+  CATCH {
+    when X::HAML {
+      $err.print("haml render: $label: " ~ .message ~ "\n");
+      return Str;
+    }
+    default {
+      $err.print("haml render: $label: " ~ .message ~ "\n");
+      return Str;
+    }
+  }
+  my $haml = HAML.new(:$config);
+  $haml.render(:src($src-blob), :%locals);
+}
+
 our sub cmd-render(@args, IO::Handle :$out, IO::Handle :$err, IO::Handle :$in --> Int) is export {
   my $parsed;
   {
@@ -239,50 +284,124 @@ our sub cmd-render(@args, IO::Handle :$out, IO::Handle :$err, IO::Handle :$in --
   my $config       = build-config($parsed<opts>);
   my %locals       = $parsed<opts><locals> // %();
   my $output-path  = $parsed<opts><output>;
-  my $stdin-count  = 0;
+  my $out-dir      = $parsed<opts><out-dir>;
+  my $watch        = ?$parsed<opts><watch>;
+  my $poll-ms      = $parsed<opts><poll>         // 0;
+  my $max-rebuilds = $parsed<opts><max-rebuilds>;
 
-  my @rendered;
-  for $parsed<positional>.list -> $file {
-    my $src;
-    my $label = $file;
-    if $file eq '-' {
-      $stdin-count++;
-      if $stdin-count > 1 {
-        $err.print("haml render: '-' (stdin) may be given at most once\n");
-        return 2;
-      }
-      $label = '<stdin>';
-      $src = $in.slurp;
-    } else {
-      unless $file.IO.e {
-        $err.print("haml render: file not found: $file\n");
-        return 1;
-      }
-      $src = $file.IO.slurp(:bin);
-    }
-    my $result;
-    {
-      CATCH {
-        when X::HAML {
-          $err.print("haml render: $label: " ~ .message ~ "\n");
-          return 1;
-        }
-        default {
-          $err.print("haml render: $label: " ~ .message ~ "\n");
-          return 1;
-        }
-      }
-      my $haml = HAML.new(:$config);
-      $result = $haml.render(:$src, :%locals);
-    }
-    @rendered.push($result);
+  if $output-path.defined && $out-dir.defined {
+    $err.print("haml render: -o and --out-dir are mutually exclusive\n");
+    return 2;
+  }
+  if $watch && !($output-path.defined || $out-dir.defined) {
+    $err.print("haml render: --watch requires -o or --out-dir\n");
+    return 2;
+  }
+  if $out-dir.defined && !$out-dir.IO.d {
+    $err.print("haml render: --out-dir directory not found: $out-dir\n");
+    return 2;
   }
 
-  my $joined = @rendered.join('');
-  if $output-path.defined {
-    $output-path.IO.spurt($joined);
-  } else {
-    $out.print($joined);
+  my @raw-positional = $parsed<positional>.list;
+  my $has-stdin = so @raw-positional.grep('-');
+  if $has-stdin && ($watch || $out-dir.defined) {
+    $err.print("haml render: '-' (stdin) cannot be combined with --watch or --out-dir\n");
+    return 2;
+  }
+
+  my @glob-args   = @raw-positional.grep(* ~~ /<[*?]>/);
+  my @plain-args  = @raw-positional.grep({ $_ !~~ /<[*?]>/ });
+
+  my @expanded;
+  for @glob-args -> $g {
+    my @hits = Template::HAML::Watch::expand-inputs([$g]).list;
+    unless @hits.elems {
+      $err.print("haml render: glob matched no files: $g\n");
+      return 1;
+    }
+    @expanded.append(@hits);
+  }
+
+  my @files-from-positional;
+  my @stdin-args;
+  for @plain-args -> $f {
+    if $f eq '-' {
+      @stdin-args.push($f);
+    } else {
+      @files-from-positional.push($f.IO);
+    }
+  }
+
+  my @all-files = (@files-from-positional, @expanded).flat;
+  my $multi-file = (@all-files.elems + @stdin-args.elems) > 1;
+
+  if @stdin-args.elems > 1 {
+    $err.print("haml render: '-' (stdin) may be given at most once\n");
+    return 2;
+  }
+
+  if $output-path.defined && $multi-file {
+    $err.print("haml render: -o accepts only a single input; use --out-dir for multiple files\n");
+    return 2;
+  }
+
+  if !$output-path.defined && !$out-dir.defined && $multi-file {
+    # falls through to stdout concatenation (legacy behavior).
+  }
+
+  if $watch {
+    my $out-dir-io = $out-dir.defined ?? $out-dir.IO !! IO::Path;
+    my &render-one = sub ($f --> Bool) {
+      my $src = $f.slurp(:bin);
+      my $result = render-file($f.Str, $src, $config, %locals, $err);
+      return False unless $result.defined;
+      my $target = $output-path.defined
+        ?? $output-path.IO
+        !! Template::HAML::Watch::mirror-output($f, $out-dir-io);
+      $target.spurt($result);
+      True;
+    };
+
+    my $watcher = Template::HAML::Watch::Watcher.new(
+      :patterns(@raw-positional.grep(* ne '-').list),
+      :&render-one,
+      :max-rebuilds($max-rebuilds.defined ?? $max-rebuilds.Int !! Int),
+      :poll-ms($poll-ms),
+      :use-polling($poll-ms > 0),
+    );
+    return $watcher.run;
+  }
+
+  my @rendered;
+  for @stdin-args -> $_dash {
+    my $src   = $in.slurp;
+    my $label = '<stdin>';
+    my $r     = render-file($label, $src, $config, %locals, $err);
+    return 1 unless $r.defined;
+    @rendered.push($r);
+  }
+  for @all-files -> $file {
+    unless $file.e {
+      $err.print("haml render: file not found: $file\n");
+      return 1;
+    }
+    my $src = $file.slurp(:bin);
+    my $r   = render-file($file.Str, $src, $config, %locals, $err);
+    return 1 unless $r.defined;
+    if $out-dir.defined {
+      Template::HAML::Watch::mirror-output($file, $out-dir.IO).spurt($r);
+    } else {
+      @rendered.push($r);
+    }
+  }
+
+  unless $out-dir.defined {
+    my $joined = @rendered.join('');
+    if $output-path.defined {
+      $output-path.IO.spurt($joined);
+    } else {
+      $out.print($joined);
+    }
   }
   0;
 }

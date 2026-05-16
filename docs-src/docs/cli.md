@@ -56,6 +56,35 @@ The values are made available as Raku scalars inside the template (e.g. `#{$name
 | `--no-escape-html`    | Disable HTML escaping for `=` expressions.              |
 | `--ugly`              | Single-line output with no inter-tag whitespace.        |
 
+### Rendering multiple files
+
+File arguments may be globs (e.g. `'views/*.haml'`). The glob is expanded by `haml` itself when it contains `*` or `?`; quoting prevents the shell from expanding it first, which matters in watch mode (see below).
+
+When more than one file is rendered, output goes to `--out-dir <dir>`. Each input is mirrored to `<dir>/<basename>.html`:
+
+```sh
+haml render 'views/*.haml' --out-dir build/
+```
+
+`--out-dir` and `-o` are mutually exclusive. With a single input, either works; with multiple inputs, only `--out-dir` is accepted.
+
+### Watch mode
+
+```sh
+haml render view.haml -o view.html --watch
+haml render 'views/*.haml' --out-dir build/ --watch
+```
+
+`--watch` does an initial render of every matching input, then re-renders any file that changes on disk. The watcher runs until interrupted (Ctrl-C). `--watch` requires `-o` or `--out-dir` — there is no stdout streaming form.
+
+By default the watcher uses Raku's `IO::Notification` (FSEvents on macOS, inotify on Linux). On filesystems where notifications are unreliable (NFS, some VM shared folders), pass `--poll <ms>` to fall back to mtime polling:
+
+```sh
+haml render 'views/*.haml' --out-dir build/ --watch --poll 200
+```
+
+Watch mode does not accept a `-` (stdin) argument.
+
 ## Checking
 
 ```sh
