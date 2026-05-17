@@ -1910,7 +1910,7 @@ consult the cache.</p>
   cache miss — no slurp + re-hash is needed on a cache hit.</li>
 </ul>
 <p>Stale entries left behind on disk are not garbage-collected automatically; see
-<a href="#clear-compiled-cache"><code>clear-compiled-cache</code></a> below.</p>
+<a href="#hamlclear-compiled-cache"><code>clear-compiled-cache</code></a> below.</p>
 <p>Each cache file is a self-contained Raku <code>unit module</code> exposing an
 <code>our sub render</code>. The cache directory is registered as a
 <code>CompUnit::Repository::FileSystem</code>, so first-load goes through Raku's
