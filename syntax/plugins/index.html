@@ -8,26 +8,28 @@
       
       
       
-        <link rel="canonical" href="https://gdonald.github.io/Template-HAML/testing/">
+        <link rel="canonical" href="https://gdonald.github.io/Template-HAML/syntax/plugins/">
       
       
-        <link rel="prev" href="../cli/">
+        <link rel="prev" href="../config/">
       
+      
+        <link rel="next" href="../../api/">
       
       
         
       
       
-      <link rel="icon" href="../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
-        <title>Tests - Template::HAML</title>
+        <title>Plugins - Template::HAML</title>
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
       
 
@@ -46,7 +48,7 @@
       
     
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -64,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#tests" class="md-skip">
+        <a href="#plugins" class="md-skip">
           Skip to content
         </a>
       
@@ -80,7 +82,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="Template::HAML" class="md-header__button md-logo" aria-label="Template::HAML" data-md-component="logo">
+    <a href="../.." title="Template::HAML" class="md-header__button md-logo" aria-label="Template::HAML" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -100,7 +102,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Tests
+              Plugins
             
           </span>
         </div>
@@ -190,7 +192,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="Template::HAML" class="md-nav__button md-logo" aria-label="Template::HAML" data-md-component="logo">
+    <a href="../.." title="Template::HAML" class="md-nav__button md-logo" aria-label="Template::HAML" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -220,7 +222,7 @@
   
   
     <li class="md-nav__item">
-      <a href=".." class="md-nav__link">
+      <a href="../.." class="md-nav__link">
         
   
   
@@ -247,7 +249,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../getting-started/" class="md-nav__link">
+      <a href="../../getting-started/" class="md-nav__link">
         
   
   
@@ -271,18 +273,20 @@
       
   
   
+    
   
   
+  
     
     
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
           <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
@@ -303,7 +307,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -321,7 +325,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../syntax/tags/" class="md-nav__link">
+      <a href="../tags/" class="md-nav__link">
         
   
   
@@ -349,7 +353,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../syntax/attributes/" class="md-nav__link">
+      <a href="../attributes/" class="md-nav__link">
         
   
   
@@ -377,7 +381,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../syntax/indentation/" class="md-nav__link">
+      <a href="../indentation/" class="md-nav__link">
         
   
   
@@ -405,7 +409,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../syntax/doctype/" class="md-nav__link">
+      <a href="../doctype/" class="md-nav__link">
         
   
   
@@ -433,7 +437,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../syntax/comments/" class="md-nav__link">
+      <a href="../comments/" class="md-nav__link">
         
   
   
@@ -461,7 +465,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../syntax/embedded-code/" class="md-nav__link">
+      <a href="../embedded-code/" class="md-nav__link">
         
   
   
@@ -489,7 +493,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../syntax/plain-text/" class="md-nav__link">
+      <a href="../plain-text/" class="md-nav__link">
         
   
   
@@ -517,7 +521,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../syntax/control-flow/" class="md-nav__link">
+      <a href="../control-flow/" class="md-nav__link">
         
   
   
@@ -545,7 +549,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../syntax/filters/" class="md-nav__link">
+      <a href="../filters/" class="md-nav__link">
         
   
   
@@ -573,7 +577,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../syntax/whitespace/" class="md-nav__link">
+      <a href="../whitespace/" class="md-nav__link">
         
   
   
@@ -601,7 +605,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../syntax/helpers/" class="md-nav__link">
+      <a href="../helpers/" class="md-nav__link">
         
   
   
@@ -629,7 +633,35 @@
   
   
     <li class="md-nav__item">
-      <a href="../syntax/layouts-partials/" class="md-nav__link">
+      <a href="../context/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Render context
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../layouts-partials/" class="md-nav__link">
         
   
   
@@ -657,7 +689,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../syntax/config/" class="md-nav__link">
+      <a href="../config/" class="md-nav__link">
         
   
   
@@ -678,6 +710,136 @@
 
               
             
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plugins
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plugins
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#why-bundle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why bundle?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#declaring-a-plugin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Declaring a plugin
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lifecycle-guarantees" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lifecycle guarantees
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#inspecting-installed-plugins" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Inspecting installed plugins
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-not-a-plugin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is not a plugin
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -692,7 +854,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/" class="md-nav__link">
+      <a href="../../api/" class="md-nav__link">
         
   
   
@@ -719,7 +881,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../cli/" class="md-nav__link">
+      <a href="../../cli/" class="md-nav__link">
         
   
   
@@ -743,26 +905,17 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
+    <li class="md-nav__item">
+      <a href="../../canonical-form/" class="md-nav__link">
         
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
   
   
   <span class="md-ellipsis">
     
   
-    Tests
+    Canonical form
   
 
     
@@ -770,10 +923,66 @@
   
   
 
-          <span class="md-nav__icon md-icon"></span>
-        </label>
+      </a>
+    </li>
+  
+
+    
       
-      <a href="./" class="md-nav__link md-nav__link--active">
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Development
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/testing/" class="md-nav__link">
         
   
   
@@ -789,69 +998,41 @@
   
 
       </a>
-      
-        
+    </li>
+  
 
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+              
+            
+              
+                
   
   
   
+  
+    <li class="md-nav__item">
+      <a href="../../dev/benchmarks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
     
   
+    Benchmarks
   
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#run-the-suite" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Run the suite
-      
-    </span>
-  </a>
+
+    
+  </span>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#author-tests" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Author tests
-      
-    </span>
-  </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#golden-file-tests" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Golden-file tests
-      
-    </span>
-  </a>
+
+      </a>
+    </li>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#ci" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        CI
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
+
+              
+            
+          </ul>
+        </nav>
       
     </li>
   
@@ -884,10 +1065,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#run-the-suite" class="md-nav__link">
+  <a href="#why-bundle" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Run the suite
+        Why bundle?
       
     </span>
   </a>
@@ -895,10 +1076,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#author-tests" class="md-nav__link">
+  <a href="#declaring-a-plugin" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Author tests
+        Declaring a plugin
       
     </span>
   </a>
@@ -906,10 +1087,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#golden-file-tests" class="md-nav__link">
+  <a href="#lifecycle-guarantees" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Golden-file tests
+        Lifecycle guarantees
       
     </span>
   </a>
@@ -917,10 +1098,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#ci" class="md-nav__link">
+  <a href="#inspecting-installed-plugins" class="md-nav__link">
     <span class="md-ellipsis">
       
-        CI
+        Inspecting installed plugins
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-not-a-plugin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is not a plugin
       
     </span>
   </a>
@@ -947,22 +1139,124 @@
   
 
 
-<h1 id="tests">Tests<a class="headerlink" href="#tests" title="Permanent link">&para;</a></h1>
-<p>The test suite lives under <code>t/</code>. Each file uses Raku's built-in <code>Test</code> module.</p>
-<h2 id="run-the-suite">Run the suite<a class="headerlink" href="#run-the-suite" title="Permanent link">&para;</a></h2>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>prove6<span class="w"> </span>-Ilib<span class="w"> </span>t/
+<h1 id="plugins">Plugins<a class="headerlink" href="#plugins" title="Permanent link">&para;</a></h1>
+<p><code>Template::HAML::Plugin</code> is the public surface for bundling related hooks —
+<a href="../../api/#register-visitor">visitors</a>, <a href="../../api/#register-tag-transformer">tag transformers</a>,
+<a href="../filters/">filters</a>, and the <a href="../filters/">markdown backend</a> — into a single
+artifact that can be installed and removed atomically.</p>
+<h2 id="why-bundle">Why bundle?<a class="headerlink" href="#why-bundle" title="Permanent link">&para;</a></h2>
+<p>Each hook registry exposes its own <code>register-*</code> / <code>clear-*</code> subs. They work
+fine for one-off use, but a plugin author shipping several related hooks
+needs every hook installed before the first render and every hook removed
+on uninstall. The <code>Plugin</code> class makes that bookkeeping the framework's
+responsibility:</p>
+<ul>
+<li><code>install</code> runs every registration sub in declaration order.</li>
+<li><code>uninstall</code> removes exactly the hooks this plugin registered, by name.</li>
+<li><code>clear-plugins</code> uninstalls every plugin in reverse-install order.</li>
+</ul>
+<h2 id="declaring-a-plugin">Declaring a plugin<a class="headerlink" href="#declaring-a-plugin" title="Permanent link">&para;</a></h2>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">Template::HAML::Plugin</span>;
+
+<span class="k">my</span> <span class="nv">$bootstrap</span> = <span class="n">Template::HAML::Plugin::Plugin</span>.<span class="nb">new</span>(
+  :<span class="n">name</span><span class="s">&lt;bootstrap-helpers&gt;</span>,
+  :<span class="n">visitors</span>([
+    %( :<span class="n">name</span><span class="s">&lt;inject-meta&gt;</span>, :<span class="n">handler</span>(-&gt; <span class="nv">$tree</span> { ... ; <span class="nv">$tree</span> }) ),
+  ]),
+  :<span class="n">tag-transformers</span>([
+    %( :<span class="n">name</span><span class="s">&lt;card&gt;</span>, :<span class="n">handler</span>(-&gt; <span class="nv">$node</span> {
+      <span class="nv">$node</span>.<span class="n">object</span>.<span class="nb">name</span> = <span class="s">&#39;div&#39;</span>;
+      <span class="nv">$node</span>.<span class="n">object</span>.<span class="n">attrs</span>.<span class="n">push:</span> <span class="s">&#39;class&#39;</span> =&gt; <span class="s">&#39;card&#39;</span>;
+      <span class="nv">$node</span>;
+    }) ),
+  ]),
+  :<span class="n">filters</span>([
+    %( :<span class="n">name</span><span class="s">&lt;upper&gt;</span>, :<span class="n">handler</span>(-&gt; <span class="nb">Str</span> <span class="nv">$body</span>, <span class="nv">%locals</span> --&gt; <span class="nb">Str</span> { <span class="nv">$body</span>.<span class="nb">uc</span> }) ),
+  ]),
+  :<span class="n">markdown-backend</span>(-&gt; <span class="nb">Str</span> <span class="nv">$body</span> --&gt; <span class="nb">Str</span> { ... }),
+);
+
+<span class="n">install-plugin</span>(<span class="nv">$bootstrap</span>);
+<span class="c1"># ... render with hooks active</span>
+
+<span class="n">uninstall-plugin</span>(<span class="nv">$bootstrap</span>);
 </code></pre></div></td></tr></table></div>
-<p><code>prove6</code> is a TAP runner; <code>-Ilib</code> puts the project's modules on the include path. Install test-depends from <code>META6.json</code> first if you don't have them:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>zef<span class="w"> </span>install<span class="w"> </span>--deps-only<span class="w"> </span>--/test<span class="w"> </span>--test-depends<span class="w"> </span>.
+<p>Every visitor, tag-transformer, and filter entry must be a hash with <code>:name</code>
+and <code>:handler</code> keys. Both are validated at <code>Plugin.new</code> time, so a malformed
+manifest fails at construction rather than mid-render. Plugin-registered
+visitors are always named (so uninstall can find them) — anonymous visitors
+are only available through <code>Template::HAML::Visitor::register-visitor</code>
+directly.</p>
+<h2 id="lifecycle-guarantees">Lifecycle guarantees<a class="headerlink" href="#lifecycle-guarantees" title="Permanent link">&para;</a></h2>
+<p>The plugin lifecycle is stable. These properties are public API and won't
+change without a major version bump:</p>
+<ol>
+<li><strong>Registration order is preserved.</strong> Inside one plugin, visitors run in the
+   order they appear in the <code>:visitors</code> list. Across plugins, visitors run in
+   plugin-install order, then per-plugin order. The same applies to filter
+   and tag-transformer registration: later wins on name collision.</li>
+<li><strong>Install is idempotent.</strong> Calling <code>install-plugin($p)</code> on an already
+   installed plugin is a no-op. The plugin doesn't appear twice in
+   <code>installed-plugins()</code>.</li>
+<li><strong>Uninstall is idempotent.</strong> Calling <code>uninstall-plugin($p)</code> on a
+   not-installed plugin is a no-op.</li>
+<li><strong>Uninstall is by name.</strong> Uninstalling a plugin clears the hooks it
+   registered by name. If a <em>different</em> plugin (or direct registration)
+   later overrode that name, uninstalling the original plugin removes the
+   currently-registered handler for that name. Plugins that share hook names
+   are co-operating, not isolated.</li>
+<li><strong><code>clear-plugins()</code> uninstalls in reverse install order.</strong> Returns the
+   number of plugins it removed.</li>
+<li><strong>Hooks observe the same pipeline order as before:</strong> parse → visitors →
+   tag transformers → render. Filters resolve per <code>:name</code> line at render
+   time. Tag transformers and visitors run before code generation, so
+   <code>compile-source-to-raku</code> and the on-disk cache reflect the transformed
+   tree. After installing or uninstalling a plugin, call
+   <a href="../../api/#hamlclear-compiled-cache"><code>clear-compiled-cache</code></a> so cached
+   artifacts get rebuilt with the new pipeline.</li>
+</ol>
+<h2 id="inspecting-installed-plugins">Inspecting installed plugins<a class="headerlink" href="#inspecting-installed-plugins" title="Permanent link">&para;</a></h2>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">@plugins</span> = <span class="n">installed-plugins</span>();        <span class="c1"># list of Plugin objects</span>
+<span class="k">my</span> <span class="nv">@names</span>   = <span class="n">installed-plugin-names</span>();   <span class="c1"># list of Str</span>
+<span class="k">my</span> <span class="nv">$maybe</span>   = <span class="n">installed-plugin</span>(<span class="s">&#39;card&#39;</span>);   <span class="c1"># Plugin or type object</span>
+<span class="k">my</span> <span class="nb">Int</span> <span class="nv">$n</span>   = <span class="n">clear-plugins</span>();            <span class="c1"># uninstall all, return count</span>
 </code></pre></div></td></tr></table></div>
-<h2 id="author-tests">Author tests<a class="headerlink" href="#author-tests" title="Permanent link">&para;</a></h2>
-<p>Author-only checks are gated behind <code>AUTHOR_TESTING=1</code>. The META validation in <code>t/000-meta.rakutest</code> runs only when this variable is set, so contributors don't fail builds over local metadata churn.</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">AUTHOR_TESTING</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>prove6<span class="w"> </span>-Ilib<span class="w"> </span>t/
-</code></pre></div></td></tr></table></div>
-<h2 id="golden-file-tests">Golden-file tests<a class="headerlink" href="#golden-file-tests" title="Permanent link">&para;</a></h2>
-<p><code>t/041-golden-files.rakutest</code> iterates <code>t/fixtures/golden/*.haml</code> against <code>t/fixtures/golden/*.html</code> and asserts the rendered output matches the recorded golden output. Add a new fixture by dropping a matched <code>.haml</code>/<code>.html</code> pair into that directory.</p>
-<h2 id="ci">CI<a class="headerlink" href="#ci" title="Permanent link">&para;</a></h2>
-<p>Every push to <code>main</code> and every PR runs <code>prove6 -Ilib t/</code> via the GitHub Actions workflow at <code>.github/workflows/ci.yml</code>. The matrix covers the latest Rakudo release and the prior minor release, and caches <code>~/.zef</code> per OS/version.</p>
+<p><code>installed-plugin($name)</code> returns the <code>Plugin</code> type object (undefined) when
+no plugin with that name is installed — guard with <code>.defined</code>.</p>
+<h2 id="what-is-not-a-plugin">What is <em>not</em> a plugin<a class="headerlink" href="#what-is-not-a-plugin" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Render-time helpers — those go through the <code>:context</code> object. See
+  <a href="../context/">Render context</a>.</li>
+<li>Configuration overrides — use <code>Template::HAML::Config</code>. See
+  <a href="../config/">Configuration</a>.</li>
+<li>Per-template scope additions — use <code>:%locals</code> or <code>:context</code> on <code>render</code>.</li>
+</ul>
 
 
 
@@ -1012,10 +1306,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>

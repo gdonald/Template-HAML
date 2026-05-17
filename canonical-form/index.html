@@ -8,13 +8,13 @@
       
       
       
-        <link rel="canonical" href="https://gdonald.github.io/Template-HAML/cli/">
+        <link rel="canonical" href="https://gdonald.github.io/Template-HAML/canonical-form/">
       
       
-        <link rel="prev" href="../api/">
+        <link rel="prev" href="../cli/">
       
       
-        <link rel="next" href="../canonical-form/">
+        <link rel="next" href="../dev/testing/">
       
       
         
@@ -25,7 +25,7 @@
     
     
       
-        <title>CLI - Template::HAML</title>
+        <title>Canonical form - Template::HAML</title>
       
     
     
@@ -66,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#command-line-interface" class="md-skip">
+        <a href="#canonical-haml" class="md-skip">
           Skip to content
         </a>
       
@@ -102,7 +102,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              CLI
+              Canonical form
             
           </span>
         </div>
@@ -774,6 +774,33 @@
       
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
     
   
   
@@ -793,7 +820,7 @@
   <span class="md-ellipsis">
     
   
-    CLI
+    Canonical form
   
 
     
@@ -811,7 +838,7 @@
   <span class="md-ellipsis">
     
   
-    CLI
+    Canonical form
   
 
     
@@ -837,10 +864,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#subcommands" class="md-nav__link">
+  <a href="#file-level-rules" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Subcommands
+        File-level rules
       
     </span>
   </a>
@@ -848,22 +875,44 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#rendering" class="md-nav__link">
+  <a href="#indentation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Rendering
+        Indentation
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Rendering">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tag-head" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tag head
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#attributes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Attributes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Attributes">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#reading-from-stdin" class="md-nav__link">
+  <a href="#form" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Reading from stdin
+        Form
       
     </span>
   </a>
@@ -871,10 +920,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#passing-locals" class="md-nav__link">
+  <a href="#spacing" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Passing locals
+        Spacing
       
     </span>
   </a>
@@ -882,10 +931,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#format-and-escaping" class="md-nav__link">
+  <a href="#layout" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Format and escaping
+        Layout
       
     </span>
   </a>
@@ -893,10 +942,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#streaming-output" class="md-nav__link">
+  <a href="#order" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Streaming output
+        Order
       
     </span>
   </a>
@@ -904,10 +953,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#rendering-multiple-files" class="md-nav__link">
+  <a href="#quoting" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Rendering multiple files
+        Quoting
       
     </span>
   </a>
@@ -915,10 +964,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#watch-mode" class="md-nav__link">
+  <a href="#splats" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Watch mode
+        Splats
       
     </span>
   </a>
@@ -931,10 +980,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#checking" class="md-nav__link">
+  <a href="#embedded-code" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Checking
+        Embedded code
       
     </span>
   </a>
@@ -942,10 +991,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#formatting" class="md-nav__link">
+  <a href="#plain-text" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Formatting
+        Plain text
       
     </span>
   </a>
@@ -953,71 +1002,54 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#linting" class="md-nav__link">
+  <a href="#comments" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Linting
+        Comments
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Linting">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#exit-codes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Exit codes
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#built-in-rules" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Built-in rules
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#declaring-expected-locals" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Declaring expected locals
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#extending-the-rule-set" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Extending the rule set
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#help" class="md-nav__link">
+  <a href="#doctype" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Help
+        Doctype
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#filters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Filters
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-not-canonicalized" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is not canonicalized
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#idempotency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Idempotency
       
     </span>
   </a>
@@ -1028,33 +1060,6 @@
   
 </nav>
       
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../canonical-form/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Canonical form
-  
-
-    
-  </span>
-  
-  
-
-      </a>
     </li>
   
 
@@ -1196,10 +1201,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#subcommands" class="md-nav__link">
+  <a href="#file-level-rules" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Subcommands
+        File-level rules
       
     </span>
   </a>
@@ -1207,22 +1212,44 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#rendering" class="md-nav__link">
+  <a href="#indentation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Rendering
+        Indentation
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Rendering">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tag-head" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tag head
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#attributes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Attributes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Attributes">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#reading-from-stdin" class="md-nav__link">
+  <a href="#form" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Reading from stdin
+        Form
       
     </span>
   </a>
@@ -1230,10 +1257,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#passing-locals" class="md-nav__link">
+  <a href="#spacing" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Passing locals
+        Spacing
       
     </span>
   </a>
@@ -1241,10 +1268,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#format-and-escaping" class="md-nav__link">
+  <a href="#layout" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Format and escaping
+        Layout
       
     </span>
   </a>
@@ -1252,10 +1279,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#streaming-output" class="md-nav__link">
+  <a href="#order" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Streaming output
+        Order
       
     </span>
   </a>
@@ -1263,10 +1290,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#rendering-multiple-files" class="md-nav__link">
+  <a href="#quoting" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Rendering multiple files
+        Quoting
       
     </span>
   </a>
@@ -1274,10 +1301,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#watch-mode" class="md-nav__link">
+  <a href="#splats" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Watch mode
+        Splats
       
     </span>
   </a>
@@ -1290,10 +1317,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#checking" class="md-nav__link">
+  <a href="#embedded-code" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Checking
+        Embedded code
       
     </span>
   </a>
@@ -1301,10 +1328,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#formatting" class="md-nav__link">
+  <a href="#plain-text" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Formatting
+        Plain text
       
     </span>
   </a>
@@ -1312,71 +1339,54 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#linting" class="md-nav__link">
+  <a href="#comments" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Linting
+        Comments
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Linting">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#exit-codes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Exit codes
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#built-in-rules" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Built-in rules
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#declaring-expected-locals" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Declaring expected locals
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#extending-the-rule-set" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Extending the rule set
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#help" class="md-nav__link">
+  <a href="#doctype" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Help
+        Doctype
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#filters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Filters
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-not-canonicalized" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is not canonicalized
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#idempotency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Idempotency
       
     </span>
   </a>
@@ -1403,253 +1413,186 @@
   
 
 
-<h1 id="command-line-interface">Command-line interface<a class="headerlink" href="#command-line-interface" title="Permanent link">&para;</a></h1>
-<p>Template::HAML ships with a <code>haml</code> script for rendering and checking templates from the shell.</p>
-<h2 id="subcommands">Subcommands<a class="headerlink" href="#subcommands" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Command</th>
-<th>Purpose</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>haml render</code></td>
-<td>Render one or more HAML files to HTML.</td>
-</tr>
-<tr>
-<td><code>haml check</code></td>
-<td>Parse-only sanity check; non-zero exit on parse failure.</td>
-</tr>
-<tr>
-<td><code>haml fmt</code></td>
-<td>Pretty-print a HAML file in <a href="../canonical-form/">canonical form</a>.</td>
-</tr>
-<tr>
-<td><code>haml lint</code></td>
-<td>Static analysis; non-zero exit on diagnostics.</td>
-</tr>
-<tr>
-<td><code>haml help</code></td>
-<td>Top-level help. Also <code>--help</code>, <code>-h</code>.</td>
-</tr>
-</tbody>
-</table>
-<h2 id="rendering">Rendering<a class="headerlink" href="#rendering" title="Permanent link">&para;</a></h2>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>haml<span class="w"> </span>render<span class="w"> </span>view.haml
+<h1 id="canonical-haml">Canonical HAML<a class="headerlink" href="#canonical-haml" title="Permanent link">&para;</a></h1>
+<p><code>haml fmt</code> rewrites a <code>.haml</code> source file into its <strong>canonical form</strong>: the
+single representative chosen from every set of HAML sources that parse to
+the same AST. This page declares the rules. The formatter aims to make
+<code>fmt(fmt(x)) == fmt(x)</code> (idempotent) and <code>parse(fmt(x)) == parse(x)</code>
+(semantics-preserving) for every input the parser accepts.</p>
+<p>If a rule below is silent on some construct, the formatter leaves the
+existing source unchanged for that construct.</p>
+<h2 id="file-level-rules">File-level rules<a class="headerlink" href="#file-level-rules" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Encoding is UTF-8, no BOM.</li>
+<li>Line endings are LF (<code>\n</code>). CR and CRLF are normalized to LF.</li>
+<li>The file ends with exactly one trailing newline.</li>
+<li>No leading blank lines.</li>
+<li>No trailing whitespace on any line.</li>
+<li>At most one consecutive blank line between siblings; runs of blank
+  lines collapse to a single blank line.</li>
+</ul>
+<h2 id="indentation">Indentation<a class="headerlink" href="#indentation" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Two spaces per level. Tabs and odd-width indents are rejected by the
+  parser (<code>X::IllegalIndent</code>); the formatter never produces them.</li>
+<li>A child line is indented exactly two more spaces than its parent.</li>
+<li>Continuation lines inside a multi-line attribute hash, HTML-style
+  attribute list, or multi-line expression are indented two spaces
+  beyond the line that opens the construct.</li>
+</ul>
+<h2 id="tag-head">Tag head<a class="headerlink" href="#tag-head" title="Permanent link">&para;</a></h2>
+<p>The canonical order of a tag head, left to right:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>%name  .class…  #id  [obj-ref]  {hash-attrs}  (html-attrs)  trim  self-close  content
 </code></pre></div></td></tr></table></div>
-<p>Output goes to standard out. Multiple files are concatenated in the order given. To write the result to a file, pass <code>-o</code>:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>haml<span class="w"> </span>render<span class="w"> </span>view.haml<span class="w"> </span>-o<span class="w"> </span>view.html
-</code></pre></div></td></tr></table></div>
-<h3 id="reading-from-stdin">Reading from stdin<a class="headerlink" href="#reading-from-stdin" title="Permanent link">&para;</a></h3>
-<p>A file argument of <code>-</code> reads HAML source from standard input. This composes with the usual flags:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;%p hi&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>haml<span class="w"> </span>render<span class="w"> </span>-
-cat<span class="w"> </span>view.haml<span class="w"> </span><span class="p">|</span><span class="w"> </span>haml<span class="w"> </span>render<span class="w"> </span>--locals<span class="w"> </span><span class="nv">name</span><span class="o">=</span>Alice<span class="w"> </span>-
-</code></pre></div></td></tr></table></div>
-<p><code>-</code> may appear at most once per invocation. Parse errors on stdin are reported against the label <code>&lt;stdin&gt;</code>.</p>
-<h3 id="passing-locals">Passing locals<a class="headerlink" href="#passing-locals" title="Permanent link">&para;</a></h3>
-<p>Use <code>--locals</code> with a comma-separated list of <code>key=value</code> pairs:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>haml<span class="w"> </span>render<span class="w"> </span>greet.haml<span class="w"> </span>--locals<span class="w"> </span><span class="nv">name</span><span class="o">=</span>Alice,greeting<span class="o">=</span>hi
-</code></pre></div></td></tr></table></div>
-<p>The values are made available as Raku scalars inside the template (e.g. <code>#{$name}</code>).</p>
-<h3 id="format-and-escaping">Format and escaping<a class="headerlink" href="#format-and-escaping" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>Flag</th>
-<th>Effect</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>--format html5</code></td>
-<td>HTML5 output (default).</td>
-</tr>
-<tr>
-<td><code>--format html4</code></td>
-<td>HTML 4.01 Transitional.</td>
-</tr>
-<tr>
-<td><code>--format xhtml</code></td>
-<td>XHTML 1.0 Transitional; void elements emit <code>&lt;br /&gt;</code>.</td>
-</tr>
-<tr>
-<td><code>--escape-html</code></td>
-<td>Escape HTML in <code>=</code> expressions (default).</td>
-</tr>
-<tr>
-<td><code>--no-escape-html</code></td>
-<td>Disable HTML escaping for <code>=</code> expressions.</td>
-</tr>
-<tr>
-<td><code>--ugly</code></td>
-<td>Single-line output with no inter-tag whitespace.</td>
-</tr>
-<tr>
-<td><code>--stream</code></td>
-<td>Stream output incrementally; one chunk per top-level node.</td>
-</tr>
-</tbody>
-</table>
-<h3 id="streaming-output">Streaming output<a class="headerlink" href="#streaming-output" title="Permanent link">&para;</a></h3>
-<p><code>--stream</code> writes HTML to its destination as each top-level node finishes
-rendering, instead of buffering the whole document and writing once. It is
-useful when piping into a slow consumer or when the document is large enough
-that first-byte latency matters.</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code>haml<span class="w"> </span>render<span class="w"> </span>--stream<span class="w"> </span>view.haml
-haml<span class="w"> </span>render<span class="w"> </span>--stream<span class="w"> </span>view.haml<span class="w"> </span>-o<span class="w"> </span>view.html
-<span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;%p hi&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>haml<span class="w"> </span>render<span class="w"> </span>--stream<span class="w"> </span>-
-</code></pre></div></td></tr></table></div>
-<p><code>--stream</code> accepts a single input and cannot be combined with <code>--watch</code>
-or <code>--out-dir</code>. The same trade-offs that apply to the
-<a href="../api/#hamlrender-supply"><code>render-supply</code> API</a> apply here: trim markers,
-<code>--ugly</code>, and <code>remove-whitespace</code> operate per chunk, not across the
-full document.</p>
-<h3 id="rendering-multiple-files">Rendering multiple files<a class="headerlink" href="#rendering-multiple-files" title="Permanent link">&para;</a></h3>
-<p>File arguments may be globs (e.g. <code>'views/*.haml'</code>). The glob is expanded by <code>haml</code> itself when it contains <code>*</code> or <code>?</code>; quoting prevents the shell from expanding it first, which matters in watch mode (see below).</p>
-<p>When more than one file is rendered, output goes to <code>--out-dir &lt;dir&gt;</code>. Each input is mirrored to <code>&lt;dir&gt;/&lt;basename&gt;.html</code>:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>haml<span class="w"> </span>render<span class="w"> </span><span class="s1">&#39;views/*.haml&#39;</span><span class="w"> </span>--out-dir<span class="w"> </span>build/
-</code></pre></div></td></tr></table></div>
-<p><code>--out-dir</code> and <code>-o</code> are mutually exclusive. With a single input, either works; with multiple inputs, only <code>--out-dir</code> is accepted.</p>
-<h3 id="watch-mode">Watch mode<a class="headerlink" href="#watch-mode" title="Permanent link">&para;</a></h3>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code>haml<span class="w"> </span>render<span class="w"> </span>view.haml<span class="w"> </span>-o<span class="w"> </span>view.html<span class="w"> </span>--watch
-haml<span class="w"> </span>render<span class="w"> </span><span class="s1">&#39;views/*.haml&#39;</span><span class="w"> </span>--out-dir<span class="w"> </span>build/<span class="w"> </span>--watch
-</code></pre></div></td></tr></table></div>
-<p><code>--watch</code> does an initial render of every matching input, then re-renders any file that changes on disk. The watcher runs until interrupted (Ctrl-C). <code>--watch</code> requires <code>-o</code> or <code>--out-dir</code> — there is no stdout streaming form.</p>
-<p>By default the watcher uses Raku's <code>IO::Notification</code> (FSEvents on macOS, inotify on Linux). On filesystems where notifications are unreliable (NFS, some VM shared folders), pass <code>--poll &lt;ms&gt;</code> to fall back to mtime polling:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>haml<span class="w"> </span>render<span class="w"> </span><span class="s1">&#39;views/*.haml&#39;</span><span class="w"> </span>--out-dir<span class="w"> </span>build/<span class="w"> </span>--watch<span class="w"> </span>--poll<span class="w"> </span><span class="m">200</span>
-</code></pre></div></td></tr></table></div>
-<p>Watch mode does not accept a <code>-</code> (stdin) argument.</p>
-<h2 id="checking">Checking<a class="headerlink" href="#checking" title="Permanent link">&para;</a></h2>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>haml<span class="w"> </span>check<span class="w"> </span>view.haml
-</code></pre></div></td></tr></table></div>
-<p><code>check</code> parses each file and reports <code>OK</code> for files that parse cleanly. It exits with a non-zero status if any file fails to parse, so it is suitable for use in pre-commit hooks or CI.</p>
-<h2 id="formatting">Formatting<a class="headerlink" href="#formatting" title="Permanent link">&para;</a></h2>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>haml<span class="w"> </span>fmt<span class="w"> </span>view.haml
-</code></pre></div></td></tr></table></div>
-<p><code>fmt</code> pretty-prints each HAML file in <a href="../canonical-form/">canonical form</a> and writes the result to standard out. Use the following flags to change behavior:</p>
-<table>
-<thead>
-<tr>
-<th>Flag</th>
-<th>Effect</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>-o &lt;path&gt;</code></td>
-<td>Write the formatted result to a file (single input only).</td>
-</tr>
-<tr>
-<td><code>--in-place</code></td>
-<td>Rewrite each input file with its canonical form.</td>
-</tr>
-<tr>
-<td><code>--check</code></td>
-<td>Exit non-zero if any file differs from its canonical form. No output.</td>
-</tr>
-</tbody>
-</table>
-<p><code>--check</code> mode is suitable for CI: it emits no stdout, writes a one-line diagnostic to stderr for each non-canonical file, and exits with status <code>1</code> when at least one file is out of form. <code>--in-place</code> and <code>-o</code> are mutually exclusive, and neither may be combined with <code>--check</code>.</p>
-<p>The canonical form is idempotent: <code>haml fmt | haml fmt</code> always equals <code>haml fmt</code>. See the <a href="../canonical-form/">canonical form spec</a> for the full set of rules.</p>
-<h2 id="linting">Linting<a class="headerlink" href="#linting" title="Permanent link">&para;</a></h2>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>haml<span class="w"> </span>lint<span class="w"> </span>view.haml
-</code></pre></div></td></tr></table></div>
-<p><code>lint</code> parses each HAML file and runs the registered lint rules over the parse tree and source. Diagnostics are written to standard out, one per line, in the form:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>path:line:col: severity: message (rule-id)
-</code></pre></div></td></tr></table></div>
-<p>A file argument of <code>-</code> reads source from standard input; the diagnostic path becomes <code>&lt;stdin&gt;</code>.</p>
-<h3 id="exit-codes">Exit codes<a class="headerlink" href="#exit-codes" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>Code</th>
-<th>Meaning</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>0</code></td>
-<td>No diagnostics reported.</td>
-</tr>
-<tr>
-<td><code>1</code></td>
-<td>At least one diagnostic reported, or a file failed to parse.</td>
-</tr>
-<tr>
-<td><code>2</code></td>
-<td>Invocation error (bad option, missing file argument).</td>
-</tr>
-</tbody>
-</table>
-<h3 id="built-in-rules">Built-in rules<a class="headerlink" href="#built-in-rules" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>Rule</th>
-<th>What it catches</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>deprecated-syntax</code></td>
-<td>Use of the dropped <code>:ruby</code> filter (suggests <code>:raku</code>).</td>
-</tr>
-<tr>
-<td><code>malformed-indent</code></td>
-<td>Trailing whitespace on a line, and whitespace-only blank lines.</td>
-</tr>
-<tr>
-<td><code>unused-locals</code></td>
-<td>A key in <code>--locals</code> that the template never references.</td>
-</tr>
-</tbody>
-</table>
-<h3 id="declaring-expected-locals">Declaring expected locals<a class="headerlink" href="#declaring-expected-locals" title="Permanent link">&para;</a></h3>
-<p>The <code>unused-locals</code> rule needs to know which locals the template will receive. Pass the expected keys with <code>--locals</code> (the same syntax as <code>haml render</code>); values are accepted but ignored:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>haml<span class="w"> </span>lint<span class="w"> </span>--locals<span class="w"> </span>name,age,role<span class="w"> </span>view.haml
-</code></pre></div></td></tr></table></div>
-<p>A key listed in <code>--locals</code> that is never referenced as <code>$key</code> in the template produces an <code>unused-locals</code> warning. Without <code>--locals</code>, the rule sleeps.</p>
-<h3 id="extending-the-rule-set">Extending the rule set<a class="headerlink" href="#extending-the-rule-set" title="Permanent link">&para;</a></h3>
-<p>Library users can register additional rules:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">Template::HAML::Lint</span>;
-
-<span class="k">class</span> <span class="n">MyRule</span> <span class="k">does</span> <span class="n">Template::HAML::Lint::Rule</span> {
-  <span class="k">method</span> <span class="nb">id</span>(--&gt; <span class="nb">Str</span>) { <span class="s">&#39;my-rule&#39;</span> }
-  <span class="k">method</span> <span class="n">check</span>(:<span class="nv">$tree</span>, :<span class="nv">$src</span>, :<span class="nv">%locals</span> --&gt; <span class="nb">List</span>) {
-    <span class="c1"># ... return a list of Template::HAML::Lint::Diagnostic</span>
-  }
-}
-
-<span class="n">Template::HAML::Lint::register-rule</span>(<span class="n">MyRule</span>.<span class="nb">new</span>);
-</code></pre></div></td></tr></table></div>
-<p>Registered rules run in addition to the built-ins. <code>clear-rules()</code> removes them.</p>
-<h2 id="help">Help<a class="headerlink" href="#help" title="Permanent link">&para;</a></h2>
-<p>Each subcommand has its own help:</p>
+<ul>
+<li><code>%name</code> is omitted when at least one shorthand (<code>.class</code> or <code>#id</code>) is
+  present <em>and</em> the implicit element is <code>div</code>. <code>%div.foo</code> canonicalizes
+  to <code>.foo</code>; <code>%span.foo</code> is preserved.</li>
+<li>Shorthand order is <em>all</em> classes first (in source order), then the id.
+  Mixed shorthand like <code>%li#row.item.lead</code> is reordered to
+  <code>%li.item.lead#row</code>. At most one <code>#id</code> shorthand is allowed by the
+  parser; the formatter never invents a second.</li>
+<li>The object-reference bracket <code>[expr]</code> (and the optional prefix
+  <code>[expr, 'prefix']</code>) sits between shorthand and any attribute hash.</li>
+<li>Hash-style <code>{ … }</code> precedes HTML-style <code>( … )</code> when both are present.</li>
+<li>Whitespace-trim modifiers <code>&lt;</code>, <code>&gt;</code>, <code>&lt;&gt;</code> appear immediately before the
+  self-close slash; the canonical spelling is <code>&lt;&gt;</code> (not <code>&gt;&lt;</code>).</li>
+<li>The self-close <code>/</code> appears last in the head. Void elements (<code>img</code>,
+  <code>br</code>, <code>hr</code>, <code>input</code>, <code>meta</code>, <code>link</code>, <code>area</code>, <code>base</code>, <code>col</code>, <code>embed</code>,
+  <code>param</code>, <code>source</code>, <code>track</code>, <code>wbr</code>) never carry an explicit <code>/</code>.</li>
+</ul>
+<h2 id="attributes">Attributes<a class="headerlink" href="#attributes" title="Permanent link">&para;</a></h2>
+<h3 id="form">Form<a class="headerlink" href="#form" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Hash form <code>{ key: value, … }</code> is canonical. HTML-style <code>( … )</code>
+  attribute lists are rewritten to hash form: once parsed, the two
+  forms are semantically identical for the values HTML-style admits
+  (string-typed only), and the parser does not preserve the source
+  spelling.</li>
+<li>Inside <code>{ … }</code>, keys use the bareword form (<code>key: value</code>) when the
+  key is a valid Raku identifier (matches <code>&lt;[A..Za..z_]&gt; \w*</code>). Keys
+  that require quoting (containing <code>-</code>, starting with a digit, etc.)
+  use the <code>'key' =&gt; value</code> rocket form.</li>
+</ul>
+<h3 id="spacing">Spacing<a class="headerlink" href="#spacing" title="Permanent link">&para;</a></h3>
+<ul>
+<li>One space after the opening <code>{</code>, one space before the closing <code>}</code>
+  on single-line hashes: <code>{ href: '/', title: 'home' }</code>.</li>
+<li>No space between key and colon: <code>href:</code> not <code>href :</code>.</li>
+<li>One space after every comma; no space before a comma.</li>
+</ul>
+<h3 id="layout">Layout<a class="headerlink" href="#layout" title="Permanent link">&para;</a></h3>
+<ul>
+<li>A single-line tag head plus content fits on one source line if the
+  result is at most <strong>100 columns</strong>. Past that, the hash spills:</li>
+</ul>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code>haml<span class="w"> </span>--help
-haml<span class="w"> </span>render<span class="w"> </span>--help
-haml<span class="w"> </span>check<span class="w"> </span>--help
-haml<span class="w"> </span>lint<span class="w"> </span>--help
-haml<span class="w"> </span>fmt<span class="w"> </span>--help
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">%a</span>{
+<span class="w">  </span>href: &#39;/about&#39;,
+<span class="w">  </span>title: &#39;About us&#39;,
+} About
 </code></pre></div></td></tr></table></div>
+<ul>
+<li>In multi-line form: each entry on its own line, indented two spaces
+  beyond the opening line, with a trailing comma after every entry
+  including the last.</li>
+</ul>
+<h3 id="order">Order<a class="headerlink" href="#order" title="Permanent link">&para;</a></h3>
+<p>Entry order is <strong>preserved</strong>, never reordered. Order is observable:</p>
+<ul>
+<li><code>class:</code> and <code>id:</code> accumulate with shorthand and earlier splats.</li>
+<li>Plain keys collide last-wins; splat vs. literal order changes which
+  value wins.</li>
+</ul>
+<p>The formatter must not move splats (<code>|$expr</code>) past literal entries or
+each other.</p>
+<h3 id="quoting">Quoting<a class="headerlink" href="#quoting" title="Permanent link">&para;</a></h3>
+<ul>
+<li>String values use single quotes by default: <code>title: 'home'</code>.</li>
+<li>Switch to double quotes when the value contains a single quote, a
+  newline/tab/CR escape, or uses <code>#{…}</code> / <code>!{…}</code> interpolation.</li>
+<li>Symbol form (<code>:value</code>) is normalized to a quoted string. The
+  attribute renderer cannot distinguish the two after parsing, so
+  there is no canonical spelling to preserve.</li>
+</ul>
+<h3 id="splats">Splats<a class="headerlink" href="#splats" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>|$expr</code> keeps its position relative to surrounding entries.</li>
+<li>No space between <code>|</code> and the expression.</li>
+</ul>
+<h2 id="embedded-code">Embedded code<a class="headerlink" href="#embedded-code" title="Permanent link">&para;</a></h2>
+<ul>
+<li>One space follows the operator: <code>= expr</code>, <code>- stmt</code>, <code>!= raw</code>,
+  <code>&amp;= forced</code>, <code>~ preserve</code>.</li>
+<li>Multi-line expressions (trailing comma or unbalanced brackets) keep
+  continuation lines aligned to the column of the first non-operator
+  character on the opening line.</li>
+</ul>
+<h2 id="plain-text">Plain text<a class="headerlink" href="#plain-text" title="Permanent link">&para;</a></h2>
+<ul>
+<li>A line that is purely literal text and does not begin with a HAML
+  sigil (<code>%</code>, <code>.</code>, <code>#</code>, <code>=</code>, <code>-</code>, <code>!</code>, <code>&amp;</code>, <code>~</code>, <code>/</code>, <code>:</code>, <code>\</code>, <code>!!!</code>)
+  is emitted verbatim.</li>
+<li>A leading <code>\</code> escape is kept only when needed to disambiguate the
+  first character. The formatter strips a redundant <code>\</code> (one whose
+  removal still parses as plain text).</li>
+</ul>
+<h2 id="comments">Comments<a class="headerlink" href="#comments" title="Permanent link">&para;</a></h2>
+<ul>
+<li>HTML comment lead: <code>/ text</code> with exactly one space after the slash
+  on the single-line form; the block form is <code>/</code> on its own line with
+  the body indented.</li>
+<li>Conditional comment: <code>/[expr]</code>. The bracketed expression has no
+  surrounding whitespace.</li>
+<li>Revealed conditional: <code>/![expr]</code>.</li>
+<li>Silent comment: <code>-# text</code> with one space after <code>-#</code> for the inline
+  form. Block silent comments place <code>-#</code> alone on a line with the
+  opaque body indented.</li>
+</ul>
+<h2 id="doctype">Doctype<a class="headerlink" href="#doctype" title="Permanent link">&para;</a></h2>
+<ul>
+<li>The doctype line (if present) is the first non-blank line of the
+  file.</li>
+<li>Capitalization of named variants is preserved (<code>!!! Strict</code>,
+  <code>!!! 1.1</code>).</li>
+<li>Exactly one space between <code>!!!</code> and any argument.</li>
+</ul>
+<h2 id="filters">Filters<a class="headerlink" href="#filters" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Filter head is <code>:name</code> flush at the parent indent.</li>
+<li>Body is indented two spaces beyond the filter head.</li>
+<li>The smallest indent across the body is <strong>not</strong> further normalized —
+  relative indentation inside the body is part of the filter's
+  contract.</li>
+<li>A blank line is preserved between the filter and its next sibling
+  when present in source; the formatter does not insert one.</li>
+</ul>
+<h2 id="what-is-not-canonicalized">What is <em>not</em> canonicalized<a class="headerlink" href="#what-is-not-canonicalized" title="Permanent link">&para;</a></h2>
+<p>The formatter preserves all of the following exactly as the user wrote
+them, because rewriting would either change semantics or destroy
+information the parser cannot recover:</p>
+<ul>
+<li>Splat order relative to literal entries.</li>
+<li>The text of any filter body (filters are opaque to the formatter).</li>
+<li>The text of <code>-#</code> silent-comment bodies.</li>
+<li>Conditional-comment expressions inside <code>[ … ]</code>.</li>
+<li>Whitespace inside double-quoted strings and <code>#{…}</code> interpolations.</li>
+</ul>
+<p>These constructs <em>are</em> canonicalized — the parser collapses them to a
+single representation, so the formatter cannot recover the original
+spelling:</p>
+<ul>
+<li>HTML-style attribute lists <code>( … )</code> collapse to hash-style <code>{ … }</code>.</li>
+<li>Symbol attribute values (<code>:value</code>) collapse to quoted strings.</li>
+</ul>
+<h2 id="idempotency">Idempotency<a class="headerlink" href="#idempotency" title="Permanent link">&para;</a></h2>
+<p>For every source <code>x</code> that parses successfully, <code>fmt(x)</code> parses to the
+same AST as <code>x</code>, and <code>fmt(fmt(x)) == fmt(x)</code> byte-for-byte. The
+emitter sub-tasks (<code>haml fmt</code> for tags, attributes, filters, etc.)
+each carry their own idempotency tests, and the CLI integration
+includes an end-to-end check that the full file round-trips.</p>
 
 
 

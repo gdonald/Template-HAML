@@ -687,6 +687,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#markdown" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        :markdown
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#raku" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -818,6 +829,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../context/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Render context
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../layouts-partials/" class="md-nav__link">
         
   
@@ -854,6 +893,34 @@
     
   
     Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plugins
   
 
     
@@ -935,7 +1002,81 @@
   
   
     <li class="md-nav__item">
-      <a href="../../testing/" class="md-nav__link">
+      <a href="../../canonical-form/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Canonical form
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Development
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/testing/" class="md-nav__link">
         
   
   
@@ -951,6 +1092,42 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/benchmarks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmarks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -1053,6 +1230,17 @@
     <span class="md-ellipsis">
       
         :preserve
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#markdown" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        :markdown
       
     </span>
   </a>
@@ -1200,6 +1388,66 @@ parent indentation. Interpolates <code>#{ ... }</code>.</p>
 <p>renders to:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>line1<span class="ni">&amp;#x000A;</span>line2
 </code></pre></div></td></tr></table></div>
+<h3 id="markdown"><code>:markdown</code><a class="headerlink" href="#markdown" title="Permanent link">&para;</a></h3>
+<p>Renders the body as Markdown by delegating to a user-registered backend.
+Interpolates <code>#{ ... }</code> before the body is passed to the backend.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">:markdown</span>
+<span class="w">  </span><span class="nd"># Hello, </span><span class="si">#{</span><span class="vg">$name</span><span class="si">}</span><span class="nd">!</span>
+<span class="w">  </span><span class="nd">body text</span>
+</code></pre></div></td></tr></table></div>
+<p><code>Template::HAML</code> ships <strong>no</strong> Markdown engine of its own — Raku has several
+viable Markdown libraries and the right choice belongs to the host
+application. Register one with <code>register-markdown-backend</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">Template::HAML</span>;
+<span class="k">use</span> <span class="n">Template::HAML::Filters</span>;
+<span class="k">use</span> <span class="n">Text::Markdown</span>;  <span class="c1"># or any other Markdown engine</span>
+
+<span class="n">register-markdown-backend</span> :<span class="n">handler</span>(-&gt; <span class="nb">Str</span> <span class="nv">$body</span> --&gt; <span class="nb">Str</span> {
+  <span class="n">Text::Markdown</span>.<span class="nb">new</span>(:<span class="n">text</span>(<span class="nv">$body</span>)).<span class="n">render</span>;
+});
+</code></pre></div></td></tr></table></div>
+<p>The handler signature is <code>(Str $body --&gt; Str)</code>. The interpolated body is
+passed in; the returned string is the rendered HTML. The renderer prefixes
+each output line with the filter's own source indent, so a <code>:markdown</code> nested
+inside <code>%div</code> lines up correctly.</p>
+<p>If <code>:markdown</code> appears in a template and no backend is registered, render
+fails with <code>X::HAML::MarkdownBackendMissing</code>. Related helpers:</p>
+<table>
+<thead>
+<tr>
+<th>Sub</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>register-markdown-backend</code></td>
+<td>Install or replace the backend handler.</td>
+</tr>
+<tr>
+<td><code>clear-markdown-backend</code></td>
+<td>Remove the current handler. Returns the previous defined-ness as a <code>Bool</code>.</td>
+</tr>
+<tr>
+<td><code>markdown-backend-registered</code></td>
+<td><code>True</code> if a backend is currently installed.</td>
+</tr>
+<tr>
+<td><code>current-markdown-backend</code></td>
+<td>The current handler, or an undefined <code>Callable</code>.</td>
+</tr>
+</tbody>
+</table>
+<p>Calling <code>register-markdown-backend</code> again replaces the previous handler — at
+most one Markdown backend is active per process.</p>
 <h3 id="raku"><code>:raku</code><a class="headerlink" href="#raku" title="Permanent link">&para;</a></h3>
 <p>Evaluates the body as Raku code with the current locals in scope and emits the
 return value as a string. The body is <strong>not</strong> interpolated — it <em>is</em> code.</p>
@@ -1265,6 +1513,10 @@ source indent.</p>
 </tr>
 <tr>
 <td><code>:preserve</code></td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>:markdown</code></td>
 <td>yes</td>
 </tr>
 <tr>

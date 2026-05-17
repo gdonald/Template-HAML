@@ -11,7 +11,7 @@
         <link rel="canonical" href="https://gdonald.github.io/Template-HAML/api/">
       
       
-        <link rel="prev" href="../syntax/config/">
+        <link rel="prev" href="../syntax/plugins/">
       
       
         <link rel="next" href="../cli/">
@@ -631,6 +631,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../syntax/context/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Render context
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../syntax/layouts-partials/" class="md-nav__link">
         
   
@@ -667,6 +695,34 @@
     
   
     Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../syntax/plugins/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plugins
   
 
     
@@ -765,10 +821,259 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#hamlrender-supply" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HAML.render-supply
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="HAML.render-supply">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#trade-offs-vs-render" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trade-offs vs. render
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hamlcompile-source-to-raku" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HAML.compile-source-to-raku
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#direct-emit-codegen-opt-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Direct-emit codegen (opt-in)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Direct-emit codegen (opt-in)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-direct-emit-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What direct emit changes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#currently-incompatible-with-direct-emit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Currently incompatible with direct emit
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#streaming" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Streaming
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#on-disk-compiled-template-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        On-disk compiled-template cache
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="On-disk compiled-template cache">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#hamlnewcompiled-cache-dir" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HAML.new(:compiled-cache-dir(...))
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hamlcompiled-cache-key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HAML.compiled-cache-key
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hamlcompiled-cache-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HAML.compiled-cache-path
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hamlcompile-to-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HAML.compile-to-cache
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hamlload-from-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HAML.load-from-cache
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hamlrender-cached" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HAML.render-cached
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#file-based-cache-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        File-based cache API
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hamlclear-compiled-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HAML.clear-compiled-cache
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hamlcompiled-fn-cache-size" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HAML.compiled-fn-cache-size
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hamlclear-compiled-fn-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HAML.clear-compiled-fn-cache
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#register-filter" class="md-nav__link">
     <span class="md-ellipsis">
       
         register-filter
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#register-visitor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        register-visitor
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#register-tag-transformer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        register-tag-transformer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#templatehamlplugin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Template::HAML::Plugin
       
     </span>
   </a>
@@ -856,7 +1161,81 @@
   
   
     <li class="md-nav__item">
-      <a href="../testing/" class="md-nav__link">
+      <a href="../canonical-form/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Canonical form
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Development
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dev/testing/" class="md-nav__link">
         
   
   
@@ -872,6 +1251,42 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dev/benchmarks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmarks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -914,10 +1329,259 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#hamlrender-supply" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HAML.render-supply
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="HAML.render-supply">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#trade-offs-vs-render" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trade-offs vs. render
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hamlcompile-source-to-raku" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HAML.compile-source-to-raku
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#direct-emit-codegen-opt-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Direct-emit codegen (opt-in)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Direct-emit codegen (opt-in)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-direct-emit-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What direct emit changes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#currently-incompatible-with-direct-emit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Currently incompatible with direct emit
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#streaming" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Streaming
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#on-disk-compiled-template-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        On-disk compiled-template cache
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="On-disk compiled-template cache">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#hamlnewcompiled-cache-dir" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HAML.new(:compiled-cache-dir(...))
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hamlcompiled-cache-key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HAML.compiled-cache-key
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hamlcompiled-cache-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HAML.compiled-cache-path
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hamlcompile-to-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HAML.compile-to-cache
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hamlload-from-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HAML.load-from-cache
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hamlrender-cached" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HAML.render-cached
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#file-based-cache-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        File-based cache API
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hamlclear-compiled-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HAML.clear-compiled-cache
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hamlcompiled-fn-cache-size" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HAML.compiled-fn-cache-size
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hamlclear-compiled-fn-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HAML.clear-compiled-fn-cache
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#register-filter" class="md-nav__link">
     <span class="md-ellipsis">
       
         register-filter
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#register-visitor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        register-visitor
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#register-tag-transformer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        register-tag-transformer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#templatehamlplugin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Template::HAML::Plugin
       
     </span>
   </a>
@@ -1034,6 +1698,11 @@
 <td><code>Template::HAML::Config</code></td>
 <td>Optional rendering options. See <a href="../syntax/config/">Configuration</a>.</td>
 </tr>
+<tr>
+<td><code>:context</code></td>
+<td>any</td>
+<td>Optional view-context object. Bare-identifier expressions resolve against its methods. Defaults to <code>Template::HAML::ViewContext.new</code>. See <a href="../syntax/context/">Render context</a>.</td>
+</tr>
 </tbody>
 </table>
 <p>Returns the rendered HTML as a <code>Str</code>.</p>
@@ -1041,6 +1710,313 @@
 used) or an instance method (the instance's stored config is used unless
 <code>:config</code> is passed at the call site). Construct an instance via
 <code>HAML.new(:config(...))</code> to reuse the same config across renders.</p>
+<h2 id="hamlrender-supply"><code>HAML.render-supply</code><a class="headerlink" href="#hamlrender-supply" title="Permanent link">&para;</a></h2>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">Template::HAML</span>;
+
+<span class="n">react</span> {
+  <span class="n">whenever</span> <span class="n">HAML</span>.<span class="n">render-supply</span>(:<span class="n">src</span>(<span class="s">&quot;%h1 hi\n%p there\n&quot;</span>)) -&gt; <span class="nv">$chunk</span> {
+    <span class="vg">$*OUT</span>.<span class="nb">print</span>(<span class="nv">$chunk</span>);
+  }
+}
+</code></pre></div></td></tr></table></div>
+<p>Returns a <code>Supply[Str]</code> that emits HTML chunks as the renderer walks the
+parse tree. Each top-level node in the source produces one chunk by
+default, so output begins streaming before the entire template finishes
+rendering.</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>:src</code></td>
+<td><code>Str:D</code> / <code>Blob:D</code></td>
+<td>HAML source to render. Mutually exclusive with <code>:file</code>.</td>
+</tr>
+<tr>
+<td><code>:file</code></td>
+<td><code>Str:D</code></td>
+<td>Template file path (instance method only). Mutually exclusive with <code>:src</code>.</td>
+</tr>
+<tr>
+<td><code>:locals</code></td>
+<td><code>%h</code></td>
+<td>Render-time locals; same semantics as <code>render</code>.</td>
+</tr>
+<tr>
+<td><code>:config</code></td>
+<td><code>Template::HAML::Config</code></td>
+<td>Optional rendering options.</td>
+</tr>
+<tr>
+<td><code>:context</code></td>
+<td>any</td>
+<td>View-context object; same semantics as <code>render</code>.</td>
+</tr>
+<tr>
+<td><code>:flush-depth</code></td>
+<td><code>Int</code></td>
+<td>Flush boundary depth. Default <code>1</code> (one chunk per top-level node). <code>0</code> emits the whole rendered output as a single chunk.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="trade-offs-vs-render">Trade-offs vs. <code>render</code><a class="headerlink" href="#trade-offs-vs-render" title="Permanent link">&para;</a></h3>
+<p><code>render-supply</code> walks the tree the same way <code>render</code> does, but commits
+each chunk to the output as it goes. That means a few whole-document
+post-processing passes are weakened or unavailable in streaming mode:</p>
+<ul>
+<li><strong>Trim markers (<code>&gt;</code> / <code>&lt;</code>)</strong> apply only within a single chunk. A
+  trim-outer on one top-level node cannot reach across the chunk
+  boundary to chew whitespace produced by the next top-level node.</li>
+<li><strong><code>output-style =&gt; 'ugly'</code></strong> runs the compression pass per chunk
+  rather than once on the full document. The visible output is still
+  one line per chunk, but the chunk boundary is preserved.</li>
+<li><strong><code>remove-whitespace</code></strong> has the same per-chunk limitation as ugly
+  mode.</li>
+<li><strong><code>find-and-preserve</code>-style global rewrites</strong> (any pass that needs
+  the full output buffer in shape) are not run.</li>
+</ul>
+<p>If a template relies on cross-document whitespace rewrites, use
+<code>render</code> and write the full result, or set <code>:flush-depth(0)</code> to fall
+back to a single-chunk emission.</p>
+<h2 id="hamlcompile-source-to-raku"><code>HAML.compile-source-to-raku</code><a class="headerlink" href="#hamlcompile-source-to-raku" title="Permanent link">&para;</a></h2>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">Template::HAML</span>;
+
+<span class="k">my</span> <span class="nb">Str</span> <span class="nv">$raku-source</span> = <span class="n">HAML</span>.<span class="n">compile-source-to-raku</span>(:<span class="n">src</span>(<span class="s">&quot;%p hi\n&quot;</span>));
+<span class="k">my</span> <span class="nv">&amp;compiled</span>        = <span class="nb">EVAL</span> <span class="nv">$raku-source</span>;
+<span class="k">my</span> <span class="nb">Str</span> <span class="nv">$html</span>        = <span class="n">compiled</span>(%(:<span class="n">name</span><span class="s">&lt;World&gt;</span>));
+</code></pre></div></td></tr></table></div>
+<p>Compiles a HAML source string to a self-contained Raku source string. The
+emitted source defines an anonymous sub with the signature</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">sub</span> (<span class="nv">%locals</span> = (), <span class="n">Template::HAML::Config</span> :<span class="nv">$config</span>, :<span class="nv">$ctx</span> --&gt; <span class="nb">Str</span>)
+</code></pre></div></td></tr></table></div>
+<p>When <code>EVAL</code>ed, the emitted source returns that sub. Calling it produces the
+same HTML that <code>HAML.render(:src(...), :%locals, :config(...))</code> would.</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>:src</code></td>
+<td><code>Str:D</code></td>
+<td>The HAML source to compile.</td>
+</tr>
+<tr>
+<td><code>:config</code></td>
+<td><code>Template::HAML::Config</code></td>
+<td>Optional configuration baked into the emitted output.</td>
+</tr>
+</tbody>
+</table>
+<p>The emitted code rebuilds the parse tree with the per-class constructors in
+<code>Template::HAML::*</code> and runs <code>Template::HAML::Renderer</code> on it, so feature
+coverage matches the interpreter exactly. The <code>:$ctx</code> parameter (a
+<code>Template::HAML::Context</code>) is plumbed through <code>$*HAML-CTX</code> so that helper
+functions like <code>yield</code> and <code>render(:partial)</code> work from the compiled sub.</p>
+<p>This is the substrate for cached/compiled templates. The emitted code
+preserves source line and column information on every node, so eval
+failures inside compiled templates raise an <code>X::HAML::Eval</code> whose <code>.line</code>
+and <code>.column</code> point back to the originating HAML template — the same as
+the interpreter.</p>
+<h2 id="direct-emit-codegen-opt-in">Direct-emit codegen (opt-in)<a class="headerlink" href="#direct-emit-codegen-opt-in" title="Permanent link">&para;</a></h2>
+<p>The default codegen path (above) emits Raku source that <strong>rebuilds the parse
+tree</strong> at render time and runs <code>Template::HAML::Renderer</code> over it. The
+<em>direct-emit</em> path emits Raku source that performs <strong>inline string
+concatenation</strong> directly — no AST is reconstructed, and embedded Raku
+expressions/control flow are inlined into the closure body rather than
+re-<code>EVAL</code>ed per render.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$cfg</span>  = <span class="n">Template::HAML::Config</span>.<span class="nb">new</span>(:<span class="n">emit</span><span class="s">&lt;direct&gt;</span>);
+<span class="k">my</span> <span class="nv">$html</span> = <span class="n">HAML</span>.<span class="n">render</span>(:<span class="n">src</span>(<span class="s">&quot;%p Hello, \#\{\$name}!\n&quot;</span>),
+                       :<span class="n">locals</span>(<span class="nb">name</span> =&gt; <span class="s">&#39;World&#39;</span>),
+                       :<span class="n">config</span>(<span class="nv">$cfg</span>));
+</code></pre></div></td></tr></table></div>
+<p>The <code>:emit</code> config field accepts <code>'ast'</code> (default) or <code>'direct'</code>. The same
+field flows through every entry point: <code>HAML.render</code>, <code>HAML.render-cached</code>,
+<code>HAML.render-file-cached</code>. The cache key embeds <code>:emit</code>, so AST and direct
+caches are stored under different filenames and coexist freely.</p>
+<h3 id="what-direct-emit-changes">What direct emit changes<a class="headerlink" href="#what-direct-emit-changes" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Tags, plain text, comments, and doctypes become literal <code>$out ~= "…"</code>
+  appends.</li>
+<li><code>=</code>, <code>!=</code>, <code>&amp;=</code>, <code>==</code>, <code>~</code>, and <code>-</code> statements are inlined as native Raku
+  expressions in the closure body — no <code>EVAL</code> per render call. Bare
+  identifier expressions still resolve through <code>eval-bare-ident</code> to keep
+  context-method dispatch working.</li>
+<li><code>- if</code>, <code>- elsif</code>, <code>- else</code>, <code>- unless</code>, <code>- for</code>, <code>- while</code>, <code>- repeat</code>,
+  <code>- given</code>, <code>- when</code>, <code>- default</code> become native Raku <code>if/for/while/given</code>
+  blocks.</li>
+<li>Dynamic attributes (interpolated values, <code>{|%splat}</code>, <code>[$obj-ref]</code>) build
+  a <code>Tag</code> object once via <code>state</code> and call a shared
+  <code>render-direct-tag-open</code> helper per render.</li>
+<li>Filter bodies are embedded as Raku string literals; dispatch goes through
+  <code>lookup-filter($name)</code> at render time so user-registered filters still
+  work.</li>
+<li>Every inlined Raku expression is wrapped in a <code>CATCH</code> that re-throws as
+  <code>X::HAML::Eval</code> with the originating template line and column. Line
+  mapping behaves the same as the AST path.</li>
+</ul>
+<h3 id="currently-incompatible-with-direct-emit">Currently incompatible with direct emit<a class="headerlink" href="#currently-incompatible-with-direct-emit" title="Permanent link">&para;</a></h3>
+<p>These templates will throw <code>X::HAML::DirectCodegenUnsupported</code> at codegen
+time. Either re-render with <code>:emit&lt;ast&gt;</code> or rewrite the template.</p>
+<ul>
+<li><code>remove-whitespace</code> config (would need trim-inner sub-buffering).</li>
+<li>Tag <code>trim-inner</code> modifier (<code>%div&lt;</code> / <code>&lt;&gt;</code>).</li>
+<li>Preserved tags (<code>&lt;pre&gt;</code>, <code>&lt;textarea&gt;</code>) with children — they need an inner
+  buffer so newlines can be encoded as <code>&amp;#x000A;</code> after children render.</li>
+</ul>
+<p>Direct emit also currently bypasses post-render passes that rely on having
+the full output buffer in shape — most notably the helpers
+<code>find-and-preserve</code> and any user-installed visitor that mutates the AST at
+render time. If your template relies on those, stay on <code>:emit&lt;ast&gt;</code>.</p>
+<h3 id="streaming">Streaming<a class="headerlink" href="#streaming" title="Permanent link">&para;</a></h3>
+<p><code>HAML.render-supply</code> does not yet support <code>:emit&lt;direct&gt;</code> — streaming stays
+on the AST path even if the config requests <code>direct</code>. (The streaming
+emitter is structured around walking the parse tree node-by-node, which is
+exactly the thing direct emit eliminates.)</p>
+<h2 id="on-disk-compiled-template-cache">On-disk compiled-template cache<a class="headerlink" href="#on-disk-compiled-template-cache" title="Permanent link">&para;</a></h2>
+<p>The emitter from <a href="#hamlcompile-source-to-raku"><code>compile-source-to-raku</code></a> can be
+written to a per-user cache directory and loaded back on subsequent runs,
+skipping the parse + emit step. This is opt-in; <code>HAML.render</code> does not
+consult the cache.</p>
+<p>Invalidation is automatic for both flavors of the API:</p>
+<ul>
+<li>String-based cache (<code>render-cached(:src)</code>): the cache key embeds a 64-bit
+  hash of the source string, so changing the source produces a different key
+  and a clean cache miss.</li>
+<li>File-based cache (<code>render-file-cached(:file)</code>): the cache key embeds the
+  file's mtime, so editing the file produces a different key and a clean
+  cache miss — no slurp + re-hash is needed on a cache hit.</li>
+</ul>
+<p>Stale entries left behind on disk are not garbage-collected automatically; see
+<a href="#clear-compiled-cache"><code>clear-compiled-cache</code></a> below.</p>
+<p>Each cache file is a self-contained Raku <code>unit module</code> exposing an
+<code>our sub render</code>. The cache directory is registered as a
+<code>CompUnit::Repository::FileSystem</code>, so first-load goes through Raku's
+normal <code>require</code> pipeline — which means MoarVM precompiles the cached
+module into <code>&lt;cache-dir&gt;/.precomp/</code> and reuses the bytecode across
+processes. Subsequent fresh interpreters loading the same cache dir
+skip the parse-and-compile of the generated Raku source as well.</p>
+<p>On top of the on-disk cache, each unique <code>(src, config)</code> or <code>(file, mtime,
+config)</code> pair produces a compiled <code>&amp;fn</code> closure that is memoized in-process,
+so the cache file is loaded at most once per process per template. See
+<a href="#hamlcompiled-fn-cache-size"><code>compiled-fn-cache-size</code></a> and
+<a href="#hamlclear-compiled-fn-cache"><code>clear-compiled-fn-cache</code></a>.</p>
+<h3 id="hamlnewcompiled-cache-dir"><code>HAML.new(:compiled-cache-dir(...))</code><a class="headerlink" href="#hamlnewcompiled-cache-dir" title="Permanent link">&para;</a></h3>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$haml</span> = <span class="n">HAML</span>.<span class="nb">new</span>(:<span class="n">compiled-cache-dir</span>(<span class="s">&#39;/var/cache/Template-HAML&#39;</span>.<span class="nb">IO</span>));
+</code></pre></div></td></tr></table></div>
+<p>Default cache directory resolution order:</p>
+<ol>
+<li>The constructor's <code>:compiled-cache-dir</code> argument.</li>
+<li>The <code>HAML_COMPILED_CACHE</code> environment variable.</li>
+<li><code>$*TMPDIR/Template-HAML/</code>.</li>
+</ol>
+<h3 id="hamlcompiled-cache-key"><code>HAML.compiled-cache-key</code><a class="headerlink" href="#hamlcompiled-cache-key" title="Permanent link">&para;</a></h3>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$key</span> = <span class="nv">$haml</span>.<span class="n">compiled-cache-key</span>(:<span class="n">src</span>(<span class="s">&quot;%p hi\n&quot;</span>));
+<span class="k">my</span> <span class="nv">$key</span> = <span class="nv">$haml</span>.<span class="n">compiled-cache-key</span>(:<span class="n">src</span>(...), :<span class="n">config</span>(...));
+</code></pre></div></td></tr></table></div>
+<p>Returns a 16-character hex digest of <code>(source, config)</code>. Stable across
+processes; changes whenever either input changes.</p>
+<h3 id="hamlcompiled-cache-path"><code>HAML.compiled-cache-path</code><a class="headerlink" href="#hamlcompiled-cache-path" title="Permanent link">&para;</a></h3>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nb">IO::Path</span> <span class="nv">$path</span> = <span class="nv">$haml</span>.<span class="n">compiled-cache-path</span>(:<span class="n">src</span>(...), :<span class="n">config</span>(...));
+</code></pre></div></td></tr></table></div>
+<p>Returns the absolute path where the compiled artifact for <code>(src, config)</code>
+would live. Layout: <code>&lt;cache-dir&gt;/Template/HAML/Compiled/T&lt;key&gt;.rakumod</code>.
+The <code>T</code> prefix on the basename keeps the module name a valid Raku
+identifier; the <code>Template/HAML/Compiled/</code> nesting matches the module name
+so the cache dir can be used directly as a
+<code>CompUnit::Repository::FileSystem</code> prefix. MoarVM stores precompiled
+bytecode for each cached module under <code>&lt;cache-dir&gt;/.precomp/</code>.</p>
+<h3 id="hamlcompile-to-cache"><code>HAML.compile-to-cache</code><a class="headerlink" href="#hamlcompile-to-cache" title="Permanent link">&para;</a></h3>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nb">IO::Path</span> <span class="nv">$path</span> = <span class="nv">$haml</span>.<span class="n">compile-to-cache</span>(:<span class="n">src</span>(...), :<span class="n">config</span>(...));
+</code></pre></div></td></tr></table></div>
+<p>If the cache file already exists, returns its path unchanged (the file is
+not rewritten). Otherwise, parses the source, emits Raku, writes it to the
+cache path, and returns the path.</p>
+<h3 id="hamlload-from-cache"><code>HAML.load-from-cache</code><a class="headerlink" href="#hamlload-from-cache" title="Permanent link">&para;</a></h3>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">&amp;fn</span> = <span class="nv">$haml</span>.<span class="n">load-from-cache</span>(<span class="nv">$path</span>);
+<span class="k">my</span> <span class="nv">$html</span> = <span class="n">fn</span>(<span class="nv">%locals</span>, :<span class="n">config</span>(<span class="nv">$cfg</span>));
+</code></pre></div></td></tr></table></div>
+<p>Loads the cached module (via <code>CompUnit::Repository::FileSystem.need</code>) and
+returns its <code>&amp;render</code> sub. The first load in a fresh process triggers
+MoarVM precompilation under <code>&lt;cache-dir&gt;/.precomp/</code>; subsequent processes
+that point at the same cache dir reuse that precompiled bytecode.</p>
+<h3 id="hamlrender-cached"><code>HAML.render-cached</code><a class="headerlink" href="#hamlrender-cached" title="Permanent link">&para;</a></h3>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$html</span> = <span class="nv">$haml</span>.<span class="n">render-cached</span>(:<span class="n">src</span>(...), :<span class="nv">%locals</span>, :<span class="n">config</span>(...));
+</code></pre></div></td></tr></table></div>
+<p>Convenience wrapper: <code>compile-to-cache</code> + <code>load-from-cache</code> + invocation
+with the appropriate <code>Template::HAML::Context</code> plumbed through <code>$*HAML-CTX</code>.</p>
+<p>The compiled <code>&amp;fn</code> is memoized in-process by cache key, so a cache file is
+loaded at most once per process per <code>(src, config)</code> tuple. Subsequent calls
+skip disk I/O entirely and reuse the in-memory closure. The memoization is
+shared across <code>HAML</code> instances in the same process — different
+<code>:compiled-cache-dir</code> values do not produce duplicate entries when the cache
+key matches.</p>
+<h3 id="file-based-cache-api">File-based cache API<a class="headerlink" href="#file-based-cache-api" title="Permanent link">&para;</a></h3>
+<p>The same on-disk layout is reused for cached compilations keyed by file
+path + mtime + config, so editing the template file is enough to invalidate.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nb">IO::Path</span> <span class="nv">$path</span> = <span class="nv">$haml</span>.<span class="n">compiled-cache-path-for-file</span>(:<span class="n">file</span><span class="s">&lt;views/home&gt;</span>);
+<span class="k">my</span> <span class="nb">IO::Path</span> <span class="nv">$path</span> = <span class="nv">$haml</span>.<span class="n">compile-file-to-cache</span>(:<span class="n">file</span><span class="s">&lt;views/home&gt;</span>);
+<span class="k">my</span> <span class="nb">Str</span>      <span class="nv">$html</span> = <span class="nv">$haml</span>.<span class="n">render-file-cached</span>(:<span class="n">file</span><span class="s">&lt;views/home&gt;</span>, :<span class="nv">%locals</span>);
+</code></pre></div></td></tr></table></div>
+<p>File names are resolved through <code>:search-paths</code> and the same extension
+fallbacks as <code>HAML.render(:file)</code> (bare name, <code>.haml</code>, <code>.html.haml</code>, partial
+<code>_name</code> variants). The cache key changes whenever the resolved file's mtime
+changes, so touching the file or editing it both force a recompile.</p>
+<p><code>render-file-cached</code> plumbs <code>:current-dir</code> through to the
+<code>Template::HAML::Context</code> so that <code>render(:partial)</code> inside the template
+resolves relative paths the same way <code>HAML.render(:file)</code> does.</p>
+<p>Like <code>render-cached</code>, the compiled <code>&amp;fn</code> is memoized in-process by cache key
+(which includes the file's mtime). An edited file produces a new key and a
+fresh load through <code>require</code>; an unchanged file reuses the in-memory closure.</p>
+<h3 id="hamlclear-compiled-cache"><code>HAML.clear-compiled-cache</code><a class="headerlink" href="#hamlclear-compiled-cache" title="Permanent link">&para;</a></h3>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nb">Int</span> <span class="nv">$removed</span> = <span class="nv">$haml</span>.<span class="n">clear-compiled-cache</span>;
+</code></pre></div></td></tr></table></div>
+<p>Removes every cached <code>.rakumod</code> file under <code>&lt;cache-dir&gt;/Template/HAML/Compiled/</code>
+and deletes the <code>&lt;cache-dir&gt;/.precomp/</code> tree, then returns the count of
+removed cache modules. Empty <code>Template/HAML/Compiled/</code> parent directories
+are pruned too. Use this when configuration changes, after upgrading
+Template::HAML, or any time the cache is suspected of being stale. The
+in-process <code>&amp;fn</code> memoization is cleared as well.</p>
+<h3 id="hamlcompiled-fn-cache-size"><code>HAML.compiled-fn-cache-size</code><a class="headerlink" href="#hamlcompiled-fn-cache-size" title="Permanent link">&para;</a></h3>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nb">Int</span> <span class="nv">$n</span> = <span class="nv">$haml</span>.<span class="n">compiled-fn-cache-size</span>;
+</code></pre></div></td></tr></table></div>
+<p>Returns the number of compiled <code>&amp;fn</code> closures currently memoized in-process.
+The memoization is process-wide (shared across <code>HAML</code> instances), so this is
+also the global count.</p>
+<h3 id="hamlclear-compiled-fn-cache"><code>HAML.clear-compiled-fn-cache</code><a class="headerlink" href="#hamlclear-compiled-fn-cache" title="Permanent link">&para;</a></h3>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nb">Int</span> <span class="nv">$cleared</span> = <span class="nv">$haml</span>.<span class="n">clear-compiled-fn-cache</span>;
+</code></pre></div></td></tr></table></div>
+<p>Drops every in-process memoized <code>&amp;fn</code> and returns the number of entries that
+were removed. The on-disk cache is untouched; the next render rebuilds the
+in-memory entry by <code>require</code>ing the cache module (or recompiling if the file
+is missing). The MoarVM precomp cache under <code>&lt;cache-dir&gt;/.precomp/</code> is also
+left in place, so the re-load is bytecode-fast.</p>
 <h2 id="register-filter"><code>register-filter</code><a class="headerlink" href="#register-filter" title="Permanent link">&para;</a></h2>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
@@ -1056,9 +2032,369 @@ used) or an instance method (the instance's stored config is used unless
 <code>(Str $body, %locals --&gt; Str)</code>. <code>$body</code> is the filter's indented block
 dedented to column zero; the handler returns the rendered text. The renderer
 applies the filter's own source indent to each line of the result.</p>
-<p><code>Template::HAML::Filters</code> also exports <code>lookup-filter(Str $name)</code>,
-<code>has-filter(Str $name)</code>, and <code>filter-names()</code>.</p>
+<p><code>Template::HAML::Filters</code> also exports:</p>
+<table>
+<thead>
+<tr>
+<th>Sub</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>lookup-filter(Str $name)</code></td>
+<td>Returns the handler for a filter name, or undefined.</td>
+</tr>
+<tr>
+<td><code>has-filter(Str $name --&gt; Bool)</code></td>
+<td>Whether a filter is registered with that name.</td>
+</tr>
+<tr>
+<td><code>filter-names(--&gt; Seq)</code></td>
+<td>Sorted list of every registered filter name.</td>
+</tr>
+<tr>
+<td><code>filter-count(--&gt; Int)</code></td>
+<td>Number of registered filters (built-in + user-registered).</td>
+</tr>
+<tr>
+<td><code>clear-filter(Str:D $name --&gt; Bool)</code></td>
+<td>Remove a single filter by name; returns whether one was removed. The built-in filters live in the same registry; clearing one of them is permitted but rarely useful.</td>
+</tr>
+</tbody>
+</table>
 <p>See <a href="../syntax/filters/">filters</a> for the built-in handlers.</p>
+<h2 id="register-visitor"><code>register-visitor</code><a class="headerlink" href="#register-visitor" title="Permanent link">&para;</a></h2>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">Template::HAML</span>;
+<span class="k">use</span> <span class="n">Template::HAML::Visitor</span>;
+<span class="k">use</span> <span class="n">Template::HAML::Tag</span>;
+
+<span class="n">register-visitor</span> :<span class="n">name</span><span class="s">&lt;rename-b&gt;</span>, :<span class="n">handler</span>(-&gt; <span class="nv">$tree</span> {
+  <span class="n">walk-tree</span>(<span class="nv">$tree</span>, -&gt; <span class="nv">$node</span> {
+    <span class="k">if</span> <span class="nv">$node</span>.<span class="n">object</span> ~~ <span class="n">Tag</span> &amp;&amp; <span class="nv">$node</span>.<span class="n">object</span>.<span class="nb">name</span> <span class="o">eq</span> <span class="s">&#39;b&#39;</span> {
+      <span class="nv">$node</span>.<span class="n">object</span>.<span class="nb">name</span> = <span class="s">&#39;strong&#39;</span>;
+    }
+  });
+  <span class="nv">$tree</span>;
+});
+
+<span class="n">HAML</span>.<span class="n">render</span>(:<span class="n">src</span>(<span class="s">&quot;%b hi\n&quot;</span>));  <span class="c1"># → &quot;&lt;strong&gt;hi&lt;/strong&gt;\n&quot;</span>
+</code></pre></div></td></tr></table></div>
+<p>Registers an AST visitor that runs against the parse tree of every subsequent
+<code>HAML.render</code> (and every other compile path: <code>render-cached</code>,
+<code>compile-source-to-raku</code>, <code>compile-file</code>). The handler signature is</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">sub</span> (<span class="n">Template::HAML::Node</span> <span class="nv">$tree</span> --&gt; <span class="n">Template::HAML::Node</span>)
+</code></pre></div></td></tr></table></div>
+<p>The handler may mutate the tree in place and return it, or return a fresh
+<code>Template::HAML::Node</code> to replace it entirely. When multiple visitors are
+registered they run in registration order and each one's return value is
+fed into the next.</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>:handler</code></td>
+<td><code>Callable</code></td>
+<td>Tree transformer (required).</td>
+</tr>
+<tr>
+<td><code>:name</code></td>
+<td><code>Str</code></td>
+<td>Optional. Registering with an existing name replaces the previous handler. Anonymous visitors always append.</td>
+</tr>
+</tbody>
+</table>
+<p><code>Template::HAML::Visitor</code> also exports:</p>
+<table>
+<thead>
+<tr>
+<th>Sub</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>clear-visitors(--&gt; Int)</code></td>
+<td>Remove every registered visitor; returns the number removed.</td>
+</tr>
+<tr>
+<td><code>clear-visitor(Str:D $name --&gt; Bool)</code></td>
+<td>Remove a named visitor; returns whether one was removed.</td>
+</tr>
+<tr>
+<td><code>has-visitor(Str:D $name --&gt; Bool)</code></td>
+<td>Whether a visitor with that name is registered.</td>
+</tr>
+<tr>
+<td><code>visitor-names()</code></td>
+<td>List of registered visitor names (anonymous visitors are not included).</td>
+</tr>
+<tr>
+<td><code>visitor-count(--&gt; Int)</code></td>
+<td>Total registered visitors, named and anonymous.</td>
+</tr>
+<tr>
+<td><code>walk-tree(Node:D $tree, &amp;cb)</code></td>
+<td>Depth-first walk of every <code>Template::HAML::Node</code> reachable from <code>$tree</code>.</td>
+</tr>
+<tr>
+<td><code>apply-visitors(Node:D $tree --&gt; Node)</code></td>
+<td>Run every registered visitor against <code>$tree</code> in order. Called automatically during compilation; exported for tests.</td>
+</tr>
+</tbody>
+</table>
+<p>Visitors run between parsing and rendering, so the renderer always operates
+on the post-visitor tree. They also run before <a href="#hamlcompile-source-to-raku">code generation</a>,
+which means the resulting cached <code>.rakumod</code> reflects the transformed tree.
+After registering or changing visitors, call
+<a href="#hamlclear-compiled-cache"><code>clear-compiled-cache</code></a> so previously cached
+artifacts get rebuilt with the new pipeline.</p>
+<h2 id="register-tag-transformer"><code>register-tag-transformer</code><a class="headerlink" href="#register-tag-transformer" title="Permanent link">&para;</a></h2>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">Template::HAML</span>;
+<span class="k">use</span> <span class="n">Template::HAML::TagTransformers</span>;
+
+<span class="n">register-tag-transformer</span> :<span class="n">name</span><span class="s">&lt;card&gt;</span>, :<span class="n">handler</span>(-&gt; <span class="nv">$node</span> {
+  <span class="nv">$node</span>.<span class="n">object</span>.<span class="nb">name</span> = <span class="s">&#39;div&#39;</span>;
+  <span class="nv">$node</span>.<span class="n">object</span>.<span class="n">attrs</span>.<span class="n">push:</span> <span class="s">&#39;class&#39;</span> =&gt; <span class="s">&#39;card&#39;</span>;
+  <span class="nv">$node</span>;
+});
+
+<span class="n">HAML</span>.<span class="n">render</span>(:<span class="n">src</span>(<span class="s">&quot;%card hi\n&quot;</span>));  <span class="c1"># → &quot;&lt;div class=&#39;card&#39;&gt;hi&lt;/div&gt;\n&quot;</span>
+</code></pre></div></td></tr></table></div>
+<p>Registers a transformer for a specific tag name. Each <code>Node</code> in the parse
+tree whose object is a <code>Template::HAML::Tag</code> with that name is passed to
+the handler. The handler signature is</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">sub</span> (<span class="n">Template::HAML::Node</span> <span class="nv">$node</span> --&gt; <span class="n">Template::HAML::Node</span>)
+</code></pre></div></td></tr></table></div>
+<p>The handler may either mutate the tag in place and return the same node,
+or return a fresh <code>Template::HAML::Node</code> to replace it entirely (in which
+case any original children are <em>not</em> re-attached automatically — the
+handler must preserve them if needed). Returning <code>Nil</code> keeps the original
+node unchanged.</p>
+<p>Tag transformers run after the <a href="#register-visitor">visitor pass</a> but before
+rendering and code generation, so the cached <code>.rakumod</code> reflects the
+expanded form. After registering or changing transformers, call
+<a href="#hamlclear-compiled-cache"><code>clear-compiled-cache</code></a> so previously cached
+artifacts get rebuilt.</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>:name</code></td>
+<td><code>Str:D</code></td>
+<td>Tag name to dispatch on (required). Registering with an existing name replaces the previous handler.</td>
+</tr>
+<tr>
+<td><code>:handler</code></td>
+<td><code>Callable</code></td>
+<td><code>Node</code> transformer (required).</td>
+</tr>
+</tbody>
+</table>
+<p><code>Template::HAML::TagTransformers</code> also exports:</p>
+<table>
+<thead>
+<tr>
+<th>Sub</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>clear-tag-transformers(--&gt; Int)</code></td>
+<td>Remove every registered transformer; returns the number removed.</td>
+</tr>
+<tr>
+<td><code>clear-tag-transformer(Str:D $name --&gt; Bool)</code></td>
+<td>Remove a named transformer; returns whether one was removed.</td>
+</tr>
+<tr>
+<td><code>has-tag-transformer(Str:D $name --&gt; Bool)</code></td>
+<td>Whether a transformer is registered for that tag name.</td>
+</tr>
+<tr>
+<td><code>tag-transformer-names()</code></td>
+<td>List of registered tag names, in registration order.</td>
+</tr>
+<tr>
+<td><code>tag-transformer-count(--&gt; Int)</code></td>
+<td>Total registered transformers.</td>
+</tr>
+<tr>
+<td><code>lookup-tag-transformer(Str:D $name)</code></td>
+<td>Returns the handler for a tag name, or <code>Nil</code> if none is registered.</td>
+</tr>
+<tr>
+<td><code>apply-tag-transformers(Node:D $tree --&gt; Node)</code></td>
+<td>Run dispatch over every matching <code>Tag</code> in <code>$tree</code>. Called automatically during compilation; exported for tests.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="templatehamlplugin"><code>Template::HAML::Plugin</code><a class="headerlink" href="#templatehamlplugin" title="Permanent link">&para;</a></h2>
+<p><code>Template::HAML::Plugin</code> is the public, stable surface for bundling related
+hooks — visitors, tag transformers, filters, and the markdown backend — so a
+plugin author can install or remove them atomically. The individual
+<code>register-*</code> subs documented above remain available; <code>Template::HAML::Plugin</code>
+adds a lifecycle layer on top.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">Template::HAML::Plugin</span>;
+
+<span class="k">my</span> <span class="nv">$plugin</span> = <span class="n">Template::HAML::Plugin::Plugin</span>.<span class="nb">new</span>(
+  :<span class="n">name</span><span class="s">&lt;my-plugin&gt;</span>,
+  :<span class="n">visitors</span>([
+    %( :<span class="n">name</span><span class="s">&lt;add-class&gt;</span>, :<span class="n">handler</span>(-&gt; <span class="nv">$tree</span> { ...; <span class="nv">$tree</span> }) ),
+  ]),
+  :<span class="n">tag-transformers</span>([
+    %( :<span class="n">name</span><span class="s">&lt;card&gt;</span>, :<span class="n">handler</span>(-&gt; <span class="nv">$node</span> {
+      <span class="nv">$node</span>.<span class="n">object</span>.<span class="nb">name</span> = <span class="s">&#39;div&#39;</span>;
+      <span class="nv">$node</span>.<span class="n">object</span>.<span class="n">attrs</span>.<span class="n">push:</span> <span class="s">&#39;class&#39;</span> =&gt; <span class="s">&#39;card&#39;</span>;
+      <span class="nv">$node</span>;
+    }) ),
+  ]),
+  :<span class="n">filters</span>([
+    %( :<span class="n">name</span><span class="s">&lt;upper&gt;</span>, :<span class="n">handler</span>(-&gt; <span class="nb">Str</span> <span class="nv">$body</span>, <span class="nv">%locals</span> --&gt; <span class="nb">Str</span> { <span class="nv">$body</span>.<span class="nb">uc</span> }) ),
+  ]),
+  :<span class="n">markdown-backend</span>(-&gt; <span class="nb">Str</span> <span class="nv">$body</span> --&gt; <span class="nb">Str</span> { ... }),
+);
+
+<span class="n">install-plugin</span>(<span class="nv">$plugin</span>);
+<span class="c1"># ... render with hooks active</span>
+
+<span class="n">uninstall-plugin</span>(<span class="nv">$plugin</span>);
+</code></pre></div></td></tr></table></div>
+<table>
+<thead>
+<tr>
+<th>Plugin attribute</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>:name</code></td>
+<td><code>Str:D</code> (required)</td>
+<td>Identifies the plugin in <code>installed-plugins</code>.</td>
+</tr>
+<tr>
+<td><code>:visitors</code></td>
+<td><code>Array</code> of <code>%(:name, :handler)</code> hashes</td>
+<td>One entry per <code>register-visitor</code> call.</td>
+</tr>
+<tr>
+<td><code>:tag-transformers</code></td>
+<td><code>Array</code> of <code>%(:name, :handler)</code> hashes</td>
+<td>One entry per <code>register-tag-transformer</code> call.</td>
+</tr>
+<tr>
+<td><code>:filters</code></td>
+<td><code>Array</code> of <code>%(:name, :handler)</code> hashes</td>
+<td>One entry per <code>register-filter</code> call.</td>
+</tr>
+<tr>
+<td><code>:markdown-backend</code></td>
+<td><code>Callable</code></td>
+<td>Optional; installs as the global markdown backend.</td>
+</tr>
+</tbody>
+</table>
+<p>Each entry hash is validated at <code>Plugin.new</code> time — missing <code>:name</code> or
+<code>:handler</code> raises immediately rather than at install time. Plugin-registered
+visitors are always named (anonymous visitors are only available through
+<code>Template::HAML::Visitor::register-visitor</code> directly).</p>
+<p><code>Template::HAML::Plugin</code> exports:</p>
+<table>
+<thead>
+<tr>
+<th>Sub</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>install-plugin(Plugin:D $p --&gt; Plugin)</code></td>
+<td>Registers every hook the plugin declares. Idempotent.</td>
+</tr>
+<tr>
+<td><code>uninstall-plugin(Plugin:D $p --&gt; Plugin)</code></td>
+<td>Clears every hook by name. Idempotent.</td>
+</tr>
+<tr>
+<td><code>installed-plugins()</code></td>
+<td>List of currently installed <code>Plugin</code> objects.</td>
+</tr>
+<tr>
+<td><code>installed-plugin-names()</code></td>
+<td>List of installed plugin names.</td>
+</tr>
+<tr>
+<td><code>installed-plugin(Str:D $name)</code></td>
+<td>Returns the installed <code>Plugin</code> with that name, or the type object.</td>
+</tr>
+<tr>
+<td><code>clear-plugins(--&gt; Int)</code></td>
+<td>Uninstalls every plugin in reverse install order. Returns the count.</td>
+</tr>
+</tbody>
+</table>
+<p>See <a href="../syntax/plugins/">Plugins</a> for the full lifecycle guarantees, cache
+considerations, and design rationale.</p>
 <h2 id="internal-modules">Internal modules<a class="headerlink" href="#internal-modules" title="Permanent link">&para;</a></h2>
 <p>The implementation is split across several modules under <code>lib/Template/HAML/</code>. These are not part of the stable public API yet, but documented here for contributors:</p>
 <table>
@@ -1102,6 +2438,14 @@ applies the filter's own source indent to each line of the result.</p>
 <td>Walks the parse tree and emits HTML.</td>
 </tr>
 <tr>
+<td><code>Template::HAML::Codegen</code></td>
+<td>Emits Raku source that reconstructs the parse tree and renders it.</td>
+</tr>
+<tr>
+<td><code>Template::HAML::Cache</code></td>
+<td>Cache-key hashing and on-disk layout for compiled templates.</td>
+</tr>
+<tr>
 <td><code>Template::HAML::Filter</code></td>
 <td>AST node representing a filter line and its dedented body.</td>
 </tr>
@@ -1112,6 +2456,18 @@ applies the filter's own source indent to each line of the result.</p>
 <tr>
 <td><code>Template::HAML::Config</code></td>
 <td>Per-render configuration: format, escape options, output style, etc.</td>
+</tr>
+<tr>
+<td><code>Template::HAML::Visitor</code></td>
+<td>AST visitor registry; transforms the parse tree before render/codegen.</td>
+</tr>
+<tr>
+<td><code>Template::HAML::TagTransformers</code></td>
+<td>Per-tag-name transformer registry; rewrites individual tags before render/codegen.</td>
+</tr>
+<tr>
+<td><code>Template::HAML::Plugin</code></td>
+<td>Public plugin lifecycle: bundles visitors, tag transformers, filters, and the markdown backend behind atomic install/uninstall.</td>
 </tr>
 <tr>
 <td><code>Template::HAML::X</code></td>

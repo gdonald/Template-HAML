@@ -14,7 +14,7 @@
         <link rel="prev" href="../whitespace/">
       
       
-        <link rel="next" href="../layouts-partials/">
+        <link rel="next" href="../context/">
       
       
         
@@ -752,10 +752,49 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#page-classcontroller-action-separator-prefix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        page-class(:$controller, :$action, :$separator = '-', :$prefix = '')
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../context/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Render context
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -804,6 +843,34 @@
     
   
     Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plugins
   
 
     
@@ -885,7 +952,81 @@
   
   
     <li class="md-nav__item">
-      <a href="../../testing/" class="md-nav__link">
+      <a href="../../canonical-form/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Canonical form
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Development
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/testing/" class="md-nav__link">
         
   
   
@@ -901,6 +1042,42 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/benchmarks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmarks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -1013,6 +1190,17 @@
     <span class="md-ellipsis">
       
         capture-haml(&amp;block)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#page-classcontroller-action-separator-prefix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        page-class(:$controller, :$action, :$separator = '-', :$prefix = '')
       
     </span>
   </a>
@@ -1181,6 +1369,37 @@ string.</p>
 <p>The block must return a HAML source string. There is no implicit "HAML block"
 syntax — Ruby HAML's <code>capture_haml do ... end</code> form is not available because
 embedded code in this implementation is plain Raku, not HAML.</p>
+<h2 id="page-classcontroller-action-separator-prefix"><code>page-class(:$controller, :$action, :$separator = '-', :$prefix = '')</code><a class="headerlink" href="#page-classcontroller-action-separator-prefix" title="Permanent link">&para;</a></h2>
+<p>Emits a default class derived from a controller/action pair, in the Rails
+<code>page_class</code> style. Useful as the body class on a layout so per-page styles
+can target <code>.controller-action</code> selectors.</p>
+<p>With no arguments, <code>page-class</code> looks up <code>controller-name</code> / <code>action-name</code> on
+the current <a href="../context/">render context</a> (falling back to <code>controller</code> /
+<code>action</code>). Explicit keyword arguments override the context values. Each value
+is lowercased and non-word characters become single dashes.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nn">!!! 5</span>
+<span class="nt">%html</span>
+<span class="w">  </span><span class="nt">%body</span>.<span class="si">#{</span><span class="n">page</span><span class="o">-</span><span class="n">class</span><span class="p">()</span><span class="si">}</span>
+<span class="w">    </span><span class="p">=</span><span class="w"> </span><span class="k">yield</span>
+</code></pre></div></td></tr></table></div>
+<p>Given a context with <code>controller-name → 'users'</code> and <code>action-name → 'show'</code>,
+the body opens as:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">&lt;</span><span class="nt">body</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;users-show&quot;</span><span class="p">&gt;</span>
+</code></pre></div></td></tr></table></div>
+<p>Overrides and options:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">page-class</span>(:<span class="n">controller</span><span class="s">&lt;users&gt;</span>, :<span class="n">action</span><span class="s">&lt;show&gt;</span>);          <span class="c1"># &#39;users-show&#39;</span>
+<span class="n">page-class</span>(:<span class="n">controller</span><span class="s">&lt;users&gt;</span>, :<span class="n">action</span><span class="s">&lt;show&gt;</span>, :<span class="n">separator</span><span class="s">&lt;_&gt;); # &#39;users_show&#39;</span>
+<span class="s">page-class(:controller&lt;users&gt;</span>, :<span class="n">action</span><span class="s">&lt;show&gt;</span>, :<span class="n">prefix</span><span class="s">&lt;page&gt;</span>); <span class="c1"># &#39;page-users-show&#39;</span>
+<span class="n">page-class</span>(:<span class="n">controller</span>(<span class="s">&#39;Admin::Users&#39;</span>), :<span class="n">action</span>(<span class="s">&#39;New Post&#39;</span>)); <span class="c1"># &#39;admin-users-new-post&#39;</span>
+</code></pre></div></td></tr></table></div>
+<p>When neither argument is supplied and the context has no controller/action
+hooks, <code>page-class</code> returns the empty string.</p>
 
 
 

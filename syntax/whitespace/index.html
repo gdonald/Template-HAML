@@ -681,6 +681,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#global-whitespace-removal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Global whitespace removal
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#forced-preserve" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -715,6 +726,34 @@
     
   
     Helpers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../context/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Render context
   
 
     
@@ -771,6 +810,34 @@
     
   
     Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plugins
   
 
     
@@ -852,7 +919,81 @@
   
   
     <li class="md-nav__item">
-      <a href="../../testing/" class="md-nav__link">
+      <a href="../../canonical-form/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Canonical form
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Development
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/testing/" class="md-nav__link">
         
   
   
@@ -868,6 +1009,42 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/benchmarks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmarks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -936,6 +1113,17 @@
     <span class="md-ellipsis">
       
         Preserved tags
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#global-whitespace-removal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Global whitespace removal
       
     </span>
   </a>
@@ -1038,6 +1226,10 @@
 <span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$cfg</span> = <span class="n">Template::HAML::Config</span>.<span class="nb">new</span>(:<span class="n">preserve</span>(<span class="s">&#39;pre&#39;</span>, <span class="s">&#39;textarea&#39;</span>, <span class="s">&#39;code&#39;</span>));
 <span class="n">HAML</span>.<span class="n">render</span>(:<span class="n">src</span>(<span class="nv">$haml</span>), :<span class="n">config</span>(<span class="nv">$cfg</span>));
 </code></pre></div></td></tr></table></div>
+<h2 id="global-whitespace-removal">Global whitespace removal<a class="headerlink" href="#global-whitespace-removal" title="Permanent link">&para;</a></h2>
+<p>To apply <code>&gt;</code> and <code>&lt;</code> to every tag at once, set <code>remove-whitespace: True</code> on the
+config. See <a href="../config/#remove-whitespace">Configuration</a> for details. Preserved
+tags keep their inner whitespace but still have outer whitespace stripped.</p>
 <h2 id="forced-preserve">Forced preserve <code>~</code><a class="headerlink" href="#forced-preserve" title="Permanent link">&para;</a></h2>
 <p>The <code>~</code> operator works like <code>=</code> (eval and emit), but additionally replaces newlines in the result with <code>&amp;#x000A;</code>. This is useful when an interpolated string contains newlines you want to keep literal in the rendered output.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">~</span><span class="w"> </span><span class="s2">&quot;line1</span><span class="se">\n</span><span class="s2">line2&quot;</span>

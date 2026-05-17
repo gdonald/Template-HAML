@@ -8,13 +8,13 @@
       
       
       
-        <link rel="canonical" href="https://gdonald.github.io/Template-HAML/syntax/embedded-code/">
+        <link rel="canonical" href="https://gdonald.github.io/Template-HAML/syntax/context/">
       
       
-        <link rel="prev" href="../comments/">
+        <link rel="prev" href="../helpers/">
       
       
-        <link rel="next" href="../plain-text/">
+        <link rel="next" href="../layouts-partials/">
       
       
         
@@ -25,7 +25,7 @@
     
     
       
-        <title>Embedded code - Template::HAML</title>
+        <title>Render context - Template::HAML</title>
       
     
     
@@ -66,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#embedded-raku-code" class="md-skip">
+        <a href="#render-context" class="md-skip">
           Skip to content
         </a>
       
@@ -102,7 +102,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Embedded code
+              Render context
             
           </span>
         </div>
@@ -462,37 +462,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Embedded code
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../embedded-code/" class="md-nav__link">
         
   
   
@@ -508,103 +481,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#operators" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Operators
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#locals" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Locals
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#escaping" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Escaping
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#multi-line-expressions" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Multi-line expressions
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#helpers" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Helpers
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#bare-identifiers-and-the-render-context" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Bare identifiers and the render context
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#errors" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Errors
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -754,10 +630,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../context/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Render context
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -773,6 +676,70 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#bare-identifiers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bare identifiers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#default-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Default context
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#extending-the-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Extending the context
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#locals-still-win" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Locals still win
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1087,10 +1054,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#operators" class="md-nav__link">
+  <a href="#bare-identifiers" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Operators
+        Bare identifiers
       
     </span>
   </a>
@@ -1098,10 +1065,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#locals" class="md-nav__link">
+  <a href="#default-context" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Locals
+        Default context
       
     </span>
   </a>
@@ -1109,10 +1076,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#escaping" class="md-nav__link">
+  <a href="#extending-the-context" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Escaping
+        Extending the context
       
     </span>
   </a>
@@ -1120,43 +1087,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#multi-line-expressions" class="md-nav__link">
+  <a href="#locals-still-win" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Multi-line expressions
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#helpers" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Helpers
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#bare-identifiers-and-the-render-context" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Bare identifiers and the render context
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#errors" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Errors
+        Locals still win
       
     </span>
   </a>
@@ -1183,92 +1117,11 @@
   
 
 
-<h1 id="embedded-raku-code">Embedded Raku code<a class="headerlink" href="#embedded-raku-code" title="Permanent link">&para;</a></h1>
-<p>Template::HAML lets you embed Raku expressions directly in a template. Each
-embedded line begins with an output operator and is followed by a Raku
-expression.</p>
-<h2 id="operators">Operators<a class="headerlink" href="#operators" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Operator</th>
-<th>Behavior</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>=</code></td>
-<td>Evaluate the expression, HTML-escape the result, emit it.</td>
-</tr>
-<tr>
-<td><code>!=</code></td>
-<td>Evaluate the expression, emit the result without escaping.</td>
-</tr>
-<tr>
-<td><code>&amp;=</code></td>
-<td>Evaluate the expression, force HTML-escape, emit it.</td>
-</tr>
-<tr>
-<td><code>-</code></td>
-<td>Evaluate the expression for side effects only — emit nothing.</td>
-</tr>
-<tr>
-<td><code>~</code></td>
-<td>Like <code>=</code>, but additionally replace newlines in the result with <code>&amp;#x000A;</code>. See <a href="../whitespace/">Whitespace</a>.</td>
-</tr>
-</tbody>
-</table>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">2</span>
-<span class="p">-</span><span class="w"> </span><span class="n">my</span><span class="w"> </span><span class="vg">$x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;hello&#39;</span>
-<span class="p">=</span><span class="w"> </span><span class="vg">$x</span>
-<span class="p">!=</span><span class="w"> </span><span class="s1">&#39;&lt;b&gt;raw&lt;/b&gt;&#39;</span>
-</code></pre></div></td></tr></table></div>
-<p>renders to:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code>3
-hello
-<span class="p">&lt;</span><span class="nt">b</span><span class="p">&gt;</span>raw<span class="p">&lt;/</span><span class="nt">b</span><span class="p">&gt;</span>
-</code></pre></div></td></tr></table></div>
-<h2 id="locals">Locals<a class="headerlink" href="#locals" title="Permanent link">&para;</a></h2>
-<p>Pass values into a template with the <code>:locals</code> named argument. Each key is bound
-as a <code>$key</code> lexical visible to embedded expressions.</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span>
-<span class="normal">6</span>
-<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">HAML</span>.<span class="n">render</span>(
-  :<span class="n">src</span>(<span class="s">q:to/HAML/),</span>
-<span class="s">    %h1= $title</span>
-<span class="s">    %p Visitor count: #{ $count }</span>
-<span class="s">    HAML</span>
-  :<span class="n">locals</span>(%(:<span class="n">title</span><span class="s">&lt;Welcome&gt;</span>, :<span class="n">count</span>(<span class="mi">42</span>))),
-);
-</code></pre></div></td></tr></table></div>
-<p>Locals of any type are bound under the <code>$</code> sigil; reach into structured values
-with the usual postfix syntax (<code>$items.elems</code>, <code>$cfg&lt;title&gt;</code>, <code>$user.name</code>).</p>
-<p>Locals are also visible inside <code>#{...}</code> and <code>!{...}</code> interpolations in tag
-content, plain text, and double-quoted attribute strings — see <a href="../plain-text/">Plain
-text</a> for the full interpolation syntax.</p>
-<h2 id="escaping">Escaping<a class="headerlink" href="#escaping" title="Permanent link">&para;</a></h2>
-<p><code>=</code> escapes <code>&amp; &lt; &gt; " '</code> by default. Use <code>!=</code> only when the value is already
-known-safe HTML.</p>
-<h2 id="multi-line-expressions">Multi-line expressions<a class="headerlink" href="#multi-line-expressions" title="Permanent link">&para;</a></h2>
-<p>An embedded code line continues on the next line in two situations:</p>
-<ol>
-<li><strong>Trailing comma.</strong> A line whose last non-whitespace character is <code>,</code>
-   joins the next line with a single space.</li>
-<li><strong>Unbalanced brackets.</strong> A line that opens more <code>(</code>, <code>[</code>, or <code>{</code> than it
-   closes joins the next line; continuation stops once the brackets balance
-   <em>and</em> the line no longer ends with a comma.</li>
-</ol>
-<p>Both rules ignore characters that appear inside single- or double-quoted
-strings.</p>
+<h1 id="render-context">Render context<a class="headerlink" href="#render-context" title="Permanent link">&para;</a></h1>
+<p><code>HAML.render</code> accepts a <code>:context</code> named argument — a Raku object whose methods
+become reachable inside templates as <strong>bare identifiers</strong> in expression
+position. This is the "view context" of frameworks like Rails: a place to put
+template-facing helpers without polluting global scope.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
@@ -1280,39 +1133,151 @@ strings.</p>
 <span class="normal"> 9</span>
 <span class="normal">10</span>
 <span class="normal">11</span>
-<span class="normal">12</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">=</span><span class="w"> </span><span class="o">[</span><span class="mi">1</span><span class="p">,</span>
-<span class="w">   </span><span class="mi">2</span><span class="p">,</span>
-<span class="w">   </span><span class="mi">3</span><span class="o">].</span><span class="n">sum</span>
+<span class="normal">12</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">MyView</span> {
+  <span class="k">has</span> <span class="nb">Str</span> <span class="nv">$.title</span>;
+  <span class="k">method</span> <span class="n">greeting</span> { <span class="s">&#39;world&#39;</span> }
+}
 
-<span class="p">-</span><span class="w"> </span><span class="n">my</span><span class="w"> </span><span class="o">%</span><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span>
-<span class="w">    </span>title =&gt; &#39;Welcome&#39;,
-<span class="w">    </span>count =&gt; 42,
-<span class="w">  </span>)
-
-<span class="p">=</span><span class="w"> </span><span class="nb">sprintf</span><span class="p">(</span><span class="s1">&#39;%s: %d&#39;</span><span class="p">,</span>
-<span class="w">          </span><span class="vg">$title</span><span class="p">,</span>
-<span class="w">          </span><span class="vg">$count</span><span class="p">)</span>
+<span class="n">HAML</span>.<span class="n">render</span>(
+  :<span class="n">src</span>(<span class="s">q:to/HAML/),</span>
+<span class="s">    %h1= title</span>
+<span class="s">    %p= greeting</span>
+<span class="s">    HAML</span>
+  :<span class="n">context</span>(<span class="n">MyView</span>.<span class="nb">new</span>(:<span class="n">title</span>(<span class="s">&#39;Hello&#39;</span>))),
+);
 </code></pre></div></td></tr></table></div>
-<p>If the source ends while an expression is still unbalanced (open brackets or a
-trailing comma), the parse raises
-<a href="../../api/#exceptions"><code>X::HAML::UnbalancedExpression</code></a> pointing at the line
-where the expression started.</p>
-<p>Filter bodies (<code>:plain</code>, <code>:javascript</code>, …) and silent-comment bodies (<code>-#</code>)
-are opaque text — lines that look like statements inside them are <em>not</em>
-joined.</p>
-<h2 id="helpers">Helpers<a class="headerlink" href="#helpers" title="Permanent link">&para;</a></h2>
-<p>A handful of helper subroutines (<code>html-safe</code>, <code>escape-once</code>, <code>surround</code>,
-<code>precede</code>, <code>succeed</code>, <code>list-of</code>, <code>find-and-preserve</code>, <code>capture-haml</code>) are
-preloaded into the eval scope. See <a href="../helpers/">Helpers</a>.</p>
-<h2 id="bare-identifiers-and-the-render-context">Bare identifiers and the render context<a class="headerlink" href="#bare-identifiers-and-the-render-context" title="Permanent link">&para;</a></h2>
-<p>An expression that is just a single bare identifier (no sigil, no parens) is
-resolved against locals first, then against methods on the
-<a href="../context/">render context</a>. See <a href="../context/">Render context</a> for the full
-rules and how to plug in your own helper methods.</p>
-<h2 id="errors">Errors<a class="headerlink" href="#errors" title="Permanent link">&para;</a></h2>
-<p>Compilation or runtime failures inside embedded code are wrapped in
-<a href="../../api/#exceptions"><code>X::HAML::Eval</code></a>, which carries the offending source
-line and column for diagnostics.</p>
+<p>renders:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">&lt;</span><span class="nt">h1</span><span class="p">&gt;</span>Hello<span class="p">&lt;/</span><span class="nt">h1</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>world<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+</code></pre></div></td></tr></table></div>
+<h2 id="bare-identifiers">Bare identifiers<a class="headerlink" href="#bare-identifiers" title="Permanent link">&para;</a></h2>
+<p>A "bare identifier" is an expression that is exactly one name — letters,
+digits, underscore, hyphen — with no parentheses, sigils, or operators.
+Examples:</p>
+<table>
+<thead>
+<tr>
+<th>Expression</th>
+<th>Bare identifier?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>title</code></td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>user-count</code></td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>$title</code></td>
+<td>no — has sigil</td>
+</tr>
+<tr>
+<td><code>title()</code></td>
+<td>no — has parens</td>
+</tr>
+<tr>
+<td><code>title.uc</code></td>
+<td>no — has <code>.</code></td>
+</tr>
+</tbody>
+</table>
+<p>A bare identifier in <code>=</code>, <code>!=</code>, <code>&amp;=</code>, <code>~</code>, or in a control-flow condition
+(<code>if</code>, <code>unless</code>, <code>elsif</code>, <code>while</code>, <code>repeat</code>, <code>given</code>) resolves through:</p>
+<ol>
+<li><strong>Locals</strong> — if <code>%locals{name}</code> exists, use it.</li>
+<li><strong>Context method</strong> — otherwise if <code>context.^can(name)</code> is true, call
+   <code>context.name</code>.</li>
+<li><strong>Fallback to eval</strong> — otherwise the expression is handed to the normal
+   Raku evaluator. If the name isn't a valid Raku identifier in scope, you'll
+   get <code>X::HAML::Eval</code>.</li>
+</ol>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">-</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">is</span><span class="o">-</span><span class="n">admin</span>
+<span class="w">  </span><span class="nt">%p</span><span class="p">=</span><span class="w"> </span><span class="n">admin</span><span class="o">-</span><span class="n">greeting</span>
+<span class="p">-</span><span class="w"> </span><span class="k">else</span>
+<span class="w">  </span><span class="nt">%p</span><span class="p">=</span><span class="w"> </span><span class="kp">public</span><span class="o">-</span><span class="n">greeting</span>
+</code></pre></div></td></tr></table></div>
+<h2 id="default-context">Default context<a class="headerlink" href="#default-context" title="Permanent link">&para;</a></h2>
+<p>If you don't pass <code>:context</code>, the renderer constructs a
+<code>Template::HAML::ViewContext</code> for you. It composes the
+<code>Template::HAML::HelpersRole</code> role, so every built-in helper (<code>surround</code>,
+<code>escape-once</code>, <code>list-of</code>, <code>find-and-preserve</code>, <code>html-safe</code>, <code>capture-haml</code>,
+<code>yield</code>, <code>content-for</code>, <code>tab-up</code>, <code>tab-down</code>, <code>haml-concat</code>) is reachable as
+a method on the context.</p>
+<h2 id="extending-the-context">Extending the context<a class="headerlink" href="#extending-the-context" title="Permanent link">&para;</a></h2>
+<p>Two composition points are supported.</p>
+<p><strong>Mix in the helper role into your own class:</strong></p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">Template::HAML::HelpersRole</span>;
+
+<span class="k">class</span> <span class="n">AppContext</span> <span class="k">does</span> <span class="n">Template::HAML::HelpersRole</span> {
+  <span class="k">has</span> <span class="nv">$.user</span>;
+  <span class="k">method</span> <span class="n">current-user-name</span> { <span class="nv">$!user</span>.<span class="nb">name</span> }
+}
+
+<span class="n">HAML</span>.<span class="n">render</span>(:<span class="n">src</span>(<span class="nv">$src</span>), :<span class="n">context</span>(<span class="n">AppContext</span>.<span class="nb">new</span>(:<span class="nv">$user</span>)));
+</code></pre></div></td></tr></table></div>
+<p>The role brings the built-in helpers along, so you can add your own methods
+without losing <code>surround</code>, <code>list-of</code>, etc.</p>
+<p><strong>Subclass <code>ViewContext</code>:</strong></p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">Template::HAML::ViewContext</span>;
+
+<span class="k">class</span> <span class="n">AppContext</span> <span class="k">is</span> <span class="n">Template::HAML::ViewContext</span> {
+  <span class="k">method</span> <span class="n">site-name</span> { <span class="s">&#39;MySite&#39;</span> }
+}
+</code></pre></div></td></tr></table></div>
+<p>Either approach works; the role form is slightly more flexible because you
+can compose other roles alongside it:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">role</span> <span class="n">Greeter</span> { <span class="k">method</span> <span class="n">hello</span>   { <span class="s">&#39;hi&#39;</span>     } }
+<span class="k">role</span> <span class="n">Footer</span>  { <span class="k">method</span> <span class="n">footer</span>  { <span class="s">&#39;fineprint&#39;</span> } }
+
+<span class="k">class</span> <span class="n">AppContext</span> <span class="k">does</span> <span class="n">Template::HAML::HelpersRole</span> <span class="k">does</span> <span class="n">Greeter</span> <span class="k">does</span> <span class="n">Footer</span> { }
+</code></pre></div></td></tr></table></div>
+<p>Bare identifiers (<code>hello</code>, <code>footer</code>, <code>surround</code>, …) resolve against every
+composed role.</p>
+<h2 id="locals-still-win">Locals still win<a class="headerlink" href="#locals-still-win" title="Permanent link">&para;</a></h2>
+<p>When both a local and a context method have the same name, the local wins:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">MyView</span> {
+  <span class="k">method</span> <span class="n">title</span> { <span class="s">&#39;from-context&#39;</span> }
+}
+
+<span class="n">HAML</span>.<span class="n">render</span>(
+  :<span class="n">src</span>(<span class="s">&quot;%h1= title\n&quot;</span>),
+  :<span class="n">context</span>(<span class="n">MyView</span>.<span class="nb">new</span>),
+  :<span class="n">locals</span>(%(<span class="n">title</span> =&gt; <span class="s">&#39;from-locals&#39;</span>)),
+);
+<span class="c1"># → &lt;h1&gt;from-locals&lt;/h1&gt;</span>
+</code></pre></div></td></tr></table></div>
+<p>This is the same precedence used by Rails-style view contexts and keeps
+per-render values from being silently shadowed by a stray helper method.</p>
 
 
 
