@@ -1117,8 +1117,8 @@
 
 <h1 id="benchmarks">Benchmarks<a class="headerlink" href="#benchmarks" title="Permanent link">&para;</a></h1>
 <p>The repo ships a small bench harness at <code>bench/render.raku</code> that compares the
-two codegen paths — the AST walker (default) and the direct-emit codegen
-(<code>:emit&lt;direct&gt;</code>, see <a href="../../api/#direct-emit-codegen-opt-in">API</a>) — on a
+two codegen paths — the direct-emit codegen (default) and the AST walker
+(<code>:emit&lt;ast&gt;</code>, see <a href="../../api/#direct-emit-codegen-default">API</a>) — on a
 fixed set of representative templates.</p>
 <h2 id="run">Run<a class="headerlink" href="#run" title="Permanent link">&para;</a></h2>
 <p>From the project root:</p>
@@ -1194,11 +1194,12 @@ returned list — the harness reflows the table to fit.</p>
   each path warms internal caches; subsequent renders reuse the cached
   closure, so the times reflect the steady-state cost, not first-render
   cost.</li>
-<li><code>:emit&lt;direct&gt;</code> does not cover every feature yet. If a case template uses
-  something direct emit doesn't support (<code>trim-inner</code>, <code>remove-whitespace</code>,
-  preserved tags with children, <code>find-and-preserve</code>), the bench will throw
-  <code>X::HAML::DirectCodegenUnsupported</code>. See
-  <a href="../../api/#currently-incompatible-with-direct-emit">API: Currently incompatible with direct emit</a>.</li>
+<li><code>:emit&lt;direct&gt;</code> covers the same template-level features as the AST
+  renderer (trim modifiers, <code>remove-whitespace</code>, preserved tags with
+  children, tab-offset propagation). The only path it does not yet drive is
+  streaming (<code>HAML.render-supply</code>), which stays on the AST renderer
+  regardless of <code>:emit</code>. See
+  <a href="../../api/#feature-parity-with-the-ast-renderer">API: Feature parity with the AST renderer</a>.</li>
 </ul>
 
 

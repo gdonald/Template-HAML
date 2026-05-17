@@ -1234,9 +1234,10 @@ change without a major version bump:</p>
    tag transformers → render. Filters resolve per <code>:name</code> line at render
    time. Tag transformers and visitors run before code generation, so
    <code>compile-source-to-raku</code> and the on-disk cache reflect the transformed
-   tree. After installing or uninstalling a plugin, call
-   <a href="../../api/#hamlclear-compiled-cache"><code>clear-compiled-cache</code></a> so cached
-   artifacts get rebuilt with the new pipeline.</li>
+   tree. Installing or uninstalling a plugin auto-invalidates the
+   in-process direct-emit and compiled-<code>&amp;fn</code> caches; call
+   <a href="../../api/#hamlclear-compiled-cache"><code>clear-compiled-cache</code></a> if you also
+   need the on-disk cached <code>.rakumod</code> artifacts rebuilt.</li>
 </ol>
 <h2 id="inspecting-installed-plugins">Inspecting installed plugins<a class="headerlink" href="#inspecting-installed-plugins" title="Permanent link">&para;</a></h2>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>

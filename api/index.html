@@ -860,15 +860,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#direct-emit-codegen-opt-in" class="md-nav__link">
+  <a href="#direct-emit-codegen-default" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Direct-emit codegen (opt-in)
+        Direct-emit codegen (default)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Direct-emit codegen (opt-in)">
+    <nav class="md-nav" aria-label="Direct-emit codegen (default)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -883,10 +883,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#currently-incompatible-with-direct-emit" class="md-nav__link">
+  <a href="#feature-parity-with-the-ast-renderer" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Currently incompatible with direct emit
+        Feature parity with the AST renderer
       
     </span>
   </a>
@@ -1368,15 +1368,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#direct-emit-codegen-opt-in" class="md-nav__link">
+  <a href="#direct-emit-codegen-default" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Direct-emit codegen (opt-in)
+        Direct-emit codegen (default)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Direct-emit codegen (opt-in)">
+    <nav class="md-nav" aria-label="Direct-emit codegen (default)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1391,10 +1391,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#currently-incompatible-with-direct-emit" class="md-nav__link">
+  <a href="#feature-parity-with-the-ast-renderer" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Currently incompatible with direct emit
+        Feature parity with the AST renderer
       
     </span>
   </a>
@@ -1648,7 +1648,10 @@
 
 
 <h1 id="api">API<a class="headerlink" href="#api" title="Permanent link">&para;</a></h1>
-<p>The public surface of Template::HAML is small today.</p>
+<p><code>Template::HAML</code> exposes a layered API: a one-call <code>render</code> for most callers,
+streaming and cached-compile variants for performance, an optional
+direct-emit codegen path, and extension registries (filters, visitors, tag
+transformers, plugins) for projects that need to customize the pipeline.</p>
 <h2 id="hamlrender"><code>HAML.render</code><a class="headerlink" href="#hamlrender" title="Permanent link">&para;</a></h2>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
@@ -1837,25 +1840,38 @@ preserves source line and column information on every node, so eval
 failures inside compiled templates raise an <code>X::HAML::Eval</code> whose <code>.line</code>
 and <code>.column</code> point back to the originating HAML template — the same as
 the interpreter.</p>
-<h2 id="direct-emit-codegen-opt-in">Direct-emit codegen (opt-in)<a class="headerlink" href="#direct-emit-codegen-opt-in" title="Permanent link">&para;</a></h2>
-<p>The default codegen path (above) emits Raku source that <strong>rebuilds the parse
-tree</strong> at render time and runs <code>Template::HAML::Renderer</code> over it. The
-<em>direct-emit</em> path emits Raku source that performs <strong>inline string
+<h2 id="direct-emit-codegen-default">Direct-emit codegen (default)<a class="headerlink" href="#direct-emit-codegen-default" title="Permanent link">&para;</a></h2>
+<p><code>Template::HAML</code> ships with two codegen paths. The <em>direct-emit</em> path is now
+the default: it emits Raku source that performs <strong>inline string
 concatenation</strong> directly — no AST is reconstructed, and embedded Raku
 expressions/control flow are inlined into the closure body rather than
-re-<code>EVAL</code>ed per render.</p>
+re-<code>EVAL</code>ed per render. The legacy <em>AST-walker</em> path emits Raku source that
+<strong>rebuilds the parse tree</strong> at render time and runs <code>Template::HAML::Renderer</code>
+over it; it remains available as <code>:emit&lt;ast&gt;</code> and is what
+<a href="#hamlcompile-source-to-raku"><code>compile-source-to-raku</code></a> produces.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
-<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$cfg</span>  = <span class="n">Template::HAML::Config</span>.<span class="nb">new</span>(:<span class="n">emit</span><span class="s">&lt;direct&gt;</span>);
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1"># Direct emit is the default — no :config needed.</span>
 <span class="k">my</span> <span class="nv">$html</span> = <span class="n">HAML</span>.<span class="n">render</span>(:<span class="n">src</span>(<span class="s">&quot;%p Hello, \#\{\$name}!\n&quot;</span>),
-                       :<span class="n">locals</span>(<span class="nb">name</span> =&gt; <span class="s">&#39;World&#39;</span>),
-                       :<span class="n">config</span>(<span class="nv">$cfg</span>));
+                       :<span class="n">locals</span>(<span class="nb">name</span> =&gt; <span class="s">&#39;World&#39;</span>));
+
+<span class="c1"># Opt back into the AST renderer if you need a feature that&#39;s</span>
+<span class="c1"># AST-only (see Feature parity below).</span>
+<span class="k">my</span> <span class="nv">$cfg</span>  = <span class="n">Template::HAML::Config</span>.<span class="nb">new</span>(:<span class="n">emit</span><span class="s">&lt;ast&gt;</span>);
+<span class="k">my</span> <span class="nv">$html</span> = <span class="n">HAML</span>.<span class="n">render</span>(:<span class="n">src</span>(...), :<span class="n">config</span>(<span class="nv">$cfg</span>));
 </code></pre></div></td></tr></table></div>
-<p>The <code>:emit</code> config field accepts <code>'ast'</code> (default) or <code>'direct'</code>. The same
+<p>The <code>:emit</code> config field accepts <code>'direct'</code> (default) or <code>'ast'</code>. The same
 field flows through every entry point: <code>HAML.render</code>, <code>HAML.render-cached</code>,
 <code>HAML.render-file-cached</code>. The cache key embeds <code>:emit</code>, so AST and direct
 caches are stored under different filenames and coexist freely.</p>
+<p>The <code>HAML_DEFAULT_EMIT</code> environment variable overrides the default for a
+process: set it to <code>ast</code> to flip the default back to the AST walker (used
+by the test suite to run every test under both paths).</p>
 <h3 id="what-direct-emit-changes">What direct emit changes<a class="headerlink" href="#what-direct-emit-changes" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Tags, plain text, comments, and doctypes become literal <code>$out ~= "…"</code>
@@ -1877,19 +1893,26 @@ caches are stored under different filenames and coexist freely.</p>
   <code>X::HAML::Eval</code> with the originating template line and column. Line
   mapping behaves the same as the AST path.</li>
 </ul>
-<h3 id="currently-incompatible-with-direct-emit">Currently incompatible with direct emit<a class="headerlink" href="#currently-incompatible-with-direct-emit" title="Permanent link">&para;</a></h3>
-<p>These templates will throw <code>X::HAML::DirectCodegenUnsupported</code> at codegen
-time. Either re-render with <code>:emit&lt;ast&gt;</code> or rewrite the template.</p>
+<h3 id="feature-parity-with-the-ast-renderer">Feature parity with the AST renderer<a class="headerlink" href="#feature-parity-with-the-ast-renderer" title="Permanent link">&para;</a></h3>
+<p>Direct emit is now at feature parity with the AST renderer for the
+template-level features. The following all work on <code>:emit&lt;direct&gt;</code>:</p>
 <ul>
-<li><code>remove-whitespace</code> config (would need trim-inner sub-buffering).</li>
-<li>Tag <code>trim-inner</code> modifier (<code>%div&lt;</code> / <code>&lt;&gt;</code>).</li>
-<li>Preserved tags (<code>&lt;pre&gt;</code>, <code>&lt;textarea&gt;</code>) with children — they need an inner
-  buffer so newlines can be encoded as <code>&amp;#x000A;</code> after children render.</li>
+<li>Tag <code>trim-outer</code> (<code>%div&gt;</code>) and <code>trim-inner</code> (<code>%div&lt;</code> / <code>&lt;&gt;</code>) modifiers.</li>
+<li><code>remove-whitespace</code> config — applied as a virtual trim-outer/trim-inner on
+  every non-preserved tag.</li>
+<li>Preserved tags (<code>&lt;pre&gt;</code>, <code>&lt;textarea&gt;</code>, custom names via <code>:preserve</code>) with
+  children — inner whitespace is captured into a sub-buffer and encoded as
+  <code>&amp;#x000A;</code> after children render.</li>
+<li><code>$*HAML-TAB-OFFSET</code> propagation — <code>tab-up</code>/<code>tab-down</code> helpers shift the
+  static-tag indentation at runtime (indents are computed dynamically by
+  the emitted code, not baked at codegen time).</li>
 </ul>
-<p>Direct emit also currently bypasses post-render passes that rely on having
-the full output buffer in shape — most notably the helpers
-<code>find-and-preserve</code> and any user-installed visitor that mutates the AST at
-render time. If your template relies on those, stay on <code>:emit&lt;ast&gt;</code>.</p>
+<p>Visitor and tag-transformer hooks also run as usual: they execute against
+the parse tree before codegen, so the emitted source already reflects the
+transformed tree regardless of <code>:emit</code> mode.</p>
+<p><code>find-and-preserve</code> is a render-time helper, not a post-render pass, so it
+works inside <code>:emit&lt;direct&gt;</code> templates the same way it does in <code>:emit&lt;ast&gt;</code>
+— call it on the relevant value before output.</p>
 <h3 id="streaming">Streaming<a class="headerlink" href="#streaming" title="Permanent link">&para;</a></h3>
 <p><code>HAML.render-supply</code> does not yet support <code>:emit&lt;direct&gt;</code> — streaming stays
 on the AST path even if the config requests <code>direct</code>. (The streaming
@@ -2165,9 +2188,10 @@ fed into the next.</p>
 <p>Visitors run between parsing and rendering, so the renderer always operates
 on the post-visitor tree. They also run before <a href="#hamlcompile-source-to-raku">code generation</a>,
 which means the resulting cached <code>.rakumod</code> reflects the transformed tree.
-After registering or changing visitors, call
-<a href="#hamlclear-compiled-cache"><code>clear-compiled-cache</code></a> so previously cached
-artifacts get rebuilt with the new pipeline.</p>
+Registering, replacing, or clearing a visitor automatically invalidates the
+in-process direct-emit and compiled-<code>&amp;fn</code> caches; the on-disk cache is left
+in place — call <a href="#hamlclear-compiled-cache"><code>clear-compiled-cache</code></a> if you
+also need the cached <code>.rakumod</code> artifacts rebuilt.</p>
 <h2 id="register-tag-transformer"><code>register-tag-transformer</code><a class="headerlink" href="#register-tag-transformer" title="Permanent link">&para;</a></h2>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
@@ -2201,9 +2225,10 @@ handler must preserve them if needed). Returning <code>Nil</code> keeps the orig
 node unchanged.</p>
 <p>Tag transformers run after the <a href="#register-visitor">visitor pass</a> but before
 rendering and code generation, so the cached <code>.rakumod</code> reflects the
-expanded form. After registering or changing transformers, call
-<a href="#hamlclear-compiled-cache"><code>clear-compiled-cache</code></a> so previously cached
-artifacts get rebuilt.</p>
+expanded form. Registering, replacing, or clearing a transformer auto-invalidates
+the in-process direct-emit and compiled-<code>&amp;fn</code> caches; call
+<a href="#hamlclear-compiled-cache"><code>clear-compiled-cache</code></a> if you also need the cached
+<code>.rakumod</code> artifacts rebuilt.</p>
 <table>
 <thead>
 <tr>
