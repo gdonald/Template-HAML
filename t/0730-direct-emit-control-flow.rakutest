@@ -1,0 +1,234 @@
+
+use v6.d;
+use lib 'lib';
+use MONKEY-SEE-NO-EVAL;
+use Template::HAML;
+use Template::HAML::Config;
+use Template::HAML::Context;
+use Template::HAML::DirectCodegen;
+use Template::HAML::ViewContext;
+use Test;
+
+plan 27;
+
+sub direct-render(
+  Str $src, %locals = (),
+  Template::HAML::Config :$config,
+  :$context,
+) {
+  my $cfg  = $config // Template::HAML::Config.new;
+  my $tree = HAML.parse-source(:$src, :config($cfg));
+  my $code = DirectCodegen.new(:config($cfg)).emit-direct($tree);
+  my &fn   = EVAL $code;
+  my $ctx  = Template::HAML::Context.new(
+    :haml(HAML),
+    :user-context($context // Template::HAML::ViewContext.new),
+  );
+  &fn(%locals, :_haml_ctx($ctx));
+}
+
+sub round-trip(
+  Str $src, %locals, Str $desc,
+  Template::HAML::Config :$config,
+  :$context,
+) {
+  my $expected = HAML.render(:$src, :%locals, :$config, :$context);
+  my $actual   = direct-render($src, %locals, :$config, :$context);
+  is $actual, $expected, $desc;
+}
+
+# ---- emit shape ----
+
+{
+  my $tree = HAML.parse-source(:src("- if \$x\n  %p y\n"));
+  my $code = DirectCodegen.new.emit-direct($tree);
+  ok $code.contains('if eval-direct({ $x }'),
+    'if-cond is inlined as native Raku (with template-line tracking)';
+}
+
+{
+  my $tree = HAML.parse-source(:src("- for ^3 -> \$i\n  %li= \$i\n"));
+  my $code = DirectCodegen.new.emit-direct($tree);
+  ok $code.contains('for @(eval-direct({ ^3 }') && $code.contains('-> $i'),
+    'for-loop is inlined as native Raku (with template-line tracking)';
+}
+
+# ---- if / elsif / else / unless ----
+
+round-trip Q:to/HAML/, %(n => 1), 'if matches first branch';
+- if $n == 1
+  %p one
+- elsif $n == 2
+  %p two
+- else
+  %p other
+HAML
+
+round-trip Q:to/HAML/, %(n => 2), 'if/elsif/else picks elsif';
+- if $n == 1
+  %p one
+- elsif $n == 2
+  %p two
+- else
+  %p other
+HAML
+
+round-trip Q:to/HAML/, %(n => 99), 'if/elsif/else falls through to else';
+- if $n == 1
+  %p one
+- elsif $n == 2
+  %p two
+- else
+  %p other
+HAML
+
+round-trip Q:to/HAML/, %(x => True), 'unless skips truthy branch';
+- unless $x
+  %p shown only when falsy
+- else
+  %p truthy branch
+HAML
+
+round-trip Q:to/HAML/, %(x => False), 'unless renders falsy branch';
+- unless $x
+  %p shown only when falsy
+HAML
+
+# ---- for loops ----
+
+round-trip Q:to/HAML/, %(items => [1, 2, 3]), 'for loop iterates locals';
+- for $items -> $i
+  %li= $i
+HAML
+
+round-trip Q:to/HAML/, %(items => ['a', 'b']), 'for $x in items syntax';
+- for $x in $items
+  %li= $x
+HAML
+
+round-trip "- for ^0 -> \$i\n  %li= \$i\n", %(), 'empty for renders nothing';
+
+round-trip Q:to/HAML/, %(), 'nested for loops';
+- for ^2 -> $i
+  %ul
+    - for ^2 -> $j
+      %li= "$i.$j"
+HAML
+
+# ---- while ----
+
+round-trip Q:to/HAML/, %(items => [1, 2, 3].Array), 'while drains an array';
+- while $items.elems
+  %li= $items.shift
+HAML
+
+round-trip Q:to/HAML/, %(), 'while with literal condition (false initially)';
+- while False
+  %p never
+HAML
+
+# ---- repeat ----
+
+round-trip "- repeat 3\n  %li hi\n",        %(),                   'repeat literal N';
+round-trip "- repeat \$n\n  %li= \"x\"\n",  %(n => 4),             'repeat dynamic N';
+round-trip "- repeat 0\n  %li nope\n",      %(),                   'repeat 0 renders nothing';
+round-trip "- repeat -5\n  %li nope\n",     %(),                   'repeat negative clamps to 0';
+
+# ---- given / when / default ----
+
+round-trip Q:to/HAML/, %(label => 2), 'given/when picks matching branch';
+- given $label
+  - when 1
+    %p one
+  - when 2
+    %p two
+  - default
+    %p other
+HAML
+
+round-trip Q:to/HAML/, %(label => 99), 'given/when falls through to default';
+- given $label
+  - when 1
+    %p one
+  - when 2
+    %p two
+  - default
+    %p other
+HAML
+
+round-trip Q:to/HAML/, %(label => 'apple'), 'given with string match';
+- given $label
+  - when 'apple'
+    %p fruit
+  - when 'carrot'
+    %p veg
+HAML
+
+# ---- orphan elsif / else ----
+
+{
+  my $tree = HAML.parse-source(:src("- elsif \$x\n  %p y\n"));
+  dies-ok { DirectCodegen.new.emit-direct($tree) },
+    'orphan elsif throws OrphanElse';
+}
+
+{
+  my $tree = HAML.parse-source(:src("- else\n  %p y\n"));
+  dies-ok { DirectCodegen.new.emit-direct($tree) },
+    'orphan else throws OrphanElse';
+}
+
+# ---- complex nested template ----
+
+round-trip Q:to/HAML/, %(name => 'world'), 'nested with statements and tags';
+%html
+  %body
+    %h1
+      = "Hello, " ~ $name
+    %ul
+      - for ^3 -> $i
+        %li= $i
+HAML
+
+# ---- control flow with bare-ident cond ----
+
+class FlagCtx {
+  method enabled(--> Bool) { True }
+}
+
+{
+  my $src = Q:to/HAML/;
+  - if enabled
+    %p shown
+  - else
+    %p hidden
+  HAML
+  round-trip $src, %(), 'bare-ident in if cond uses context method',
+    :context(FlagCtx.new);
+}
+
+# ---- if with predeclared locals also used outside ----
+
+round-trip Q:to/HAML/, %(x => 5, y => 10), 'predeclared locals visible inside and outside if';
+%p= $x
+- if $x < $y
+  %p= $y
+HAML
+
+# ---- loop var shadows top-level local ----
+
+round-trip Q:to/HAML/, %(i => 'OUT', items => [1, 2]), 'loop var shadows outer local of same name';
+%p= $i
+- for $items -> $i
+  %p= $i
+%p= $i
+HAML
+
+# ---- multiple if-chains in same block ----
+
+round-trip Q:to/HAML/, %(a => 1, b => 2), 'multiple if-chains as siblings';
+- if $a
+  %p A
+- if $b
+  %p B
+HAML

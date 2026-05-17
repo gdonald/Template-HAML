@@ -1,0 +1,155 @@
+
+use v6.d;
+use lib 'lib';
+use MONKEY-SEE-NO-EVAL;
+use Template::HAML;
+use Template::HAML::Config;
+use Template::HAML::Context;
+use Template::HAML::DirectCodegen;
+use Template::HAML::ViewContext;
+use Test;
+
+plan 20;
+
+sub direct-render(
+  Str $src, %locals = (),
+  Template::HAML::Config :$config,
+  :$context,
+) {
+  my $cfg  = $config // Template::HAML::Config.new;
+  my $tree = HAML.parse-source(:$src, :config($cfg));
+  my $code = DirectCodegen.new(:config($cfg)).emit-direct($tree);
+  my &fn   = EVAL $code;
+  my $ctx  = Template::HAML::Context.new(
+    :haml(HAML),
+    :user-context($context // Template::HAML::ViewContext.new),
+  );
+  &fn(%locals, :_haml_ctx($ctx));
+}
+
+sub round-trip(
+  Str $src, %locals, Str $desc,
+  Template::HAML::Config :$config,
+  :$context,
+) {
+  my $expected = HAML.render(:$src, :%locals, :$config, :$context);
+  my $actual   = direct-render($src, %locals, :$config, :$context);
+  is $actual, $expected, $desc;
+}
+
+# ---- emit shape ----
+
+{
+  my $tree = HAML.parse-source(:src(Q[%a{|$attrs} go] ~ "\n"));
+  my $code = DirectCodegen.new.emit-direct($tree);
+  ok $code.contains('Tag.new('),
+    'dynamic-attr tag triggers runtime Tag construction';
+  ok $code.contains('render-direct-tag-open('),
+    'dynamic-attr tag uses render-direct-tag-open helper';
+  ok $code.contains('state $_haml_tag_'),
+    'dynamic-attr tag is cached as state var';
+}
+
+{
+  my $tree = HAML.parse-source(:src("%p hi\n"));
+  my $code = DirectCodegen.new.emit-direct($tree);
+  ok !$code.contains('Tag.new('),
+    'static-attr tag stays on the fast inline path';
+}
+
+# ---- interpolated attribute values ----
+
+round-trip Q[%a(href="hello #{$x}") hi] ~ "\n", %(x => 'world'),
+  'InterpString in html-attr value';
+
+round-trip Q[%a{href: "/u/#{$user}"} go] ~ "\n", %(user => 'alice'),
+  'InterpString in hash-attr value';
+
+# ---- shorthand class with interpolation (becomes InterpString) ----
+
+round-trip Q[%li.item-#{$id} hi] ~ "\n", %(id => 42),
+  'interpolated class shorthand';
+
+round-trip Q[%li#row-#{$n} hi] ~ "\n", %(n => 7),
+  'interpolated id shorthand';
+
+round-trip Q[%li.item-#{$id}#row-#{$n} hi] ~ "\n", %(id => 1, n => 2),
+  'combined interpolated class + id';
+
+# ---- attribute splat ----
+
+round-trip Q[%a{|$attrs} link] ~ "\n",
+  %(attrs => { href => '/about', title => 'About' }),
+  'plain attribute splat';
+
+round-trip Q[%div.shorthand{|$attrs} body] ~ "\n",
+  %(attrs => { class => 'extra' }),
+  'splat merges with shorthand class';
+
+round-trip Q[%div#main{|$attrs} body] ~ "\n",
+  %(attrs => { id => 'sub' }),
+  'splat concatenates with shorthand id';
+
+round-trip Q[%a{|$a, |$b} link] ~ "\n",
+  %(a => { href => '/x', class => 'a' },
+    b => { class => 'b', title => 'T' }),
+  'multiple splats accumulate classes';
+
+# ---- object reference ----
+
+class Account {
+  has Int $.id;
+  method haml-object-ref(--> Str) { 'account' }
+}
+
+{
+  my $a = Account.new(:id(7));
+  round-trip Q[%div[$acct] hi] ~ "\n", %(acct => $a),
+    'object reference computes class and id';
+}
+
+class User {
+  has Int $.id;
+}
+{
+  my $u = User.new(:id(3));
+  round-trip Q[%div[$user, 'admin'] hi] ~ "\n", %(user => $u),
+    'object reference with prefix';
+}
+
+# ---- dynamic attrs nested with control flow ----
+
+{
+  my $src = qq[- for \$items -> \$item\n  %a\{href: \$item<href>\}= \$item<name>\n];
+  round-trip $src,
+    %(items => [{name => 'A', href => '/a'}, {name => 'B', href => '/b'}]),
+    'dynamic attrs inside a for loop';
+}
+
+# ---- mix of static and dynamic on same tag ----
+
+round-trip Q[%a.btn(href="/x" title="hi #{$who}") click] ~ "\n", %(who => 'me'),
+  'static attrs + interpolated attrs on same tag';
+
+# ---- void with dynamic attr ----
+
+round-trip Q[%input(type='checkbox' value="#{$v}")] ~ "\n", %(v => 'on'),
+  'void tag with interpolated attr value';
+
+# ---- xhtml format with dynamic attr ----
+
+{
+  my $cfg    = Template::HAML::Config.new(:format<xhtml>);
+  my %locals = attrs => { class => 'spacer' };
+  round-trip Q[%br{|$attrs}] ~ "\n", %locals,
+    'xhtml void splat self-close', :config($cfg);
+}
+
+# ---- pretty parity with AST renderer for templates exercising many paths ----
+
+{
+  my $src = qq[%ul\n  - for \$items -> \$i\n    %li\{class: \$i<cls>\}= \$i<n>\n];
+  round-trip $src,
+    %(items => [{cls => 'one', n => 1}, {cls => 'two', n => 2}]),
+    'comprehensive dynamic-attr template';
+}

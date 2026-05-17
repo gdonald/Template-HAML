@@ -1,0 +1,141 @@
+
+use v6.d;
+use lib 'lib';
+use MONKEY-SEE-NO-EVAL;
+use Template::HAML;
+use Template::HAML::Config;
+use Template::HAML::DirectCodegen;
+use Test;
+
+plan 34;
+
+sub direct-render(Str $src, %locals = (), Template::HAML::Config :$config) {
+  my $cfg  = $config // Template::HAML::Config.new;
+  my $tree = HAML.parse-source(:$src, :config($cfg));
+  my $code = DirectCodegen.new(:config($cfg)).emit-direct($tree);
+  my &fn   = EVAL $code;
+  &fn(%locals);
+}
+
+sub round-trip(Str $src, %locals, Str $desc, Template::HAML::Config :$config) {
+  my $expected = HAML.render(:$src, :%locals, :$config);
+  my $actual   = direct-render($src, %locals, :$config);
+  is $actual, $expected, $desc;
+}
+
+# ---- emit-direct returns plain Raku that mentions interpolate ----
+
+{
+  my $tree = HAML.parse-source(:src(qq[%p Hello #\{\$n\}\n]));
+  my $code = DirectCodegen.new.emit-direct($tree);
+  ok $code.contains('interpolate('),
+    'emitted source calls the interpolate helper on interpolated content';
+  ok $code.contains('$_haml_out ~='),
+    'emitted source builds output via string concat';
+  ok !$code.contains('Renderer.new'),
+    'emitted source does not instantiate the AST Renderer';
+  ok !$code.contains('Node.new'),
+    'emitted source does not construct AST Node objects';
+}
+
+# ---- tags (literal, void, nested) ----
+
+round-trip "%p hello\n",                      %(), 'plain inline tag';
+round-trip "%div\n  %p first\n  %p second\n", %(), 'nested tags';
+round-trip "%br\n",                           %(), 'void element self-closes';
+round-trip "%hr/\n",                          %(), 'explicit self-close marker';
+round-trip "%p.x.y#main hi\n",                %(), 'static shorthand classes and id';
+
+# ---- tag content interpolation ----
+
+round-trip Q[%p Hello #{$name}] ~ "\n", %(name => 'World'),
+  'tag content with interpolation';
+
+round-trip Q[%p \#{$name} stays literal] ~ "\n", %(name => 'X'),
+  'escaped interpolation in tag content';
+
+# ---- static attributes ----
+
+round-trip Q[%a(href='/' title='Home') home] ~ "\n", %(),
+  'static html-style attrs';
+
+round-trip Q[%div{foo: 'bar'} body] ~ "\n", %(),
+  'static hash-style attrs';
+
+round-trip Q[%input(type='checkbox' checked)] ~ "\n", %(),
+  'boolean html attr';
+
+# ---- plain text ----
+
+round-trip "Plain at top\n",                  %(), 'plain text node';
+round-trip "Hello\nWorld\n",                  %(), 'two plain text lines';
+round-trip qq[Hello #\{\$name\}\n], %(name => 'World'),
+  'plain text with interpolation';
+
+# ---- doctypes ----
+
+round-trip "!!!\n%html\n  %body\n",           %(), 'html5 doctype';
+round-trip "!!! 5\n",                         %(), 'explicit html5 doctype';
+round-trip "!!! XML\n",                       %(), 'XML declaration';
+
+# ---- comments ----
+
+round-trip "/ a comment\n",                   %(), 'visible comment';
+round-trip "-# silent\n",                     %(), 'silent comment emits nothing';
+round-trip "/[if IE]\n  %p hi\n",             %(), 'conditional comment block';
+
+# ---- trim-outer ----
+
+round-trip "%p first\n%p> trimmed\n%p last\n", %(), 'trim-outer strips surrounding whitespace';
+
+# ---- ugly output ----
+
+{
+  my $cfg = Template::HAML::Config.new(:output-style<ugly>);
+  round-trip "%div\n  %p hi\n", %(), :config($cfg), 'ugly output collapses whitespace';
+}
+
+# ---- xhtml self-close suffix ----
+
+{
+  my $cfg = Template::HAML::Config.new(:format<xhtml>);
+  round-trip "%br\n", %(), :config($cfg), 'xhtml self-close adds slash';
+}
+
+# ---- module emit ----
+
+{
+  my $tree = HAML.parse-source(:src("%p hello\n"));
+  my $mod-src = DirectCodegen.new.emit-direct-module($tree, :module-name<DirectEmitTest>);
+  ok $mod-src.contains('unit module DirectEmitTest;'), 'module emits unit module declaration';
+  ok $mod-src.contains('our sub render'),              'module emits render sub';
+}
+
+# ---- unsupported nodes throw clearly ----
+
+round-trip "- for ^3 -> \$i\n  %li= \$i\n", %(), 'simple for loop renders';
+
+round-trip ":plain\n  hi\n", %(), 'plain filter renders';
+
+{
+  my $tree = HAML.parse-source(:src(":nosuchfilter\n  hi\n"));
+  dies-ok { DirectCodegen.new.emit-direct($tree) },
+    'unknown filter throws at codegen';
+}
+
+round-trip Q[%a(href="hello #{$x}") hi] ~ "\n", %(x => 'world'),
+  'InterpString attribute value renders';
+
+round-trip Q[%div{|$attrs} body] ~ "\n",
+  %(attrs => { href => '/about', title => 'About' }),
+  'attribute splat renders';
+
+class _DocAcc {
+  has Int $.id;
+  method haml-object-ref(--> Str) { 'account' }
+}
+{
+  my $a = _DocAcc.new(:id(7));
+  round-trip Q[%div[$user] hi] ~ "\n", %(user => $a),
+    'object-ref args render';
+}

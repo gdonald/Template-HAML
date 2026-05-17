@@ -1,0 +1,100 @@
+
+use v6.d;
+use lib 'lib';
+use MONKEY-SEE-NO-EVAL;
+use Template::HAML;
+use Template::HAML::Config;
+use Template::HAML::Context;
+use Template::HAML::DirectCodegen;
+use Template::HAML::ViewContext;
+use Template::HAML::X;
+use Test;
+
+plan 9;
+
+sub direct-render(
+  Str $src, %locals = %(),
+  Template::HAML::Config :$config,
+  :$context,
+) {
+  my $cfg  = $config // Template::HAML::Config.new;
+  my $tree = HAML.parse-source(:$src, :config($cfg));
+  my $code = DirectCodegen.new(:config($cfg)).emit-direct($tree);
+  my &fn   = EVAL $code;
+  my $ctx  = Template::HAML::Context.new(
+    :haml(HAML),
+    :user-context($context // Template::HAML::ViewContext.new),
+  );
+  &fn(%locals, :_haml_ctx($ctx));
+}
+
+# ---- eval-direct emits CATCH that re-throws as X::HAML::Eval ----
+
+{
+  my $tree = HAML.parse-source(:src("= 1/0\n"));
+  my $code = DirectCodegen.new.emit-direct($tree);
+  ok $code.contains('X::HAML::Eval.new(:code'),
+    'output-op statement is wrapped with a template-line CATCH';
+}
+
+# ---- output op with bad expression maps to template line ----
+
+{
+  my $src = qq[%p first\n= 1/0\n];
+  dies-ok { direct-render($src) },
+    'dividing by zero in inline expr throws';
+
+  my $err;
+  {
+    CATCH {
+      when X::HAML::Eval { $err = $_ }
+    }
+    direct-render($src);
+  }
+  isa-ok $err, X::HAML::Eval, 'error is X::HAML::Eval';
+  is $err.line, 2, 'error reports template line 2';
+}
+
+# ---- silent op with bad expression also wrapped ----
+
+{
+  my $src = qq[- die "boom"\n];
+  my $err;
+  {
+    CATCH {
+      when X::HAML::Eval { $err = $_ }
+    }
+    direct-render($src);
+  }
+  isa-ok $err, X::HAML::Eval, 'silent op error wrapped as X::HAML::Eval';
+  is $err.line, 1, 'silent op error reports line 1';
+}
+
+# ---- bad for-loop iter ----
+
+{
+  my $src = qq[- for die("oops") -> \$i\n  %p hi\n];
+  my $err;
+  {
+    CATCH {
+      when X::HAML::Eval { $err = $_ }
+    }
+    direct-render($src);
+  }
+  isa-ok $err, X::HAML::Eval, 'bad for-iter wrapped';
+  is $err.line, 1, 'for-iter error reports line 1';
+}
+
+# ---- bad if-cond on later line ----
+
+{
+  my $src = qq[%p first\n%p second\n- if die("noo")\n  %p inner\n];
+  my $err;
+  {
+    CATCH {
+      when X::HAML::Eval { $err = $_ }
+    }
+    direct-render($src);
+  }
+  is $err.line, 3, 'if-cond error reports correct template line';
+}

@@ -60,7 +60,27 @@ sub ser-str-list(@items --> Str) {
   '(' ~ @items.map({ raku-str($_.Str) }).join(', ') ~ ',).list';
 }
 
-sub ser-tag(Tag:D $t --> Str) {
+sub ser-config(Template::HAML::Config:D $c --> Str) is export {
+  my @parts;
+  @parts.push: ':format('               ~ raku-str($c.format)       ~ ')';
+  @parts.push: ':escape-html('          ~ ser-bool($c.escape-html)  ~ ')';
+  @parts.push: ':escape-attrs('         ~ ser-bool($c.escape-attrs) ~ ')';
+  @parts.push: ':output-style('         ~ raku-str($c.output-style) ~ ')';
+  @parts.push: ':attr-quote('           ~ raku-str($c.attr-quote)   ~ ')';
+  @parts.push: ':encoding('             ~ raku-str($c.encoding)     ~ ')';
+  @parts.push: ':suppress-eval('        ~ ser-bool($c.suppress-eval)~ ')';
+  @parts.push: ':cdata('                ~ ser-bool($c.cdata)        ~ ')';
+  @parts.push: ':mime-type('            ~ raku-str($c.mime-type)    ~ ')';
+  @parts.push: ':hyphenate-data-attrs(' ~ ser-bool($c.hyphenate-data-attrs) ~ ')';
+  @parts.push: ':output-indent-width('  ~ $c.output-indent-width    ~ ')';
+  @parts.push: ':remove-whitespace('    ~ ser-bool($c.remove-whitespace) ~ ')';
+  @parts.push: ':trace('                ~ ser-bool($c.trace)        ~ ')';
+  @parts.push: ':autoclose('            ~ ser-str-list($c.autoclose) ~ ')';
+  @parts.push: ':preserve('             ~ ser-str-list($c.preserve)  ~ ')';
+  'Template::HAML::Config.new(' ~ @parts.join(', ') ~ ')';
+}
+
+sub ser-tag(Tag:D $t --> Str) is export {
   my @parts;
   @parts.push: ':name(' ~ raku-str($t.name) ~ ')';
   @parts.push: ':indent(' ~ $t.indent ~ ')';
@@ -172,26 +192,7 @@ class Codegen is export {
     '$n' ~ ++$!sym;
   }
 
-  method !ser-config(--> Str) {
-    my $c = $!config;
-    my @parts;
-    @parts.push: ':format('               ~ raku-str($c.format)       ~ ')';
-    @parts.push: ':escape-html('          ~ ser-bool($c.escape-html)  ~ ')';
-    @parts.push: ':escape-attrs('         ~ ser-bool($c.escape-attrs) ~ ')';
-    @parts.push: ':output-style('         ~ raku-str($c.output-style) ~ ')';
-    @parts.push: ':attr-quote('           ~ raku-str($c.attr-quote)   ~ ')';
-    @parts.push: ':encoding('             ~ raku-str($c.encoding)     ~ ')';
-    @parts.push: ':suppress-eval('        ~ ser-bool($c.suppress-eval)~ ')';
-    @parts.push: ':cdata('                ~ ser-bool($c.cdata)        ~ ')';
-    @parts.push: ':mime-type('            ~ raku-str($c.mime-type)    ~ ')';
-    @parts.push: ':hyphenate-data-attrs(' ~ ser-bool($c.hyphenate-data-attrs) ~ ')';
-    @parts.push: ':output-indent-width('  ~ $c.output-indent-width    ~ ')';
-    @parts.push: ':remove-whitespace('    ~ ser-bool($c.remove-whitespace) ~ ')';
-    @parts.push: ':trace('                ~ ser-bool($c.trace)        ~ ')';
-    @parts.push: ':autoclose('            ~ ser-str-list($c.autoclose) ~ ')';
-    @parts.push: ':preserve('             ~ ser-str-list($c.preserve)  ~ ')';
-    'Template::HAML::Config.new(' ~ @parts.join(', ') ~ ')';
-  }
+  method !ser-config(--> Str) { ser-config($!config) }
 
   method !walk-children(Node:D $n, Str $parent-var --> List) {
     my @lines;

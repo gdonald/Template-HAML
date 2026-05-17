@@ -18,6 +18,8 @@
     "Template::HAML::Comment": "lib/Template/HAML/Comment.rakumod",
     "Template::HAML::Config": "lib/Template/HAML/Config.rakumod",
     "Template::HAML::Context": "lib/Template/HAML/Context.rakumod",
+    "Template::HAML::DirectCodegen": "lib/Template/HAML/DirectCodegen.rakumod",
+    "Template::HAML::DirectEmit": "lib/Template/HAML/DirectEmit.rakumod",
     "Template::HAML::Doctype": "lib/Template/HAML/Doctype.rakumod",
     "Template::HAML::Eval": "lib/Template/HAML/Eval.rakumod",
     "Template::HAML::Filter": "lib/Template/HAML/Filter.rakumod",

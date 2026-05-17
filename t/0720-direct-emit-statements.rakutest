@@ -1,0 +1,166 @@
+
+use v6.d;
+use lib 'lib';
+use MONKEY-SEE-NO-EVAL;
+use Template::HAML;
+use Template::HAML::Config;
+use Template::HAML::Context;
+use Template::HAML::DirectCodegen;
+use Template::HAML::ViewContext;
+use Test;
+
+plan 26;
+
+sub direct-render(
+  Str $src, %locals = (),
+  Template::HAML::Config :$config,
+  :$context,
+) {
+  my $cfg  = $config // Template::HAML::Config.new;
+  my $tree = HAML.parse-source(:$src, :config($cfg));
+  my $code = DirectCodegen.new(:config($cfg)).emit-direct($tree);
+  my &fn   = EVAL $code;
+  my $ctx  = Template::HAML::Context.new(
+    :haml(HAML),
+    :user-context($context // Template::HAML::ViewContext.new),
+  );
+  &fn(%locals, :_haml_ctx($ctx));
+}
+
+sub haml-render(
+  Str $src, %locals = (),
+  Template::HAML::Config :$config,
+  :$context,
+) {
+  HAML.render(:$src, :%locals, :$config, :$context);
+}
+
+sub round-trip(
+  Str $src, %locals, Str $desc,
+  Template::HAML::Config :$config,
+  :$context,
+) {
+  my $expected = haml-render($src, %locals, :$config, :$context);
+  my $actual   = direct-render($src, %locals, :$config, :$context);
+  is $actual, $expected, $desc;
+}
+
+# ---- emit shape ----
+
+{
+  my $tree = HAML.parse-source(:src("= \$name\n"));
+  my $code = DirectCodegen.new.emit-direct($tree);
+  ok !$code.contains('eval-haml('),
+    'non-bare expression does not call eval-haml';
+  ok $code.contains('my $name'),
+    'scanned local $name is predeclared';
+}
+
+{
+  my $tree = HAML.parse-source(:src("= name\n"));
+  my $code = DirectCodegen.new.emit-direct($tree);
+  ok $code.contains('eval-bare-ident('),
+    'bare-ident expression goes through the bare-ident lookup helper';
+}
+
+# ---- output ops ----
+
+round-trip "= \$name\n",                %(name => 'World'), 'simple = output';
+round-trip "= \$name\n",                %(name => '<b>'),   '= escapes html by default';
+round-trip "!= \$raw\n",                %(raw  => '<b>x</b>'), '!= leaves html raw';
+round-trip "&= \$x\n",                  %(x    => '<x>'),   '&= force-escapes';
+round-trip "== Hello, \#\{\$name\}!\n", %(name => 'World'), '== interpolation statement';
+round-trip "~ \"line1\\nline2\"\n",     %(),                '~ encodes newlines';
+
+# ---- bare-ident output ops resolve via locals ----
+
+round-trip "= name\n", %(name => 'Bare'),
+  'bare-ident statement reads from %locals';
+
+# ---- silent statement (no control flow) ----
+
+round-trip "- 1 + 2\n",                 %(),                'silent statement produces no output';
+round-trip "%p hi\n- 1\n%p bye\n",      %(),                'silent statement between tags';
+
+# ---- complex expression ----
+
+round-trip "= \$user.uc\n",             %(user => 'world'), 'method call on local';
+round-trip "= \$items.elems\n",         %(items => [1, 2, 3]), 'list method';
+round-trip "= \$x + \$y\n",             %(x => 2, y => 3),  'binary expression with two locals';
+
+# ---- output with siblings (no control flow) ----
+
+round-trip Q:to/HAML/, %(name => 'World'), 'mixed tags and statements';
+%h1
+  = "Hello, " ~ $name
+%p done
+HAML
+
+# ---- statement with children at same indent depth ----
+# (kind='expression' statements pass offset through)
+round-trip Q:to/HAML/, %(label => 'L'), 'statement carrying a child block';
+= $label
+  %p inner
+HAML
+
+# ---- context method via bare-ident ----
+
+class FakeCtx {
+  method page-class(--> Str) { 'page' }
+}
+
+{
+  my $src     = "= page-class\n";
+  my $context = FakeCtx.new;
+  round-trip $src, %(), 'bare-ident resolves to context method',
+    :$context;
+}
+
+# ---- SafeString suppression ----
+
+round-trip "= html-safe('<b>x</b>')\n", %(), 'SafeString bypasses escaping';
+
+# ---- haml-concat buffer plumbing ----
+
+round-trip "= haml-concat('A') ~ haml-concat('B')\n", %(),
+  'haml-concat buffered output is preserved';
+
+# ---- config: escape-html toggle ----
+
+{
+  my $cfg = Template::HAML::Config.new(:!escape-html);
+  round-trip "= \$x\n", %(x => '<b>'), :config($cfg),
+    'escape-html=false leaves = output raw';
+}
+
+# ---- config: suppress-eval skips eval but keeps == ----
+
+{
+  my $cfg = Template::HAML::Config.new(:suppress-eval);
+  round-trip "= \$name\n", %(name => 'X'), :config($cfg),
+    'suppress-eval skips = eval';
+  round-trip "== Hello \#\{\$name\}!\n", %(name => 'X'), :config($cfg),
+    'suppress-eval still interpolates ==';
+}
+
+# ---- still rejects unsupported nodes ----
+
+round-trip ":plain\n  hi\n", %(), 'filter now renders via direct emit';
+
+# ---- locals not referenced are not predeclared ----
+
+{
+  my $tree = HAML.parse-source(:src("%p hi\n"));
+  my $code = DirectCodegen.new.emit-direct($tree);
+  ok !$code.contains('my $unused'),
+    'unreferenced locals are not predeclared';
+}
+
+# ---- reserved _haml_ prefix is skipped ----
+
+{
+  my $tree = HAML.parse-source(:src("= \$_haml_x // 'fallback'\n"));
+  my $code = DirectCodegen.new.emit-direct($tree);
+  ok !$code.contains('my $_haml_x = '),
+    'user vars starting with _haml_ are not predeclared (reserved namespace)';
+}

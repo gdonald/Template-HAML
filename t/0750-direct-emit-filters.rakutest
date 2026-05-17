@@ -1,0 +1,147 @@
+
+use v6.d;
+use lib 'lib';
+use MONKEY-SEE-NO-EVAL;
+use Template::HAML;
+use Template::HAML::Config;
+use Template::HAML::Context;
+use Template::HAML::DirectCodegen;
+use Template::HAML::Filters;
+use Template::HAML::ViewContext;
+use Test;
+
+plan 17;
+
+sub direct-render(
+  Str $src, %locals = (),
+  Template::HAML::Config :$config,
+  :$context,
+) {
+  my $cfg  = $config // Template::HAML::Config.new;
+  my $tree = HAML.parse-source(:$src, :config($cfg));
+  my $code = DirectCodegen.new(:config($cfg)).emit-direct($tree);
+  my &fn   = EVAL $code;
+  my $ctx  = Template::HAML::Context.new(
+    :haml(HAML),
+    :user-context($context // Template::HAML::ViewContext.new),
+  );
+  &fn(%locals, :_haml_ctx($ctx));
+}
+
+sub round-trip(
+  Str $src, %locals, Str $desc,
+  Template::HAML::Config :$config,
+  :$context,
+) {
+  my $expected = HAML.render(:$src, :%locals, :$config, :$context);
+  my $actual   = direct-render($src, %locals, :$config, :$context);
+  is $actual, $expected, $desc;
+}
+
+# ---- emit shape ----
+
+{
+  my $tree = HAML.parse-source(:src(":plain\n  hi\n"));
+  my $code = DirectCodegen.new.emit-direct($tree);
+  ok $code.contains('lookup-filter('),
+    'filter dispatch uses lookup-filter at runtime';
+  ok !$code.contains('Filter.new'),
+    'filter does not construct AST Filter object';
+}
+
+# ---- built-in filters ----
+
+round-trip ":plain\n  hello\n", %(), ':plain renders body verbatim';
+
+round-trip Q:to/HAML/, %(name => 'World'), ':plain with interpolation';
+:plain
+  hello #{$name}
+HAML
+
+round-trip ":escaped\n  <b>hi</b>\n", %(), ':escaped html-escapes body';
+
+round-trip Q:to/HAML/, %(), ':preserve encodes newlines';
+:preserve
+  line1
+  line2
+HAML
+
+round-trip Q:to/HAML/, %(), ':javascript wraps body in script tag';
+:javascript
+  var x = 1;
+HAML
+
+round-trip Q:to/HAML/, %(), ':css wraps body in style tag';
+:css
+  body { color: red; }
+HAML
+
+round-trip Q:to/HAML/, %(), ':cdata wraps body';
+:cdata
+  some cdata
+HAML
+
+# ---- :raku filter ----
+
+round-trip ":raku\n  1 + 2\n", %(), ':raku evaluates expression';
+
+round-trip Q:to/HAML/, %(name => 'World'), ':raku reads locals';
+:raku
+  "Hello, " ~ $name
+HAML
+
+# ---- filter inside a tag block ----
+
+round-trip Q:to/HAML/, %(), 'filter inside tag indents correctly';
+%div
+  :plain
+    nested
+HAML
+
+# ---- filter inside a for loop ----
+
+round-trip Q:to/HAML/, %(items => [1, 2]), 'filter inside for loop';
+- for $items -> $i
+  :plain
+    item #{$i}
+HAML
+
+# ---- markdown backend missing ----
+
+{
+  Template::HAML::Filters::clear-markdown-backend();
+  my $tree = HAML.parse-source(:src(":markdown\n  hi\n"));
+  my $code = DirectCodegen.new.emit-direct($tree);
+  my &fn   = EVAL $code;
+  dies-ok { &fn(%()) },
+    ':markdown without backend throws MarkdownBackendMissing';
+}
+
+# ---- markdown backend present ----
+
+{
+  Template::HAML::Filters::register-markdown-backend(:handler(-> Str $body --> Str {
+    "MD[$body]"
+  }));
+  LEAVE { Template::HAML::Filters::clear-markdown-backend() }
+
+  round-trip ":markdown\n  some text\n", %(),
+    ':markdown uses registered backend';
+}
+
+# ---- empty body filter ----
+
+round-trip ":plain\n", %(), 'filter with no body emits nothing';
+
+# ---- user-registered custom filter ----
+
+{
+  Template::HAML::Filters::register-filter(
+    :name<shout>,
+    :handler(-> Str $body, %locals --> Str { $body.uc.chomp }),
+  );
+  LEAVE { Template::HAML::Filters::clear-filter('shout') }
+
+  round-trip ":shout\n  whisper\n", %(),
+    'user-registered filter works through direct emit';
+}

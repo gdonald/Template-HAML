@@ -39,7 +39,7 @@ sub eval-haml-or-ctx(Str $code, Bool $bare, %locals, Int :$line, Int :$column) {
   eval-haml($code, %locals, :$line, :$column);
 }
 
-sub resolve-attrs(@attrs, %locals) {
+sub resolve-attrs(@attrs, %locals) is export {
   @attrs.map(-> $p {
     my $v = $p.value;
     if $v ~~ Template::HAML::Interpolation::InterpString {
@@ -79,7 +79,7 @@ sub splat-to-pairs($v) {
   ();
 }
 
-sub expand-splats(@attrs, %locals) {
+sub expand-splats(@attrs, %locals) is export {
   my @out;
   for @attrs -> $a {
     if $a ~~ AttrSplat {
@@ -116,7 +116,7 @@ sub flatten-id-vals($v) {
   $s.chars ?? ($s,) !! ();
 }
 
-sub merge-attr-pairs(@pairs, :@shorthand-classes = (), :@shorthand-ids = ()) {
+sub merge-attr-pairs(@pairs, :@shorthand-classes = (), :@shorthand-ids = ()) is export {
   my @order;
   my %slot;
   my @class-vals;
@@ -169,7 +169,7 @@ sub prefix-str($p) {
   $p.Str;
 }
 
-sub compute-obj-ref($obj, %locals) {
+sub compute-obj-ref($obj, %locals) is export {
   my @args = $obj.obj-ref-args.list;
   return (Nil, Nil) unless @args.elems;
 
@@ -220,7 +220,7 @@ sub existing-id-str($v --> Str) {
   $v.defined ?? $v.Str !! '';
 }
 
-sub inject-obj-ref-attrs(@attrs, $cls, $id) {
+sub inject-obj-ref-attrs(@attrs, $cls, $id) is export {
   my @out = @attrs;
 
   if $cls.defined && $cls.chars {
