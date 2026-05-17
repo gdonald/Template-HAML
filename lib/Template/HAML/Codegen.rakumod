@@ -81,7 +81,7 @@ sub ser-config(Template::HAML::Config:D $c --> Str) is export {
   'Template::HAML::Config.new(' ~ @parts.join(', ') ~ ')';
 }
 
-sub ser-tag(Tag:D $t --> Str) is export {
+sub ser-tag(Tag:D $t, Str :$config-var = '$cfg' --> Str) is export {
   my @parts;
   @parts.push: ':name(' ~ raku-str($t.name) ~ ')';
   @parts.push: ':indent(' ~ $t.indent ~ ')';
@@ -100,7 +100,7 @@ sub ser-tag(Tag:D $t --> Str) is export {
     @parts.push: ':ids('     ~ ser-str-list($t.ids)     ~ ')' if $t.ids.elems;
   }
   @parts.push: ':obj-ref-args(' ~ ser-str-list($t.obj-ref-args) ~ ')' if $t.obj-ref-args.elems;
-  @parts.push: ':config($cfg)';
+  @parts.push: ':config(' ~ $config-var ~ ')';
 
   'Tag.new(' ~ @parts.join(', ') ~ ')';
 }

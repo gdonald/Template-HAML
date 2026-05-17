@@ -66,6 +66,11 @@ sub fn-cache-clear(--> Int) {
   $n;
 }
 
+register-invalidation-listener({
+  %direct-cache = ();
+  %fn-cache     = ();
+});
+
 sub rm-rf(IO::Path:D $dir) {
   return unless $dir.e;
   if $dir.d {
@@ -95,7 +100,8 @@ sub load-render-fn(IO::Path:D $cache-dir, Str:D $key, Str:D :$sub-name = 'render
   for $mod-name.split('::') -> $part {
     $stash = $stash{$part}.WHO;
   }
-  $stash{'&' ~ $sub-name};
+  my $fn = $stash{'&' ~ $sub-name};
+  $fn.defined ?? $fn !! $stash{'&haml-render'};
 }
 
 sub render-fn-name-for(Template::HAML::Config:D $cfg --> Str) {

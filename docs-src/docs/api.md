@@ -1,6 +1,9 @@
 # API
 
-The public surface of Template::HAML is small today.
+`Template::HAML` exposes a layered API: a one-call `render` for most callers,
+streaming and cached-compile variants for performance, an optional
+direct-emit codegen path, and extension registries (filters, visitors, tag
+transformers, plugins) for projects that need to customize the pipeline.
 
 ## `HAML.render`
 
@@ -117,26 +120,36 @@ failures inside compiled templates raise an `X::HAML::Eval` whose `.line`
 and `.column` point back to the originating HAML template — the same as
 the interpreter.
 
-## Direct-emit codegen (opt-in)
+## Direct-emit codegen (default)
 
-The default codegen path (above) emits Raku source that **rebuilds the parse
-tree** at render time and runs `Template::HAML::Renderer` over it. The
-*direct-emit* path emits Raku source that performs **inline string
+`Template::HAML` ships with two codegen paths. The *direct-emit* path is now
+the default: it emits Raku source that performs **inline string
 concatenation** directly — no AST is reconstructed, and embedded Raku
 expressions/control flow are inlined into the closure body rather than
-re-`EVAL`ed per render.
+re-`EVAL`ed per render. The legacy *AST-walker* path emits Raku source that
+**rebuilds the parse tree** at render time and runs `Template::HAML::Renderer`
+over it; it remains available as `:emit<ast>` and is what
+[`compile-source-to-raku`](#hamlcompile-source-to-raku) produces.
 
 ```raku
-my $cfg  = Template::HAML::Config.new(:emit<direct>);
+# Direct emit is the default — no :config needed.
 my $html = HAML.render(:src("%p Hello, \#\{\$name}!\n"),
-                       :locals(name => 'World'),
-                       :config($cfg));
+                       :locals(name => 'World'));
+
+# Opt back into the AST renderer if you need a feature that's
+# AST-only (see Feature parity below).
+my $cfg  = Template::HAML::Config.new(:emit<ast>);
+my $html = HAML.render(:src(...), :config($cfg));
 ```
 
-The `:emit` config field accepts `'ast'` (default) or `'direct'`. The same
+The `:emit` config field accepts `'direct'` (default) or `'ast'`. The same
 field flows through every entry point: `HAML.render`, `HAML.render-cached`,
 `HAML.render-file-cached`. The cache key embeds `:emit`, so AST and direct
 caches are stored under different filenames and coexist freely.
+
+The `HAML_DEFAULT_EMIT` environment variable overrides the default for a
+process: set it to `ast` to flip the default back to the AST walker (used
+by the test suite to run every test under both paths).
 
 ### What direct emit changes
 
@@ -159,20 +172,28 @@ caches are stored under different filenames and coexist freely.
   `X::HAML::Eval` with the originating template line and column. Line
   mapping behaves the same as the AST path.
 
-### Currently incompatible with direct emit
+### Feature parity with the AST renderer
 
-These templates will throw `X::HAML::DirectCodegenUnsupported` at codegen
-time. Either re-render with `:emit<ast>` or rewrite the template.
+Direct emit is now at feature parity with the AST renderer for the
+template-level features. The following all work on `:emit<direct>`:
 
-- `remove-whitespace` config (would need trim-inner sub-buffering).
-- Tag `trim-inner` modifier (`%div<` / `<>`).
-- Preserved tags (`<pre>`, `<textarea>`) with children — they need an inner
-  buffer so newlines can be encoded as `&#x000A;` after children render.
+- Tag `trim-outer` (`%div>`) and `trim-inner` (`%div<` / `<>`) modifiers.
+- `remove-whitespace` config — applied as a virtual trim-outer/trim-inner on
+  every non-preserved tag.
+- Preserved tags (`<pre>`, `<textarea>`, custom names via `:preserve`) with
+  children — inner whitespace is captured into a sub-buffer and encoded as
+  `&#x000A;` after children render.
+- `$*HAML-TAB-OFFSET` propagation — `tab-up`/`tab-down` helpers shift the
+  static-tag indentation at runtime (indents are computed dynamically by
+  the emitted code, not baked at codegen time).
 
-Direct emit also currently bypasses post-render passes that rely on having
-the full output buffer in shape — most notably the helpers
-`find-and-preserve` and any user-installed visitor that mutates the AST at
-render time. If your template relies on those, stay on `:emit<ast>`.
+Visitor and tag-transformer hooks also run as usual: they execute against
+the parse tree before codegen, so the emitted source already reflects the
+transformed tree regardless of `:emit` mode.
+
+`find-and-preserve` is a render-time helper, not a post-render pass, so it
+works inside `:emit<direct>` templates the same way it does in `:emit<ast>`
+— call it on the relevant value before output.
 
 ### Streaming
 
@@ -198,7 +219,7 @@ Invalidation is automatic for both flavors of the API:
   cache miss — no slurp + re-hash is needed on a cache hit.
 
 Stale entries left behind on disk are not garbage-collected automatically; see
-[`clear-compiled-cache`](#clear-compiled-cache) below.
+[`clear-compiled-cache`](#hamlclear-compiled-cache) below.
 
 Each cache file is a self-contained Raku `unit module` exposing an
 `our sub render`. The cache directory is registered as a
@@ -426,9 +447,10 @@ fed into the next.
 Visitors run between parsing and rendering, so the renderer always operates
 on the post-visitor tree. They also run before [code generation](#hamlcompile-source-to-raku),
 which means the resulting cached `.rakumod` reflects the transformed tree.
-After registering or changing visitors, call
-[`clear-compiled-cache`](#hamlclear-compiled-cache) so previously cached
-artifacts get rebuilt with the new pipeline.
+Registering, replacing, or clearing a visitor automatically invalidates the
+in-process direct-emit and compiled-`&fn` caches; the on-disk cache is left
+in place — call [`clear-compiled-cache`](#hamlclear-compiled-cache) if you
+also need the cached `.rakumod` artifacts rebuilt.
 
 ## `register-tag-transformer`
 
@@ -461,9 +483,10 @@ node unchanged.
 
 Tag transformers run after the [visitor pass](#register-visitor) but before
 rendering and code generation, so the cached `.rakumod` reflects the
-expanded form. After registering or changing transformers, call
-[`clear-compiled-cache`](#hamlclear-compiled-cache) so previously cached
-artifacts get rebuilt.
+expanded form. Registering, replacing, or clearing a transformer auto-invalidates
+the in-process direct-emit and compiled-`&fn` caches; call
+[`clear-compiled-cache`](#hamlclear-compiled-cache) if you also need the cached
+`.rakumod` artifacts rebuilt.
 
 | Parameter   | Type      | Description                                                  |
 |-------------|-----------|--------------------------------------------------------------|

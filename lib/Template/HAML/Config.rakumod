@@ -31,6 +31,11 @@ sub is-known-encoding(Str:D $name --> Bool) is export {
   %ENCODING-ALIASES{$name.lc}:exists;
 }
 
+sub default-emit-mode(--> Str) {
+  my $env = %*ENV<HAML_DEFAULT_EMIT> // '';
+  $env eq 'ast' ?? 'ast' !! 'direct';
+}
+
 class Template::HAML::Config is export {
   has Str  $.format          is rw = 'html5';
   has Bool $.escape-html     is rw = True;
@@ -45,7 +50,7 @@ class Template::HAML::Config is export {
   has Int  $.output-indent-width is rw = 2;
   has Bool $.remove-whitespace is rw = False;
   has Bool $.trace           is rw = False;
-  has Str  $.emit            is rw = 'ast';
+  has Str  $.emit            is rw = default-emit-mode();
   has @.autoclose            is rw;
   has @.preserve             is rw;
 
@@ -63,7 +68,7 @@ class Template::HAML::Config is export {
     Int  :$!output-indent-width = 2,
     Bool :$!remove-whitespace = False,
     Bool :$!trace           = False,
-    Str  :$!emit            = 'ast',
+    Str  :$!emit            = default-emit-mode(),
     :@autoclose,
     :@preserve,
   ) {

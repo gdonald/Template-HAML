@@ -39,7 +39,7 @@ sub fresh-dir(--> IO::Path) {
   my $contents = $path.slurp;
   ok $contents.starts-with('unit module Template::HAML::Compiled::T' ~ $key),
      'cached file is a unit module';
-  ok $contents.contains('our sub render'),
+  ok $contents.contains('our sub render') || $contents.contains('our sub haml-render'),
      'cached module exports a render sub';
 }
 

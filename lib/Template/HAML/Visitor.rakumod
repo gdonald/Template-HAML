@@ -1,4 +1,5 @@
 
+use Template::HAML::Cache;
 use Template::HAML::Node;
 
 unit module Template::HAML::Visitor;
@@ -10,17 +11,20 @@ our sub register-visitor(:&handler!, Str :$name) is export {
     my $idx = @visitors.first({ .key.defined && .key eq $name }, :k);
     if $idx.defined {
       @visitors[$idx] = $name => &handler;
+      notify-cache-invalidated();
       return;
     }
     @visitors.push: Pair.new($name, &handler);
   } else {
     @visitors.push: Pair.new(Nil, &handler);
   }
+  notify-cache-invalidated();
 }
 
 our sub clear-visitors(--> Int) is export {
   my $n = @visitors.elems;
   @visitors = ();
+  notify-cache-invalidated();
   $n;
 }
 
@@ -28,6 +32,7 @@ our sub clear-visitor(Str:D $name --> Bool) is export {
   my $idx = @visitors.first({ .key.defined && .key eq $name }, :k);
   return False unless $idx.defined;
   @visitors.splice($idx, 1);
+  notify-cache-invalidated();
   True;
 }
 

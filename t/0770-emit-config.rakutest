@@ -10,8 +10,11 @@ plan 16;
 # ---- Config validation ----
 
 {
+  # Default emit mode is direct. The HAML_DEFAULT_EMIT env var lets the
+  # test harness flip the default back to ast for parity checks.
+  my $expected = (%*ENV<HAML_DEFAULT_EMIT> // '') eq 'ast' ?? 'ast' !! 'direct';
   my $cfg = Template::HAML::Config.new;
-  is $cfg.emit, 'ast', 'default emit is ast';
+  is $cfg.emit, $expected, "default emit is $expected";
 }
 
 {

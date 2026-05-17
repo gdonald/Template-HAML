@@ -1,4 +1,6 @@
 
+use MONKEY-SEE-NO-EVAL;
+
 use Template::HAML::Codegen;
 use Template::HAML::Comment;
 use Template::HAML::Config;
@@ -41,14 +43,76 @@ sub reserved-local-name(Str $name --> Bool) {
 class DirectCodegen is export {
   has Template::HAML::Config $.config;
   has Int $!tag-counter   = 0;
+  has Int $!sub-buf-counter = 0;
   has @!tag-preamble-lines;
+  has @!current-locals;
+  has @!scope-vars;
 
   submethod BUILD(Template::HAML::Config :$config) {
     $!config = $config // Template::HAML::Config.new;
   }
 
+  method !try-precompile(Str $expr) {
+    my @all-locals = flat @!current-locals.list, @!scope-vars.list;
+    # If the expression declares any locals with `my $name`, exclude those
+    # names from the wrapper signature so the precheck doesn't trip a
+    # "Redeclaration of symbol" compile-time advisory.
+    my %declared;
+    for $expr.match(/ 'my' \s+ '$' (<[A..Za..z_]> <[\w \-]>*) /, :g) -> $m {
+      %declared{~$m[0]} = True;
+    }
+    my @sig-locals = @all-locals.grep({ !%declared{$_} });
+    my $sig = @sig-locals.elems
+      ?? '-> ' ~ @sig-locals.map({ '$' ~ $_ }).join(', ') ~ ' {'
+      !! '-> {';
+    my $body =
+      'use Template::HAML::Helpers; '
+      ~ 'use Template::HAML::Filters; '
+      ~ 'use Template::HAML::Interpolation; '
+      ~ 'use Template::HAML::Tag; '
+      ~ 'use Template::HAML::Config; '
+      ~ $sig ~ "\n" ~ $expr ~ "\n}";
+    my $err;
+    {
+      CATCH { default { $err = .message; } }
+      EVAL $body;
+    }
+    $err;
+  }
+
+  method !block-source(Str $expr --> Str) {
+    my @all-locals = flat @!current-locals.list, @!scope-vars.list;
+    my $sig = @all-locals.elems
+      ?? '-> ' ~ @all-locals.map({ '$' ~ $_ }).join(', ') ~ ' {'
+      !! '-> {';
+    $sig ~ "\n" ~ $expr ~ "\n}";
+  }
+
+  method !precompile-throw(Str $expr, Int $line, Int $col, Str $reason --> Str) {
+    my @parts;
+    @parts.push: ':code(' ~ raku-str($expr) ~ ')';
+    @parts.push: ':line(' ~ $line ~ ')';
+    @parts.push: ':column(' ~ $col ~ ')';
+    @parts.push: ':reason(' ~ raku-str($reason) ~ ')';
+    if $!config.trace {
+      @parts.push: ':block-source(' ~ raku-str(self!block-source($expr)) ~ ')';
+      @parts.push: ':block-line(2)';
+    }
+    'X::HAML::Eval.new(' ~ @parts.join(', ') ~ ').throw;';
+  }
+
   method !next-tag-var(--> Str) {
     '$_haml_tag_' ~ ++$!tag-counter;
+  }
+
+  method !next-sub-buf(--> Str) {
+    '_haml_sub_' ~ ++$!sub-buf-counter;
+  }
+
+  method !indent-expr-for($obj, Int $offset --> Str) {
+    my $base  = $obj.indent - $offset;
+    my $width = $obj.output-indent-width;
+    'haml-indent(' ~ $base ~ ', ' ~ $width ~ ')';
   }
 
   method !is-dynamic-value($v --> Bool) {
@@ -77,7 +141,6 @@ class DirectCodegen is export {
   }
 
   method !validate(Node:D $tree) {
-    unsupported('remove-whitespace not yet supported') if $!config.remove-whitespace;
     self!validate-node($tree);
   }
 
@@ -101,12 +164,6 @@ class DirectCodegen is export {
           }
         }
         when Tag {
-          if $obj.trim-inner {
-            unsupported('trim-inner not yet supported in this phase');
-          }
-          if $!config.is-preserved($obj.name) && $node.children.elems {
-            unsupported('preserved tags with children not yet supported in this phase');
-          }
           if $obj.is-void && $node.children.elems {
             X::HAML::VoidWithChildren.new(
               :line($obj.line), :column($obj.column), :name($obj.name),
@@ -120,19 +177,20 @@ class DirectCodegen is export {
 
   method !scan-locals(Node:D $tree --> List) {
     my %seen;
-    self!scan-node-locals($tree, %seen);
-    %seen.keys.sort.list;
+    my %bound;
+    self!scan-node-locals($tree, %seen, %bound);
+    %seen.keys.grep({ !%bound{$_} }).sort.list;
   }
 
-  method !scan-node-locals(Node:D $node, %seen) {
+  method !scan-node-locals(Node:D $node, %seen, %bound) {
     my $obj = $node.object;
     if $obj.defined && $obj ~~ Statement {
-      self!scan-statement-locals($obj, %seen);
+      self!scan-statement-locals($obj, %seen, %bound);
     }
-    self!scan-node-locals($_, %seen) for $node.children;
+    self!scan-node-locals($_, %seen, %bound) for $node.children;
   }
 
-  method !scan-statement-locals(Statement:D $s, %seen) {
+  method !scan-statement-locals(Statement:D $s, %seen, %bound) {
     given $s.kind {
       when 'expression' {
         if $s.op ne '==' && !$s.is-bare-ident {
@@ -141,6 +199,7 @@ class DirectCodegen is export {
       }
       when 'for' {
         self!collect-ident-names($s.loop-iter // '', %seen);
+        %bound{$s.loop-var} = True if $s.loop-var;
       }
       when 'if' | 'elsif' | 'unless' | 'while' | 'repeat' | 'given' | 'when' {
         unless $s.is-bare-ident {
@@ -165,14 +224,15 @@ class DirectCodegen is export {
   }
 
   method !emit-plain(Plain:D $p, Int $offset --> Str) {
-    my $indent-str = $p.get-indent(:$offset);
-    my $text       = $p.text // '';
+    my $indent-expr = self!indent-expr-for($p, $offset);
+    my $text        = $p.text // '';
     if has-interp($text) {
-      '  ' ~ BUF-VAR ~ ' ~= ' ~ raku-str($indent-str) ~ ' ~ interpolate('
+      '  ' ~ BUF-VAR ~ ' ~= ' ~ $indent-expr ~ ' ~ interpolate('
         ~ raku-str($text) ~ ', ' ~ LOCALS-DYN-VAR ~ ', :line(' ~ ($p.line // 0)
         ~ '), :column(' ~ ($p.column // 0) ~ ')) ~ "\n";';
     } else {
-      '  ' ~ BUF-VAR ~ ' ~= ' ~ raku-str($indent-str ~ $text ~ "\n") ~ ';';
+      '  ' ~ BUF-VAR ~ ' ~= ' ~ $indent-expr ~ ' ~ '
+        ~ raku-str($text ~ "\n") ~ ';';
     }
   }
 
@@ -180,19 +240,21 @@ class DirectCodegen is export {
     return ().List if $c.silent;
 
     my @lines;
-    my $indent-str = $c.get-indent(:$offset);
+    my $indent-expr = self!indent-expr-for($c, $offset);
     if $node.children.elems {
-      @lines.push: '  ' ~ BUF-VAR ~ ' ~= ' ~ raku-str($indent-str ~ $c.open-tag ~ "\n") ~ ';';
+      @lines.push: '  ' ~ BUF-VAR ~ ' ~= ' ~ $indent-expr ~ ' ~ '
+        ~ raku-str($c.open-tag ~ "\n") ~ ';';
       @lines.append: self!emit-children-lines($node, $offset);
-      @lines.push: '  ' ~ BUF-VAR ~ ' ~= ' ~ raku-str($indent-str ~ $c.close-tag ~ "\n") ~ ';';
+      @lines.push: '  ' ~ BUF-VAR ~ ' ~= ' ~ $indent-expr ~ ' ~ '
+        ~ raku-str($c.close-tag ~ "\n") ~ ';';
     } else {
       my $text = $c.text;
       my $body = '';
       if $text {
         $body = $c.condition ?? $text !! " $text ";
       }
-      @lines.push: '  ' ~ BUF-VAR ~ ' ~= '
-        ~ raku-str($indent-str ~ $c.open-tag ~ $body ~ $c.close-tag ~ "\n") ~ ';';
+      @lines.push: '  ' ~ BUF-VAR ~ ' ~= ' ~ $indent-expr ~ ' ~ '
+        ~ raku-str($c.open-tag ~ $body ~ $c.close-tag ~ "\n") ~ ';';
     }
     @lines.List;
   }
@@ -211,65 +273,79 @@ class DirectCodegen is export {
   }
 
   method !emit-tag-lines(Node:D $node, Tag:D $t, Int $offset --> List) {
-    if self!tag-has-dynamic-attrs($t) {
-      return self!emit-dynamic-tag-lines($node, $t, $offset);
-    }
+    my $is-preserved = $!config.is-preserved($t.name);
+    my $remove-ws    = $!config.remove-whitespace;
+    my $trim-outer   = $t.trim-outer || $remove-ws;
+    my $trim-inner   = $t.trim-inner || ($remove-ws && !$is-preserved);
 
+    if self!tag-has-dynamic-attrs($t) {
+      return self!emit-dynamic-tag-lines(
+        $node, $t, $offset,
+        :$trim-outer, :$trim-inner, :$is-preserved,
+      );
+    }
+    self!emit-static-tag-lines(
+      $node, $t, $offset,
+      :$trim-outer, :$trim-inner, :$is-preserved,
+    );
+  }
+
+  method !emit-static-tag-lines(
+    Node:D $node, Tag:D $t, Int $offset,
+    Bool :$trim-outer, Bool :$trim-inner, Bool :$is-preserved,
+    --> List
+  ) {
     my @lines;
-    my $open       = $t.open(:$offset);
-    my $close      = $t.close;
-    my $content-rk = self!content-expr($t);
-    my $trim-outer = $t.trim-outer;
-    my $tb-prefix  = $trim-outer ?? raku-str(TRIM-BEFORE) ~ ' ~ ' !! '';
-    my $ta-suffix  = $trim-outer ?? ' ~ ' ~ raku-str(TRIM-AFTER) !! '';
+    my $indent-expr = self!indent-expr-for($t, $offset);
+    my $open-rest   = '<' ~ $t.name ~ $t.render-attrs ~ $t.open-suffix;
+    my $close       = $t.close;
+    my $content-rk  = self!content-expr($t);
+    my $tb-prefix   = $trim-outer ?? raku-str(TRIM-BEFORE) ~ ' ~ ' !! '';
+    my $ta-suffix   = $trim-outer ?? ' ~ ' ~ raku-str(TRIM-AFTER) !! '';
 
     if $t.self-close {
-      @lines.push: '  ' ~ BUF-VAR ~ ' ~= ' ~ $tb-prefix
-        ~ raku-str($open ~ $close) ~ $ta-suffix ~ ';';
+      @lines.push: '  ' ~ BUF-VAR ~ ' ~= ' ~ $tb-prefix ~ $indent-expr ~ ' ~ '
+        ~ raku-str($open-rest ~ $close) ~ $ta-suffix ~ ';';
       return @lines.List;
     }
 
     if !$node.children.elems {
-      @lines.push: '  ' ~ BUF-VAR ~ ' ~= ' ~ $tb-prefix
-        ~ raku-str($open) ~ ' ~ ' ~ $content-rk ~ ' ~ '
+      @lines.push: '  ' ~ BUF-VAR ~ ' ~= ' ~ $tb-prefix ~ $indent-expr ~ ' ~ '
+        ~ raku-str($open-rest) ~ ' ~ ' ~ $content-rk ~ ' ~ '
         ~ raku-str($close) ~ $ta-suffix ~ ';';
       return @lines.List;
     }
 
-    my $close-indent = $t.get-indent(:$offset);
-
-    @lines.push: '  ' ~ BUF-VAR ~ ' ~= ' ~ raku-str(TRIM-BEFORE) ~ ';' if $trim-outer;
-
-    my $content = $t.content // '';
-    if $content.chars {
-      @lines.push: '  ' ~ BUF-VAR ~ ' ~= ' ~ raku-str($open) ~ ' ~ ' ~ $content-rk ~ ' ~ "\n";';
-    } else {
-      @lines.push: '  ' ~ BUF-VAR ~ ' ~= ' ~ raku-str($open ~ "\n") ~ ';';
-    }
-
-    @lines.append: self!emit-children-lines($node, $offset);
-
-    @lines.push: '  ' ~ BUF-VAR ~ ' ~= ' ~ raku-str($close-indent ~ $close) ~ ';';
-    @lines.push: '  ' ~ BUF-VAR ~ ' ~= ' ~ raku-str(TRIM-AFTER) ~ ';' if $trim-outer;
-
+    self!emit-tag-with-children(
+      $node, $t, $offset,
+      :$trim-outer, :$trim-inner, :$is-preserved,
+      :open-expr($indent-expr ~ ' ~ ' ~ raku-str($open-rest)),
+      :close-expr(raku-str($close)),
+      :close-indent-expr($indent-expr),
+      :content-rk($content-rk),
+      :@lines,
+    );
     @lines.List;
   }
 
-  method !emit-dynamic-tag-lines(Node:D $node, Tag:D $t, Int $offset --> List) {
+  method !emit-dynamic-tag-lines(
+    Node:D $node, Tag:D $t, Int $offset,
+    Bool :$trim-outer, Bool :$trim-inner, Bool :$is-preserved,
+    --> List
+  ) {
     my @lines;
     my $tag-var      = self!next-tag-var;
-    my $tag-ctor     = ser-tag($t);
+    my $tag-ctor     = ser-tag($t, :config-var('$_haml_cfg'));
     @!tag-preamble-lines.push: '  state ' ~ $tag-var ~ ' = ' ~ $tag-ctor ~ ';';
 
     my $content-rk = self!content-expr($t);
-    my $trim-outer = $t.trim-outer;
     my $tb-prefix  = $trim-outer ?? raku-str(TRIM-BEFORE) ~ ' ~ ' !! '';
     my $ta-suffix  = $trim-outer ?? ' ~ ' ~ raku-str(TRIM-AFTER) !! '';
 
-    my $open-expr = 'render-direct-tag-open(' ~ $tag-var ~ ', ' ~ LOCALS-DYN-VAR
-      ~ ', :offset(' ~ $offset ~ '))';
-    my $close-expr = $tag-var ~ '.close';
-    my $close-indent-expr = $tag-var ~ '.get-indent(:offset(' ~ $offset ~ '))';
+    my $indent-expr = $tag-var ~ '.get-indent(:offset(' ~ $offset ~ '))';
+    my $open-expr   = 'render-direct-tag-open(' ~ $tag-var ~ ', '
+      ~ LOCALS-DYN-VAR ~ ', :offset(' ~ $offset ~ '))';
+    my $close-expr  = $tag-var ~ '.close';
 
     if $t.self-close {
       @lines.push: '  ' ~ BUF-VAR ~ ' ~= ' ~ $tb-prefix
@@ -284,21 +360,94 @@ class DirectCodegen is export {
       return @lines.List;
     }
 
+    self!emit-tag-with-children(
+      $node, $t, $offset,
+      :$trim-outer, :$trim-inner, :$is-preserved,
+      :$open-expr,
+      :$close-expr,
+      :close-indent-expr($indent-expr),
+      :content-rk($content-rk),
+      :@lines,
+    );
+    @lines.List;
+  }
+
+  method !emit-tag-with-children(
+    Node:D $node, Tag:D $t, Int $offset,
+    Bool :$trim-outer, Bool :$trim-inner, Bool :$is-preserved,
+    Str :$open-expr!,
+    Str :$close-expr!,
+    Str :$close-indent-expr!,
+    Str :$content-rk!,
+    :@lines!,
+  ) {
     @lines.push: '  ' ~ BUF-VAR ~ ' ~= ' ~ raku-str(TRIM-BEFORE) ~ ';' if $trim-outer;
 
     my $content = $t.content // '';
-    if $content.chars {
-      @lines.push: '  ' ~ BUF-VAR ~ ' ~= ' ~ $open-expr ~ ' ~ ' ~ $content-rk ~ ' ~ "\n";';
+
+    if $trim-inner {
+      if $content.chars {
+        @lines.push: '  ' ~ BUF-VAR ~ ' ~= ' ~ $open-expr ~ ' ~ ' ~ $content-rk ~ ';';
+      } else {
+        @lines.push: '  ' ~ BUF-VAR ~ ' ~= ' ~ $open-expr ~ ';';
+      }
+      self!emit-sub-buffer(
+        $node, $offset + 1,
+        :transform-kind<strip-ws>,
+        :@lines,
+      );
+      @lines.push: '  ' ~ BUF-VAR ~ ' ~= ' ~ $close-expr ~ ';';
+    } elsif $is-preserved {
+      @lines.push: '  ' ~ BUF-VAR ~ ' ~= ' ~ $open-expr ~ ';';
+      self!emit-sub-buffer(
+        $node, $offset,
+        :transform-kind<preserve-encode>,
+        :$close-indent-expr,
+        :@lines,
+      );
+      @lines.push: '  ' ~ BUF-VAR ~ ' ~= ' ~ $close-expr ~ ';';
     } else {
-      @lines.push: '  ' ~ BUF-VAR ~ ' ~= ' ~ $open-expr ~ ' ~ "\n";';
+      if $content.chars {
+        @lines.push: '  ' ~ BUF-VAR ~ ' ~= ' ~ $open-expr ~ ' ~ ' ~ $content-rk ~ ' ~ "\n";';
+      } else {
+        @lines.push: '  ' ~ BUF-VAR ~ ' ~= ' ~ $open-expr ~ ' ~ "\n";';
+      }
+      @lines.append: self!emit-children-lines($node, $offset);
+      @lines.push: '  ' ~ BUF-VAR ~ ' ~= ' ~ $close-indent-expr ~ ' ~ ' ~ $close-expr ~ ';';
     }
 
-    @lines.append: self!emit-children-lines($node, $offset);
-
-    @lines.push: '  ' ~ BUF-VAR ~ ' ~= ' ~ $close-indent-expr ~ ' ~ ' ~ $close-expr ~ ';';
     @lines.push: '  ' ~ BUF-VAR ~ ' ~= ' ~ raku-str(TRIM-AFTER) ~ ';' if $trim-outer;
+  }
 
-    @lines.List;
+  method !emit-sub-buffer(
+    Node:D $node, Int $offset,
+    Str :$transform-kind!,
+    Str :$close-indent-expr,
+    :@lines!,
+  ) {
+    my $name      = self!next-sub-buf;
+    my $save-var  = '$' ~ $name ~ '_save';
+    my $kids-var  = '$' ~ $name ~ '_kids';
+    @lines.push: '  do {';
+    @lines.push: '    my ' ~ $save-var ~ ' = ' ~ BUF-VAR ~ ';';
+    @lines.push: '    ' ~ BUF-VAR ~ ' = "";';
+    @lines.append: self!emit-children-lines($node, $offset);
+    @lines.push: '    my ' ~ $kids-var ~ ' = ' ~ BUF-VAR ~ ';';
+    @lines.push: '    ' ~ BUF-VAR ~ ' = ' ~ $save-var ~ ';';
+    given $transform-kind {
+      when 'strip-ws' {
+        @lines.push: '    ' ~ BUF-VAR ~ ' ~= ' ~ $kids-var
+          ~ '.subst(/^ \\s+/, "").subst(/\\s+ $/, "");';
+      }
+      when 'preserve-encode' {
+        @lines.push: '    ' ~ BUF-VAR ~ ' ~= ("\n" ~ ' ~ $kids-var ~ ' ~ '
+          ~ $close-indent-expr ~ ').subst("\n", "&#x000A;", :g);';
+      }
+      default {
+        unsupported('unknown sub-buffer transform: ' ~ $transform-kind);
+      }
+    }
+    @lines.push: '  };';
   }
 
   method !emit-statement-lines(Node:D $node, Statement:D $s, Int $offset --> List) {
@@ -319,20 +468,20 @@ class DirectCodegen is export {
 
   method !emit-expression-statement(Node:D $node, Statement:D $s, Int $offset --> List) {
     my @lines;
-    my $indent-str = $s.get-indent(:$offset);
+    my $indent-expr = self!indent-expr-for($s, $offset);
     my $line  = $s.line   // 0;
     my $col   = $s.column // 0;
     my $op    = $s.op     // '';
     my $expr  = $s.expr   // '';
 
     if $op eq '==' {
-      @lines.push: '  ' ~ BUF-VAR ~ ' ~= ' ~ raku-str($indent-str)
+      @lines.push: '  ' ~ BUF-VAR ~ ' ~= ' ~ $indent-expr
         ~ ' ~ interpolate(' ~ raku-str($expr) ~ ', ' ~ LOCALS-DYN-VAR
         ~ ', :line(' ~ $line ~ '), :column(' ~ $col ~ ')) ~ "\n";';
     } elsif $!config.suppress-eval {
       # No-op: eval suppressed; children (rendered below) carry on.
     } else {
-      @lines.append: self!emit-eval-statement($s, $indent-str, $line, $col, $expr);
+      @lines.append: self!emit-eval-statement($s, $indent-expr, $line, $col, $expr);
     }
 
     @lines.append: self!emit-children-lines($node, $offset);
@@ -340,8 +489,15 @@ class DirectCodegen is export {
   }
 
   method !wrap-eval(Str $expr, Int $line, Int $col --> Str) {
-    'eval-direct({ ' ~ $expr ~ ' }, ' ~ raku-str($expr)
-      ~ ', :line(' ~ $line ~ '), :column(' ~ $col ~ '))';
+    my $err = self!try-precompile($expr);
+    if $err.defined {
+      'do { '
+        ~ self!precompile-throw($expr, $line, $col, $err)
+        ~ ' }';
+    } else {
+      'eval-direct({ ' ~ $expr ~ ' }, ' ~ raku-str($expr)
+        ~ ', :line(' ~ $line ~ '), :column(' ~ $col ~ '))';
+    }
   }
 
   method !eval-cond-as-raku(
@@ -405,7 +561,9 @@ class DirectCodegen is export {
     @lines.push: '  for @(' ~ $iter-expr ~ ' // ()) -> $' ~ $var ~ ' {';
     @lines.push: '    my %*HAML-LOCALS = %*HAML-LOCALS.clone;';
     @lines.push: '    %*HAML-LOCALS<' ~ $var ~ '> = $' ~ $var ~ ';';
+    @!scope-vars.push: $var;
     @lines.append: self!emit-children-lines($node, $offset + 1);
+    @!scope-vars.pop;
     @lines.push: '  }';
     @lines.List;
   }
@@ -482,7 +640,7 @@ class DirectCodegen is export {
 
   method !emit-eval-statement(
     Statement:D $s,
-    Str  $indent-str,
+    Str  $indent-expr,
     Int  $line,
     Int  $col,
     Str  $expr,
@@ -503,24 +661,37 @@ class DirectCodegen is export {
       $escape-bool = $!config.escape-html;
     }
 
+    my $compile-err;
     my $value-expr;
     if $s.is-bare-ident {
       $value-expr = 'eval-bare-ident(' ~ raku-str($expr) ~ ', ' ~ LOCALS-DYN-VAR
         ~ ', :line(' ~ $line ~ '), :column(' ~ $col ~ '))';
     } else {
-      $value-expr = 'do { ' ~ $expr ~ ' }';
+      $compile-err = self!try-precompile($expr);
+      $value-expr = $compile-err.defined
+        ?? 'Nil'
+        !! 'do { ' ~ $expr ~ ' }';
+    }
+
+    my $trace-args = '';
+    if $!config.trace {
+      $trace-args = ', :block-source(' ~ raku-str(self!block-source($expr))
+        ~ '), :block-line(2)';
     }
 
     my @lines;
     @lines.push: '  do {';
     @lines.push: '    CATCH {';
-    @lines.push: '      when X::HAML::Eval { .throw }';
+    @lines.push: '      when X::HAML { .throw }';
     @lines.push: '      default {';
     @lines.push: '        X::HAML::Eval.new(:code(' ~ raku-str($expr)
       ~ '), :line(' ~ $line ~ '), :column(' ~ $col
-      ~ '), :reason(.message)).throw;';
+      ~ '), :reason(.message)' ~ $trace-args ~ ').throw;';
     @lines.push: '      }';
     @lines.push: '    }';
+    if $compile-err.defined {
+      @lines.push: '    ' ~ self!precompile-throw($expr, $line, $col, $compile-err);
+    }
     @lines.push: '    my @*HAML-CONCAT;';
     @lines.push: '    my $_haml_value = ' ~ $value-expr ~ ';';
     @lines.push: '    my $_haml_buffered = @*HAML-CONCAT.join("");';
@@ -535,11 +706,11 @@ class DirectCodegen is export {
         @lines.push: '    $_haml_str = $_haml_str.subst("\n", "&#x000A;", :g);';
       }
       @lines.push: '    ' ~ BUF-VAR ~ ' ~= '
-        ~ raku-str($indent-str) ~ ' ~ $_haml_buffered ~ $_haml_str ~ "\n";';
+        ~ $indent-expr ~ ' ~ $_haml_buffered ~ $_haml_str ~ "\n";';
     } else {
       @lines.push: '    if $_haml_buffered.chars {';
       @lines.push: '      ' ~ BUF-VAR ~ ' ~= '
-        ~ raku-str($indent-str) ~ ' ~ $_haml_buffered ~ "\n";';
+        ~ $indent-expr ~ ' ~ $_haml_buffered ~ "\n";';
       @lines.push: '    }';
     }
 
@@ -634,10 +805,10 @@ class DirectCodegen is export {
 
   method !preamble(@locals --> List) {
     my @lines;
-    @lines.push: '  my $cfg = ' ~ CONFIG-VAR ~ ' // ' ~ ser-config($!config) ~ ';';
+    @lines.push: '  my $_haml_cfg = ' ~ CONFIG-VAR ~ ' // ' ~ ser-config($!config) ~ ';';
     @lines.push: '  my Int $*HAML-TAB-OFFSET = 0;';
     @lines.push: '  my $*HAML-CTX = ' ~ CTX-VAR ~ ';';
-    @lines.push: '  my $*HAML-CFG = $cfg;';
+    @lines.push: '  my $*HAML-CFG = $_haml_cfg;';
     @lines.push: '  my ' ~ LOCALS-DYN-VAR ~ ' = ' ~ LOCALS-VAR ~ ';';
     @lines.push: '  my ' ~ BUF-VAR ~ ' = "";';
     for @locals -> $name {
@@ -672,13 +843,16 @@ class DirectCodegen is export {
 
   method !reset-state {
     $!tag-counter        = 0;
+    $!sub-buf-counter    = 0;
     @!tag-preamble-lines = ();
+    @!current-locals     = ();
   }
 
   method emit-direct(Node:D $tree --> Str) {
     self!reset-state;
     self!validate($tree);
     my @locals    = self!scan-locals($tree);
+    @!current-locals = @locals;
     my @body      = self!emit-children-lines($tree, 0);
     my @lines;
     @lines.append: self!uses;
@@ -695,6 +869,7 @@ class DirectCodegen is export {
     self!reset-state;
     self!validate($tree);
     my @locals    = self!scan-locals($tree);
+    @!current-locals = @locals;
     my @body      = self!emit-children-lines($tree, 0);
     my @lines;
     @lines.push: 'unit module ' ~ $module-name ~ ';';

@@ -52,10 +52,11 @@ sub fresh-dir(--> IO::Path) {
   ok $path.absolute.starts-with($dir.absolute), 'cache path is under configured dir';
 }
 
-# compile-to-cache writes the file
+# compile-to-cache writes the file (AST-emit specific shape)
 {
   my $dir  = fresh-dir;
-  my $haml = HAML.new(:compiled-cache-dir($dir));
+  my $cfg  = Template::HAML::Config.new(:emit<ast>);
+  my $haml = HAML.new(:compiled-cache-dir($dir), :config($cfg));
   my $path = $haml.compile-to-cache(:src("%p hi\n"));
   ok $path.e, 'compile-to-cache wrote the file';
   ok $path.s > 0, 'cache file is non-empty';

@@ -15,6 +15,33 @@ sub html-escape(Str() $s --> Str) is export {
     .subst("'", '&#39;', :g);
 }
 
+sub haml-indent(Int $base-level, Int $width --> Str) is export {
+  my $tab = (try { $*HAML-TAB-OFFSET }) // 0;
+  my $level = $base-level + $tab;
+  $level = 0 if $level < 0;
+  ' ' x ($level * $width);
+}
+
+sub haml-tag-open-rest(
+  Tag:D $tag, %locals --> Str
+) is export {
+  my $has-splat = $tag.attrs.grep({ $_ ~~ AttrSplat }).elems > 0;
+  my @expanded  = $has-splat ?? expand-splats($tag.attrs, %locals) !! $tag.attrs.list;
+  my @resolved  = resolve-attrs(@expanded, %locals);
+  if $has-splat {
+    @resolved = merge-attr-pairs(
+      @resolved,
+      :shorthand-classes($tag.classes.list),
+      :shorthand-ids($tag.ids.list),
+    );
+  }
+  if $tag.obj-ref-args.elems {
+    my ($cls, $id) = compute-obj-ref($tag, %locals);
+    @resolved = inject-obj-ref-attrs(@resolved, $cls, $id);
+  }
+  '<' ~ $tag.name ~ $tag.render-attrs(:attrs(@resolved)) ~ $tag.open-suffix;
+}
+
 sub lookup-bare-ident(Str $name, %locals) {
   return (True, %locals{$name}) if %locals{$name}:exists;
   my $ctx  = (try { $*HAML-CTX }) // Nil;
@@ -39,7 +66,7 @@ sub eval-direct(
   Int :$line = 0, Int :$column = 0
 ) is export {
   CATCH {
-    when X::HAML::Eval { .throw }
+    when X::HAML { .throw }
     default {
       X::HAML::Eval.new(
         :$code, :$line, :$column, :reason(.message),

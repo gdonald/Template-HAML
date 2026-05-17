@@ -31,6 +31,7 @@ sub config-fingerprint(Template::HAML::Config $cfg --> Str) is export {
     $cfg.hyphenate-data-attrs.Str,
     $cfg.output-indent-width.Str,
     $cfg.remove-whitespace.Str,
+    $cfg.trace.Str,
     $cfg.emit,
     $cfg.autoclose.sort.join(','),
     $cfg.preserve.sort.join(','),
@@ -88,4 +89,14 @@ sub write-cache-file(IO::Path $path, Str $contents) is export {
 
 sub read-cache-file(IO::Path $path --> Str) is export {
   $path.slurp;
+}
+
+my @invalidation-listeners;
+
+sub register-invalidation-listener(&cb) is export {
+  @invalidation-listeners.push: &cb;
+}
+
+sub notify-cache-invalidated() is export {
+  for @invalidation-listeners -> &cb { cb(); }
 }

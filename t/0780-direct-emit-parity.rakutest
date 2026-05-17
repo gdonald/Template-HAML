@@ -1,0 +1,88 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Template::HAML::Config;
+use Test;
+
+plan 25;
+
+my $LT = chr(60);
+my $GT = chr(62);
+
+sub round-trip(Str $src, Str :$desc, :%locals, Template::HAML::Config :$config) {
+  my $ast-cfg    = ($config // Template::HAML::Config.new).clone-with(:emit<ast>);
+  my $direct-cfg = ($config // Template::HAML::Config.new).clone-with(:emit<direct>);
+  my $expected = HAML.render(:$src, :%locals, :config($ast-cfg));
+  my $actual   = HAML.render(:$src, :%locals, :config($direct-cfg));
+  is $actual, $expected, ($desc // 'parity');
+}
+
+# ---- trim-inner ----
+round-trip "%p$LT hi\n",                                :desc('trim-inner inline content');
+round-trip "%blockquote$LT\n  %div\n    Foo!\n",        :desc('trim-inner strips inner whitespace');
+round-trip "%p$LT hello\n  %strong world\n",            :desc('trim-inner with content + child');
+round-trip "%p$LT$GT hi\n",                             :desc('trim-inner + trim-outer combined');
+round-trip "%p$GT$LT\n  %a hi\n",                       :desc('trim-outer + trim-inner combined');
+round-trip "%div\n  %p$LT$GT\n    %a hi\n",             :desc('combined trims as only child');
+
+# ---- preserved tags with children ----
+round-trip "%pre\n  Line 1\n  Line 2\n",                :desc('pre preserves inner ws');
+round-trip "%textarea\n  hello\n  world\n",             :desc('textarea preserves inner ws');
+round-trip "%pre Just text\n",                          :desc('pre with single-line content');
+round-trip "%div\n  %pre\n    text\n",                  :desc('pre nested in div');
+
+{
+  my $cfg = Template::HAML::Config.new(:preserve('custom-pre',));
+  round-trip "%custom-pre\n  hi\n", :config($cfg), :desc('custom preserve element');
+}
+
+{
+  my $cfg = Template::HAML::Config.new(:preserve('textarea',));
+  round-trip "%pre\n  hi\n", :config($cfg), :desc('pre not preserved when removed from list');
+}
+
+# ---- remove-whitespace ----
+{
+  my $cfg = Template::HAML::Config.new(:remove-whitespace);
+  round-trip "%p hi\n",                                  :config($cfg), :desc('remove-ws lone tag');
+  round-trip "%p first\n%p middle\n%p last\n",           :config($cfg), :desc('remove-ws siblings');
+  round-trip "%div\n  %p hi\n",                          :config($cfg), :desc('remove-ws nested');
+  round-trip "%div\n  %p\n    %span hi\n",               :config($cfg), :desc('remove-ws deeper');
+  round-trip "%img\n%img\n%img\n",                       :config($cfg), :desc('remove-ws void');
+  round-trip "%pre\n  Line 1\n  Line 2\n",               :config($cfg), :desc('remove-ws preserves pre');
+  round-trip "%div\n  %pre\n    hi\n",                   :config($cfg), :desc('remove-ws outer-trim on pre');
+}
+
+# ---- tab-up / tab-down ----
+round-trip "%div\n  - tab-up\n  %p deep\n  - tab-down\n  %p back\n", :desc('tab-up bumps indent');
+round-trip "%div\n  - tab-up 2\n  %p deep\n  - tab-down 2\n  %p back\n", :desc('tab-up 2 levels');
+round-trip "%div\n  - tab-up\n  hello\n  - tab-down\n",                  :desc('tab-up on plain text');
+
+# ---- isolation: tab-offset resets across renders ----
+{
+  my $cfg = Template::HAML::Config.new(:emit<direct>);
+  HAML.render(:src("%div\n  - tab-up\n  %p deep\n"), :config($cfg));
+  is HAML.render(:src("%p hi\n"), :config($cfg)),
+     "<p>hi</p>\n",
+     'tab offset resets between direct-emit renders';
+}
+
+# ---- find-and-preserve helper works in direct-emit body ----
+{
+  my $cfg = Template::HAML::Config.new(:emit<direct>);
+  my $src = qq[!= find-and-preserve("<pre>a\\nb</pre>")\n];
+  is HAML.render(:$src, :config($cfg)),
+     "<pre>a&#x000A;b</pre>\n",
+     'find-and-preserve helper callable in direct-emit';
+}
+
+# ---- find-and-preserve as a post-render pass (chained) ----
+{
+  my $cfg = Template::HAML::Config.new(:emit<direct>);
+  my $src = "%pre\n  hello\n  world\n";
+  my $rendered = HAML.render(:$src, :config($cfg));
+  is $rendered,
+     "<pre>&#x000A;  hello&#x000A;  world&#x000A;</pre>\n",
+     'pre preservation already &#x000A;-encoded in direct emit output';
+}

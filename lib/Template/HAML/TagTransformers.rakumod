@@ -1,4 +1,5 @@
 
+use Template::HAML::Cache;
 use Template::HAML::Node;
 use Template::HAML::Tag;
 
@@ -10,12 +11,14 @@ my @order;
 our sub register-tag-transformer(Str:D :$name!, :&handler!) is export {
   @order.push: $name unless %handlers{$name}:exists;
   %handlers{$name} = &handler;
+  notify-cache-invalidated();
 }
 
 our sub clear-tag-transformers(--> Int) is export {
   my $n = @order.elems;
   %handlers = ();
   @order = ();
+  notify-cache-invalidated();
   $n;
 }
 
@@ -23,6 +26,7 @@ our sub clear-tag-transformer(Str:D $name --> Bool) is export {
   return False unless %handlers{$name}:exists;
   %handlers{$name}:delete;
   @order = @order.grep(* ne $name);
+  notify-cache-invalidated();
   True;
 }
 
