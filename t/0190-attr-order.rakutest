@@ -6,22 +6,18 @@ use Test;
 
 plan 4;
 
-# id then class first regardless of source order
 is HAML.render(:src(Q<%a{title: 't', class: 'c', id: 'i', href: '/'}> ~ "\n")),
    "<a id='i' class='c' title='t' href='/'></a>\n",
    'id, class first; rest in insertion order';
 
-# stable insertion order for non-id/class attrs
 is HAML.render(:src(Q<%a{c: 3, a: 1, b: 2}> ~ "\n")),
    "<a c='3' a='1' b='2'></a>\n",
    'insertion order preserved';
 
-# id from shorthand combined with hash attrs (id still first)
 is HAML.render(:src(Q<%a#main{href: '/', class: 'cls'}> ~ "\n")),
    "<a id='main' class='cls' href='/'></a>\n",
    'id from shorthand still emitted first';
 
-# Class from shorthand merged then ordered
 is HAML.render(:src(Q<%a.foo{href: '/', id: 'm'}> ~ "\n")),
    "<a id='m' class='foo' href='/'></a>\n",
    'class from shorthand still after id';

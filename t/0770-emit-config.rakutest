@@ -7,8 +7,6 @@ use Test;
 
 plan 16;
 
-# ---- Config validation ----
-
 {
   # Default emit mode is direct. The HAML_DEFAULT_EMIT env var lets the
   # test harness flip the default back to ast for parity checks.
@@ -25,8 +23,6 @@ plan 16;
 dies-ok { Template::HAML::Config.new(:emit<wrong>) },
   'invalid emit value is rejected';
 
-# ---- clone-with preserves emit ----
-
 {
   my $cfg = Template::HAML::Config.new(:emit<direct>);
   my $c2 = $cfg.clone-with;
@@ -38,8 +34,6 @@ dies-ok { Template::HAML::Config.new(:emit<wrong>) },
   my $c2 = $cfg.clone-with(:emit<ast>);
   is $c2.emit, 'ast', 'clone-with(:emit) overrides';
 }
-
-# ---- HAML.render uses direct emit when configured ----
 
 sub round-trip(Str $src, %locals, Str $desc) {
   my $expected = HAML.render(:$src, :%locals);
@@ -58,8 +52,6 @@ round-trip Q[%a{|$attrs} go] ~ "\n",
   %(attrs => { href => '/x', title => 'X' }),
   'splat attrs via :emit<direct>';
 
-# ---- HAML.render :file works with :emit<direct> ----
-
 {
   my $tmp = $*TMPDIR.add('haml-emit-test-' ~ $*PID);
   mkdir $tmp unless $tmp.e;
@@ -73,8 +65,6 @@ round-trip Q[%a{|$attrs} go] ~ "\n",
   my $out  = $haml.render(:file<hello>, :locals(name => 'World'), :config($cfg));
   is $out.chomp, '<h1>Hello, World!</h1>', 'HAML.render(:file) works with :emit<direct>';
 }
-
-# ---- render-cached uses DirectCodegen for emit=direct ----
 
 {
   my $tmp = $*TMPDIR.add('haml-emit-cache-' ~ $*PID);
@@ -106,8 +96,6 @@ round-trip Q[%a{|$attrs} go] ~ "\n",
   my $out = $haml.render-cached(:$src, :locals(name => 'World'), :config($cfg));
   is $out.chomp, '<p>Hello, World!</p>', 'render-cached works with :emit<direct>';
 }
-
-# ---- ast and direct cache files are distinct (config fingerprint differs) ----
 
 {
   my $tmp = $*TMPDIR.add('haml-emit-keys-' ~ $*PID);

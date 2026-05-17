@@ -7,44 +7,37 @@ use Test;
 
 plan 7;
 
-# `= haml-concat($s)` emits unescaped
 my $r = HAML.render(:src(q:to/HAML/));
 = haml-concat('<b>x</b>')
 HAML
 is $r, "<b>x</b>\n", '= haml-concat emits unescaped value';
 
-# `- haml-concat($s)` writes to the buffer; silent statement still emits buffer
 $r = HAML.render(:src(q:to/HAML/));
 - haml-concat('one')
 - haml-concat('two')
 HAML
 is $r, "one\ntwo\n", '- haml-concat emits buffered content from silent statements';
 
-# Multiple appends in a single expression
 $r = HAML.render(:src(q:to/HAML/));
 - haml-concat('a'); haml-concat('b'); haml-concat('c')
 HAML
 is $r, "abc\n", 'multiple haml-concat calls accumulate in one statement';
 
-# Mixing buffer with return value
 $r = HAML.render(:src(q:to/HAML/));
 = do { haml-concat('pre-'); 'ret' }
 HAML
 is $r, "pre-ret\n", 'buffer flushes before return value on `=`';
 
-# Returned haml-concat result is SafeString — not escaped
 $r = HAML.render(:src(q:to/HAML/));
 = haml-concat('<&>')
 HAML
 is $r, "<&>\n", 'haml-concat return is SafeString (no escape)';
 
-# Inside a tag
 $r = HAML.render(:src(q:to/HAML/));
 %p
   = haml-concat('hi')
 HAML
 is $r, "<p>\n  hi\n</p>\n", 'haml-concat inside a tag indents output';
 
-# Plain context (no eval): bare call returns SafeString of arg
 my $ss = haml-concat('<a>');
 isa-ok $ss, Template::HAML::Helpers::SafeString, 'haml-concat outside eval returns SafeString';

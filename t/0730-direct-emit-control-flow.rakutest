@@ -37,8 +37,6 @@ sub round-trip(
   is $actual, $expected, $desc;
 }
 
-# ---- emit shape ----
-
 {
   my $tree = HAML.parse-source(:src("- if \$x\n  %p y\n"));
   my $code = DirectCodegen.new.emit-direct($tree);
@@ -52,8 +50,6 @@ sub round-trip(
   ok $code.contains('for @(eval-direct({ ^3 }') && $code.contains('-> $i'),
     'for-loop is inlined as native Raku (with template-line tracking)';
 }
-
-# ---- if / elsif / else / unless ----
 
 round-trip Q:to/HAML/, %(n => 1), 'if matches first branch';
 - if $n == 1
@@ -94,8 +90,6 @@ round-trip Q:to/HAML/, %(x => False), 'unless renders falsy branch';
   %p shown only when falsy
 HAML
 
-# ---- for loops ----
-
 round-trip Q:to/HAML/, %(items => [1, 2, 3]), 'for loop iterates locals';
 - for $items -> $i
   %li= $i
@@ -115,8 +109,6 @@ round-trip Q:to/HAML/, %(), 'nested for loops';
       %li= "$i.$j"
 HAML
 
-# ---- while ----
-
 round-trip Q:to/HAML/, %(items => [1, 2, 3].Array), 'while drains an array';
 - while $items.elems
   %li= $items.shift
@@ -127,14 +119,10 @@ round-trip Q:to/HAML/, %(), 'while with literal condition (false initially)';
   %p never
 HAML
 
-# ---- repeat ----
-
 round-trip "- repeat 3\n  %li hi\n",        %(),                   'repeat literal N';
 round-trip "- repeat \$n\n  %li= \"x\"\n",  %(n => 4),             'repeat dynamic N';
 round-trip "- repeat 0\n  %li nope\n",      %(),                   'repeat 0 renders nothing';
 round-trip "- repeat -5\n  %li nope\n",     %(),                   'repeat negative clamps to 0';
-
-# ---- given / when / default ----
 
 round-trip Q:to/HAML/, %(label => 2), 'given/when picks matching branch';
 - given $label
@@ -164,8 +152,6 @@ round-trip Q:to/HAML/, %(label => 'apple'), 'given with string match';
     %p veg
 HAML
 
-# ---- orphan elsif / else ----
-
 {
   my $tree = HAML.parse-source(:src("- elsif \$x\n  %p y\n"));
   dies-ok { DirectCodegen.new.emit-direct($tree) },
@@ -178,8 +164,6 @@ HAML
     'orphan else throws OrphanElse';
 }
 
-# ---- complex nested template ----
-
 round-trip Q:to/HAML/, %(name => 'world'), 'nested with statements and tags';
 %html
   %body
@@ -189,8 +173,6 @@ round-trip Q:to/HAML/, %(name => 'world'), 'nested with statements and tags';
       - for ^3 -> $i
         %li= $i
 HAML
-
-# ---- control flow with bare-ident cond ----
 
 class FlagCtx {
   method enabled(--> Bool) { True }
@@ -207,15 +189,11 @@ class FlagCtx {
     :context(FlagCtx.new);
 }
 
-# ---- if with predeclared locals also used outside ----
-
 round-trip Q:to/HAML/, %(x => 5, y => 10), 'predeclared locals visible inside and outside if';
 %p= $x
 - if $x < $y
   %p= $y
 HAML
-
-# ---- loop var shadows top-level local ----
 
 round-trip Q:to/HAML/, %(i => 'OUT', items => [1, 2]), 'loop var shadows outer local of same name';
 %p= $i
@@ -223,8 +201,6 @@ round-trip Q:to/HAML/, %(i => 'OUT', items => [1, 2]), 'loop var shadows outer l
   %p= $i
 %p= $i
 HAML
-
-# ---- multiple if-chains in same block ----
 
 round-trip Q:to/HAML/, %(a => 1, b => 2), 'multiple if-chains as siblings';
 - if $a

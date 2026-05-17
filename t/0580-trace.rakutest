@@ -16,13 +16,11 @@ sub trap-eval(&body) {
   Nil;
 }
 
-# Default is off
 {
   my $cfg = Template::HAML::Config.new;
   is $cfg.trace, False, 'trace defaults to False';
 }
 
-# clone-with preserves and overrides trace
 {
   my $cfg = Template::HAML::Config.new(:trace);
   is $cfg.trace, True, 'trace honored as named arg';
@@ -32,7 +30,6 @@ sub trap-eval(&body) {
   is $c3.trace, True, 'clone-with can flip trace on';
 }
 
-# trace=False: X::HAML::Eval has no breadcrumb
 {
   clear-eval-cache();
   my $cfg = Template::HAML::Config.new;
@@ -44,7 +41,6 @@ sub trap-eval(&body) {
   nok $err.message.contains('compiled block'), 'trace off: message has no block trace';
 }
 
-# trace=True: X::HAML::Eval carries the wrapped block source
 {
   clear-eval-cache();
   my $cfg = Template::HAML::Config.new(:trace);
@@ -60,7 +56,6 @@ sub trap-eval(&body) {
   ok $err.message.contains('template line 2 → block line 2'), 'trace on: message maps template line to block line';
 }
 
-# trace=True with locals: signature appears in the breadcrumb
 {
   clear-eval-cache();
   my $cfg = Template::HAML::Config.new(:trace);
@@ -70,7 +65,6 @@ sub trap-eval(&body) {
   ok $err.block-source.contains('-> $x'),   'trace on (locals): signature in source';
 }
 
-# Compile-time failure (bad Raku syntax in the body) also gets the trace
 {
   clear-eval-cache();
   my $cfg = Template::HAML::Config.new(:trace);
@@ -81,7 +75,6 @@ sub trap-eval(&body) {
   ok $err.message.contains('compiled block'), 'trace on: compile-time message has block trace';
 }
 
-# Direct codegen path picks up trace from serialized config
 {
   clear-eval-cache();
   my $cfg = Template::HAML::Config.new(:trace);
@@ -94,7 +87,6 @@ sub trap-eval(&body) {
   ok $err.block-source.defined,             'codegen+trace: block-source present';
 }
 
-# Direct codegen path: trace off => no breadcrumb
 {
   clear-eval-cache();
   my $cfg = Template::HAML::Config.new;
@@ -106,7 +98,6 @@ sub trap-eval(&body) {
   nok $err.block-source,                    'codegen no-trace: no block-source';
 }
 
-# Direct eval-haml call without a renderer: no breadcrumb (no $*HAML-CFG)
 {
   clear-eval-cache();
   my $err = trap-eval({ eval-haml('die "boom"', %(), :line(5), :column(2)) });

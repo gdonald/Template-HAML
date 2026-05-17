@@ -6,29 +6,24 @@ use Test;
 
 plan 5;
 
-# data: { id: 1, role: 'foo' } → data-id='1' data-role='foo'
 my $r = HAML.render(:src(Q<%a{data: {id: 1, role: 'foo'}}> ~ "\n"));
 ok $r.contains("data-id='1'") && $r.contains("data-role='foo'"),
    "data: hash expands to data-* attrs (got: $r)";
 
-# aria: { label: 'x', hidden: True } → aria-label='x' aria-hidden
 $r = HAML.render(:src(Q<%a{aria: {label: 'x', hidden: True}}> ~ "\n"));
 ok $r.contains("aria-label='x'") && $r.contains("aria-hidden"),
    "aria: hash expands; True renders as bare attr (got: $r)";
 
-# recursive — data: { user: { id: 1 } } → data-user-id='1'
 $r = HAML.render(:src(Q<%a{data: {user: {id: 1}}}> ~ "\n"));
 is $r,
    "<a data-user-id='1'></a>\n",
    'recursive data:user:id expansion';
 
-# Two-level recursion
 $r = HAML.render(:src(Q<%a{data: {user: {profile: {url: '/u'}}}}> ~ "\n"));
 is $r,
    "<a data-user-profile-url='/u'></a>\n",
    'deeper recursion';
 
-# Mixed leaf + nested
 $r = HAML.render(:src(Q<%a{data: {x: 1, y: {z: 2}}}> ~ "\n"));
 ok $r.contains("data-x='1'") && $r.contains("data-y-z='2'"),
    "mixed leaf/nested data: (got: $r)";

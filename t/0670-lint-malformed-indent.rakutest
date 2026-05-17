@@ -13,13 +13,11 @@ sub diags-for(:$src --> List) {
   $linter.lint(:$src).list;
 }
 
-# Clean source produces no diagnostics.
 {
   my @d = diags-for(:src("%p hi\n%p there\n"));
   is @d.elems, 0, 'clean source has no diagnostics';
 }
 
-# Trailing spaces are flagged.
 {
   my @d = diags-for(:src("%p hi   \n"));
   is @d.elems, 1, 'trailing spaces flagged';
@@ -29,14 +27,12 @@ sub diags-for(:$src --> List) {
   like @d[0].message, /'trailing whitespace'/, 'message describes trailing whitespace';
 }
 
-# Trailing tab is flagged.
 {
   my @d = diags-for(:src("%p hi\t\n"));
   is @d.elems, 1, 'trailing tab flagged';
   like @d[0].message, /'trailing whitespace'/, 'tab counts as trailing whitespace';
 }
 
-# Whitespace-only "blank" line is flagged distinctly.
 {
   my @d = diags-for(:src("%p one\n   \n%p two\n"));
   is @d.elems, 1, 'one diagnostic for the all-whitespace line';
@@ -45,13 +41,11 @@ sub diags-for(:$src --> List) {
        'message names the whitespace-only blank line case';
 }
 
-# Genuinely empty blank lines are fine.
 {
   my @d = diags-for(:src("%p one\n\n%p two\n"));
   is @d.elems, 0, 'empty blank line is not flagged';
 }
 
-# Multiple lines of trailing whitespace get separate diagnostics.
 {
   my @d = diags-for(:src("%p a \n%p b  \n%p c\n"));
   is @d.elems, 2, 'two distinct trailing-whitespace diagnostics';
@@ -59,7 +53,6 @@ sub diags-for(:$src --> List) {
   is @d[1].line, 2, 'second on line 2';
 }
 
-# CLI integration.
 sub capture(@args) {
   my $tmp     = $*TMPDIR.add("haml-mi-out-{$*PID}-{(^999999).pick}");
   my $tmp-err = $*TMPDIR.add("haml-mi-err-{$*PID}-{(^999999).pick}");

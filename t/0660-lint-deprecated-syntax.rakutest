@@ -13,7 +13,6 @@ sub diags-for(:$src --> List) {
   $linter.lint(:$src).list;
 }
 
-# `:ruby` filter (top-level, no body) is flagged.
 {
   my $src = ":ruby\n";
   my @d = diags-for(:$src);
@@ -25,7 +24,6 @@ sub diags-for(:$src --> List) {
   like @d[0].message, /':raku'/, 'message suggests :raku replacement';
 }
 
-# `:ruby` indented inside a tag, with body lines, is flagged on the :ruby line.
 {
   my $src = "%div\n  :ruby\n    say 'hi'\n";
   my @d = diags-for(:$src);
@@ -34,7 +32,6 @@ sub diags-for(:$src --> List) {
   is @d[0].column, 3, 'column points past indent to start of ":ruby"';
 }
 
-# Lines that merely mention "ruby" or use :raku are not flagged.
 {
   my @d = diags-for(:src(":raku\n  say 'ok'\n"));
   is @d.elems, 0, ':raku is not flagged';
@@ -45,7 +42,6 @@ sub diags-for(:$src --> List) {
   is @d.elems, 0, 'text mentioning :ruby is not flagged';
 }
 
-# CLI integration.
 sub capture(@args) {
   my $tmp     = $*TMPDIR.add("haml-dep-out-{$*PID}-{(^999999).pick}");
   my $tmp-err = $*TMPDIR.add("haml-dep-err-{$*PID}-{(^999999).pick}");

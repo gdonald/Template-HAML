@@ -15,7 +15,6 @@ sub fresh-dir(--> IO::Path) {
   $base;
 }
 
-# cache key stability
 {
   my $a = HAML.new.compiled-cache-key(:src("%p hi\n"));
   my $b = HAML.new.compiled-cache-key(:src("%p hi\n"));
@@ -38,7 +37,6 @@ sub fresh-dir(--> IO::Path) {
   isnt $a, $b, 'config affects cache key';
 }
 
-# on-disk layout
 {
   my $dir   = fresh-dir;
   my $haml  = HAML.new(:compiled-cache-dir($dir));
@@ -52,7 +50,6 @@ sub fresh-dir(--> IO::Path) {
   ok $path.absolute.starts-with($dir.absolute), 'cache path is under configured dir';
 }
 
-# compile-to-cache writes the file (AST-emit specific shape)
 {
   my $dir  = fresh-dir;
   my $cfg  = Template::HAML::Config.new(:emit<ast>);
@@ -65,7 +62,6 @@ sub fresh-dir(--> IO::Path) {
   ok $contents.contains('Tag.new('),   'cached file contains tag construction';
 }
 
-# compile-to-cache is idempotent (file mtime unchanged on second call)
 {
   my $dir  = fresh-dir;
   my $haml = HAML.new(:compiled-cache-dir($dir));
@@ -77,8 +73,6 @@ sub fresh-dir(--> IO::Path) {
   is $path2.modified.Num, $mtime,     'cache file mtime unchanged on hit';
 }
 
-# load-from-cache returns a callable sub
-
 {
   my $dir  = fresh-dir;
   my $haml = HAML.new(:compiled-cache-dir($dir));
@@ -88,7 +82,6 @@ sub fresh-dir(--> IO::Path) {
   is fn(), HAML.render(:src("%p hi\n")), 'cached sub matches HAML.render';
 }
 
-# render-cached end-to-end
 {
   my $dir  = fresh-dir;
   my $haml = HAML.new(:compiled-cache-dir($dir));
@@ -104,7 +97,6 @@ sub fresh-dir(--> IO::Path) {
   'render-cached matches interpreter on nested tags';
 }
 
-# env override
 {
   my $dir = fresh-dir;
   temp %*ENV<HAML_COMPILED_CACHE> = $dir.absolute;
@@ -113,7 +105,6 @@ sub fresh-dir(--> IO::Path) {
   'HAML_COMPILED_CACHE env overrides the default';
 }
 
-# clear-compiled-cache
 {
   my $dir  = fresh-dir;
   my $haml = HAML.new(:compiled-cache-dir($dir));
@@ -128,7 +119,6 @@ sub fresh-dir(--> IO::Path) {
   'cleared cache no longer has previous entries';
 }
 
-# xhtml round-trip via cache
 {
   my $dir  = fresh-dir;
   my $cfg  = Template::HAML::Config.new(:format<xhtml>);

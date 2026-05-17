@@ -25,7 +25,6 @@ sub fresh-dir(--> IO::Path) {
   ok $precomp.e && $precomp.d, '.precomp directory created after first render';
 }
 
-# Cached file lives under Template/HAML/Compiled/T<key>.rakumod.
 {
   my $dir  = fresh-dir;
   my $haml = HAML.new(:compiled-cache-dir($dir));

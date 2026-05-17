@@ -9,7 +9,6 @@ plan 10;
 
 sub render(Str $src, *%args) { HAML.render(:$src, |%args) }
 
-# pre / textarea preserve inner whitespace
 is render("%pre\n  Line 1\n  Line 2\n"),
    "<pre>&#x000A;  Line 1&#x000A;  Line 2&#x000A;</pre>\n",
    'pre tag preserves inner whitespace as &#x000A;';
@@ -26,19 +25,16 @@ is render("%div\n  %pre\n    text\n"),
    "<div>\n  <pre>&#x000A;    text&#x000A;  </pre>\n</div>\n",
    'pre nested in div preserves whitespace';
 
-# Custom preserve list
 my $cfg = Template::HAML::Config.new(:preserve('custom-pre',));
 is render("%custom-pre\n  hi\n", :config($cfg)),
    "<custom-pre>&#x000A;  hi&#x000A;</custom-pre>\n",
    'custom preserve element honored via config';
 
-# pre is NOT preserved when removed from list
 my $cfg2 = Template::HAML::Config.new(:preserve('textarea',));
 is render("%pre\n  hi\n", :config($cfg2)),
    "<pre>\n  hi\n</pre>\n",
    'pre not preserved when removed from preserve list';
 
-# ~ operator for forced preserve
 is render("~ \"line1\\nline2\"\n"),
    "line1&#x000A;line2\n",
    '~ operator preserves newlines';
@@ -51,7 +47,6 @@ is render("%div\n  ~ \"a\\nb\"\n"),
    "<div>\n  a&#x000A;b\n</div>\n",
    '~ operator inside a tag';
 
-# ~ should HTML-escape by default
 is render("~ '<a>'\n"),
    "&lt;a&gt;\n",
    '~ operator html-escapes by default';

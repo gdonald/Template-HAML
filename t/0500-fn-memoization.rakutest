@@ -20,7 +20,6 @@ sub fresh-haml-file(IO::Path $root, Str $body --> IO::Path) {
   $f;
 }
 
-# fn cache starts empty (after explicit clear; module-level cache is shared)
 {
   my $dir  = fresh-dir;
   my $haml = HAML.new(:compiled-cache-dir($dir));
@@ -28,7 +27,6 @@ sub fresh-haml-file(IO::Path $root, Str $body --> IO::Path) {
   is $haml.compiled-fn-cache-size, 0, 'fn cache starts at 0';
 }
 
-# render-cached populates fn cache
 {
   my $dir  = fresh-dir;
   my $haml = HAML.new(:compiled-cache-dir($dir));
@@ -39,7 +37,6 @@ sub fresh-haml-file(IO::Path $root, Str $body --> IO::Path) {
   is $haml.compiled-fn-cache-size, 1, 'second call with same src does not grow cache';
 }
 
-# different src yields a separate entry
 {
   my $dir  = fresh-dir;
   my $haml = HAML.new(:compiled-cache-dir($dir));
@@ -49,7 +46,6 @@ sub fresh-haml-file(IO::Path $root, Str $body --> IO::Path) {
   is $haml.compiled-fn-cache-size, 2, 'different src yields distinct fn cache entries';
 }
 
-# different config yields a separate entry
 {
   my $dir  = fresh-dir;
   my $haml = HAML.new(:compiled-cache-dir($dir));
@@ -62,7 +58,6 @@ sub fresh-haml-file(IO::Path $root, Str $body --> IO::Path) {
   is $haml.compiled-fn-cache-size, 2, 'different config yields distinct fn entries';
 }
 
-# memoization proof: removing the cache file after first render does not break second render
 {
   my $dir  = fresh-dir;
   my $haml = HAML.new(:compiled-cache-dir($dir));
@@ -77,7 +72,6 @@ sub fresh-haml-file(IO::Path $root, Str $body --> IO::Path) {
   is $out2, $out1, 'second render still works without disk file (fn memoized in-process)';
 }
 
-# clear-compiled-fn-cache returns count and empties cache
 {
   my $dir  = fresh-dir;
   my $haml = HAML.new(:compiled-cache-dir($dir));
@@ -88,7 +82,6 @@ sub fresh-haml-file(IO::Path $root, Str $body --> IO::Path) {
   is $haml.compiled-fn-cache-size, 0, 'fn cache empty after clear';
 }
 
-# clear-compiled-cache (disk) also clears fn cache as a side effect
 {
   my $dir  = fresh-dir;
   my $haml = HAML.new(:compiled-cache-dir($dir));
@@ -99,7 +92,6 @@ sub fresh-haml-file(IO::Path $root, Str $body --> IO::Path) {
   is $haml.compiled-fn-cache-size, 0, 'clear-compiled-cache also clears fn cache';
 }
 
-# render-file-cached memoizes per-file
 {
   my $dir  = fresh-dir;
   my $tpl  = fresh-haml-file($dir, "%p file-memoization\n");
@@ -111,7 +103,6 @@ sub fresh-haml-file(IO::Path $root, Str $body --> IO::Path) {
   is $haml.compiled-fn-cache-size, 1, 'second call does not grow cache';
 }
 
-# file content change yields a new entry; output reflects the new source
 {
   my $dir  = fresh-dir;
   my $tpl  = fresh-haml-file($dir, "%p one\n");
@@ -126,7 +117,6 @@ sub fresh-haml-file(IO::Path $root, Str $body --> IO::Path) {
   is $haml.compiled-fn-cache-size, 2, 'old and new entries both present';
 }
 
-# memoization is shared across HAML instances when the key matches
 {
   my $dir1 = fresh-dir;
   my $dir2 = fresh-dir;

@@ -20,7 +20,6 @@ sub fresh-haml-file(IO::Path $root, Str $body --> IO::Path) {
   $f;
 }
 
-# file cache key stability
 {
   my $dir   = fresh-dir;
   my $tpl   = fresh-haml-file($dir, "%p hi\n");
@@ -32,7 +31,6 @@ sub fresh-haml-file(IO::Path $root, Str $body --> IO::Path) {
   ok $a ~~ /^ <[0..9 a..f]>+ $/, 'file cache key is hex';
 }
 
-# mtime change -> different key
 {
   my $dir  = fresh-dir;
   my $tpl  = fresh-haml-file($dir, "%p hi\n");
@@ -45,7 +43,6 @@ sub fresh-haml-file(IO::Path $root, Str $body --> IO::Path) {
   isnt $a, $b, 'mtime change yields a different cache key';
 }
 
-# content change (which also bumps mtime) -> different key + recompile
 {
   my $dir  = fresh-dir;
   my $tpl  = fresh-haml-file($dir, "%p hi\n");
@@ -63,7 +60,6 @@ sub fresh-haml-file(IO::Path $root, Str $body --> IO::Path) {
   isnt $contents1, $contents2, 'cached emitted Raku differs after source change';
 }
 
-# compile-file-to-cache idempotent when file unchanged
 {
   my $dir  = fresh-dir;
   my $tpl  = fresh-haml-file($dir, "%p hello\n");
@@ -76,7 +72,6 @@ sub fresh-haml-file(IO::Path $root, Str $body --> IO::Path) {
   is $p2.modified.Num, $m1, 'cache file mtime unchanged on hit';
 }
 
-# render-file-cached end-to-end
 {
   my $dir  = fresh-dir;
   my $tpl  = fresh-haml-file($dir, "%p\n  = \$name\n");
@@ -89,7 +84,6 @@ sub fresh-haml-file(IO::Path $root, Str $body --> IO::Path) {
   'render-file-cached matches interpreter output';
 }
 
-# render-file-cached re-renders after the file changes
 {
   my $dir  = fresh-dir;
   my $tpl  = fresh-haml-file($dir, "%p one\n");
@@ -103,7 +97,6 @@ sub fresh-haml-file(IO::Path $root, Str $body --> IO::Path) {
   'second render reflects updated file content';
 }
 
-# config affects file cache key
 {
   my $dir  = fresh-dir;
   my $tpl  = fresh-haml-file($dir, "%br\n");
@@ -120,7 +113,6 @@ sub fresh-haml-file(IO::Path $root, Str $body --> IO::Path) {
   isnt $a, $b, 'config affects file cache key';
 }
 
-# file resolution honors search-paths
 {
   my $dir   = fresh-dir;
   my $views = $dir.add('views');

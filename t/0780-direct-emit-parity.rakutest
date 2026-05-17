@@ -18,7 +18,6 @@ sub round-trip(Str $src, Str :$desc, :%locals, Template::HAML::Config :$config) 
   is $actual, $expected, ($desc // 'parity');
 }
 
-# ---- trim-inner ----
 round-trip "%p$LT hi\n",                                :desc('trim-inner inline content');
 round-trip "%blockquote$LT\n  %div\n    Foo!\n",        :desc('trim-inner strips inner whitespace');
 round-trip "%p$LT hello\n  %strong world\n",            :desc('trim-inner with content + child');
@@ -26,7 +25,6 @@ round-trip "%p$LT$GT hi\n",                             :desc('trim-inner + trim
 round-trip "%p$GT$LT\n  %a hi\n",                       :desc('trim-outer + trim-inner combined');
 round-trip "%div\n  %p$LT$GT\n    %a hi\n",             :desc('combined trims as only child');
 
-# ---- preserved tags with children ----
 round-trip "%pre\n  Line 1\n  Line 2\n",                :desc('pre preserves inner ws');
 round-trip "%textarea\n  hello\n  world\n",             :desc('textarea preserves inner ws');
 round-trip "%pre Just text\n",                          :desc('pre with single-line content');
@@ -42,7 +40,6 @@ round-trip "%div\n  %pre\n    text\n",                  :desc('pre nested in div
   round-trip "%pre\n  hi\n", :config($cfg), :desc('pre not preserved when removed from list');
 }
 
-# ---- remove-whitespace ----
 {
   my $cfg = Template::HAML::Config.new(:remove-whitespace);
   round-trip "%p hi\n",                                  :config($cfg), :desc('remove-ws lone tag');
@@ -54,12 +51,10 @@ round-trip "%div\n  %pre\n    text\n",                  :desc('pre nested in div
   round-trip "%div\n  %pre\n    hi\n",                   :config($cfg), :desc('remove-ws outer-trim on pre');
 }
 
-# ---- tab-up / tab-down ----
 round-trip "%div\n  - tab-up\n  %p deep\n  - tab-down\n  %p back\n", :desc('tab-up bumps indent');
 round-trip "%div\n  - tab-up 2\n  %p deep\n  - tab-down 2\n  %p back\n", :desc('tab-up 2 levels');
 round-trip "%div\n  - tab-up\n  hello\n  - tab-down\n",                  :desc('tab-up on plain text');
 
-# ---- isolation: tab-offset resets across renders ----
 {
   my $cfg = Template::HAML::Config.new(:emit<direct>);
   HAML.render(:src("%div\n  - tab-up\n  %p deep\n"), :config($cfg));
@@ -68,7 +63,6 @@ round-trip "%div\n  - tab-up\n  hello\n  - tab-down\n",                  :desc('
      'tab offset resets between direct-emit renders';
 }
 
-# ---- find-and-preserve helper works in direct-emit body ----
 {
   my $cfg = Template::HAML::Config.new(:emit<direct>);
   my $src = qq[!= find-and-preserve("<pre>a\\nb</pre>")\n];
@@ -77,7 +71,6 @@ round-trip "%div\n  - tab-up\n  hello\n  - tab-down\n",                  :desc('
      'find-and-preserve helper callable in direct-emit';
 }
 
-# ---- find-and-preserve as a post-render pass (chained) ----
 {
   my $cfg = Template::HAML::Config.new(:emit<direct>);
   my $src = "%pre\n  hello\n  world\n";

@@ -18,12 +18,10 @@ is HAML.render(:src("%div\n  %span Inner\n")),
    "<div>\n  <span>Inner</span>\n</div>\n",
    'block: only children, no inline content';
 
-# tag with content AND children — content first, then children
 is HAML.render(:src("%h1 Title\n  %span Sub\n")),
    "<h1>Title\n  <span>Sub</span>\n</h1>\n",
    'inline content precedes children';
 
-# Nested deep
 my $src = qq:to/HAML/;
 %html
   %head

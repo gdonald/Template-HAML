@@ -30,7 +30,6 @@ sub write-haml(Str:D $content --> Str) {
 
 my $nl = "\n";
 
-# help
 {
   my $r = capture(['fmt', '--help']);
   is $r<exit>, 0, 'fmt --help exits 0';
@@ -39,27 +38,23 @@ my $nl = "\n";
   like $r<out>, /'--check'/,    'fmt help mentions --check';
 }
 
-# top-level help mentions fmt
 {
   my $r = capture(['help']);
   like $r<out>, /'fmt'/, 'top-level help mentions fmt';
 }
 
-# missing file argument
 {
   my $r = capture(['fmt']);
   is $r<exit>, 2, 'fmt without args exits 2';
   like $r<err>, /'missing file argument'/, 'mentions missing arg';
 }
 
-# file not found
 {
   my $r = capture(['fmt', '/no/such/path-haml-test.haml']);
   is $r<exit>, 1, 'fmt missing file exits 1';
   like $r<err>, /'file not found'/, 'mentions file not found';
 }
 
-# render to stdout
 {
   my $path = write-haml('%p hello' ~ $nl);
   my $r = capture(['fmt', $path]);
@@ -68,7 +63,6 @@ my $nl = "\n";
   $path.IO.unlink;
 }
 
-# canonicalization: HTML-style → hash form
 {
   my $path = write-haml(q{%a(href='/about')} ~ $nl);
   my $r = capture(['fmt', $path]);
@@ -76,7 +70,6 @@ my $nl = "\n";
   $path.IO.unlink;
 }
 
-# -o writes to file
 {
   my $in  = write-haml('%p hi' ~ $nl);
   my $out-path = $*TMPDIR.add("haml-fmt-out-{$*PID}-{(^999999).pick}.haml");
@@ -87,7 +80,6 @@ my $nl = "\n";
   $out-path.unlink;
 }
 
-# --in-place rewrites the file
 {
   my $path = write-haml('%a(href=\'/\')' ~ $nl);
   my $r = capture(['fmt', '--in-place', $path]);
@@ -96,7 +88,6 @@ my $nl = "\n";
   $path.IO.unlink;
 }
 
-# --check: file already canonical
 {
   my $path = write-haml('%p hi' ~ $nl);
   my $r = capture(['fmt', '--check', $path]);
@@ -105,7 +96,6 @@ my $nl = "\n";
   $path.IO.unlink;
 }
 
-# --check: file not canonical
 {
   my $path = write-haml('%a(href=\'/\')' ~ $nl);
   my $r = capture(['fmt', '--check', $path]);
@@ -114,7 +104,6 @@ my $nl = "\n";
   $path.IO.unlink;
 }
 
-# mutually exclusive flags
 {
   my $path = write-haml('%p hi' ~ $nl);
   my $r = capture(['fmt', '--in-place', '-o', '/tmp/x', $path]);
@@ -122,7 +111,6 @@ my $nl = "\n";
   $path.IO.unlink;
 }
 
-# end-to-end idempotency on a richer document
 {
   my $src = '!!! 5'                                ~ $nl
           ~ '%html'                                ~ $nl

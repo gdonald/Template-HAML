@@ -37,7 +37,6 @@ sub capture(@args, Str :$stdin) {
   { :$exit, :out($out-text), :err($err-text) };
 }
 
-# top-level help
 {
   my $r = capture(['help']);
   is $r<exit>, 0, 'help exits 0';
@@ -46,7 +45,6 @@ sub capture(@args, Str :$stdin) {
   like $r<out>, /'check'/,  'help lists check';
 }
 
-# per-command help
 {
   my $r = capture(['render', '--help']);
   is $r<exit>, 0, 'render --help exits 0';
@@ -60,14 +58,12 @@ sub capture(@args, Str :$stdin) {
   like $r<out>, /'haml check'/, 'check help mentions command';
 }
 
-# Unknown command exits non-zero
 {
   my $r = capture(['frobnicate']);
   isnt $r<exit>, 0, 'unknown command non-zero exit';
   like $r<err>, /"unknown command"/, 'mentions unknown command';
 }
 
-# render to stdout
 {
   my $dir  = make-tmpdir;
   my $file = $dir.add('hello.haml');
@@ -79,7 +75,6 @@ sub capture(@args, Str :$stdin) {
   $dir.rmdir;
 }
 
-# render to file via -o
 {
   my $dir  = make-tmpdir;
   my $file = $dir.add('hello.haml');
@@ -94,7 +89,6 @@ sub capture(@args, Str :$stdin) {
   $dir.rmdir;
 }
 
-# --locals
 {
   my $dir  = make-tmpdir;
   my $file = $dir.add('locals.haml');
@@ -106,7 +100,6 @@ sub capture(@args, Str :$stdin) {
   $dir.rmdir;
 }
 
-# --format xhtml affects void elements
 {
   my $dir  = make-tmpdir;
   my $file = $dir.add('void.haml');
@@ -119,7 +112,6 @@ sub capture(@args, Str :$stdin) {
   $dir.rmdir;
 }
 
-# --no-escape-html
 {
   my $dir  = make-tmpdir;
   my $file = $dir.add('esc.haml');
@@ -133,7 +125,6 @@ sub capture(@args, Str :$stdin) {
   $dir.rmdir;
 }
 
-# --ugly
 {
   my $dir  = make-tmpdir;
   my $file = $dir.add('ugly.haml');
@@ -145,14 +136,12 @@ sub capture(@args, Str :$stdin) {
   $dir.rmdir;
 }
 
-# Missing file
 {
   my $r = capture(['render', 'does-not-exist.haml']);
   isnt $r<exit>, 0, 'missing file non-zero exit';
   like $r<err>, /'not found'/, 'mentions not found';
 }
 
-# check on valid file
 {
   my $dir  = make-tmpdir;
   my $file = $dir.add('ok.haml');
@@ -164,7 +153,6 @@ sub capture(@args, Str :$stdin) {
   $dir.rmdir;
 }
 
-# check on bad file
 {
   my $dir  = make-tmpdir;
   my $file = $dir.add('bad.haml');
@@ -173,21 +161,18 @@ sub capture(@args, Str :$stdin) {
   isnt $r<exit>, 0, 'check bad file non-zero exit';
 }
 
-# Unknown render option
 {
   my $r = capture(['render', '--bogus', 'foo']);
   isnt $r<exit>, 0, 'unknown render option non-zero exit';
   like $r<err>, /'unknown option'/, 'mentions unknown option';
 }
 
-# render from stdin via '-'
 {
   my $r = capture(['render', '-'], :stdin("%p hello\n"));
   is $r<exit>, 0, 'render - exit 0';
   is $r<out>.chomp, '<p>hello</p>', 'render - reads source from stdin';
 }
 
-# stdin with --locals
 {
   my $r = capture(['render', '--locals', 'name=Bob', '-'],
                   :stdin("%p Hi \#\{\$name\}\n"));
@@ -195,7 +180,6 @@ sub capture(@args, Str :$stdin) {
   is $r<out>.chomp, '<p>Hi Bob</p>', 'locals threaded through stdin render';
 }
 
-# stdin with -o writes to file
 {
   my $dir = make-tmpdir;
   my $out = $dir.add('stdin-out.html');
@@ -206,21 +190,18 @@ sub capture(@args, Str :$stdin) {
   $dir.rmdir;
 }
 
-# parse error on stdin reports <stdin>
 {
   my $r = capture(['render', '-'], :stdin("\t %p mixed\n  %p indent\n"));
   isnt $r<exit>, 0, 'bad stdin source non-zero exit';
   like $r<err>, /'<stdin>'/, 'error label is <stdin>';
 }
 
-# '-' may be given at most once
 {
   my $r = capture(['render', '-', '-'], :stdin("%p ok\n"));
   isnt $r<exit>, 0, "two '-' positionals non-zero exit";
   like $r<err>, /"at most once"/, 'mentions stdin restriction';
 }
 
-# render help mentions stdin
 {
   my $r = capture(['render', '--help']);
   like $r<out>, /"standard input"/, 'render help mentions stdin';

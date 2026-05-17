@@ -6,7 +6,6 @@ use Test;
 
 plan 6;
 
-# True → bare attribute (HTML5)
 is HAML.render(:src(Q<%input{disabled: True}> ~ "\n")),
    "<input disabled>\n",
    'True renders as bare attribute';
@@ -15,7 +14,6 @@ is HAML.render(:src(Q<%input{checked: true}> ~ "\n")),
    "<input checked>\n",
    'lowercase true renders as bare attribute';
 
-# False → omit
 is HAML.render(:src(Q<%input{disabled: False}> ~ "\n")),
    "<input>\n",
    'False omits the attribute';
@@ -24,12 +22,10 @@ is HAML.render(:src(Q<%input{disabled: false, checked: True}> ~ "\n")),
    "<input checked>\n",
    'False omitted, True kept';
 
-# Nil → omit
 is HAML.render(:src(Q<%input{title: Nil}> ~ "\n")),
    "<input>\n",
    'Nil omits the attribute';
 
-# Empty string → name=""
 is HAML.render(:src(Q<%input{title: ''}> ~ "\n")),
    "<input title=''>\n",
    'empty string renders as empty value';

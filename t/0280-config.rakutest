@@ -7,7 +7,6 @@ use Test;
 
 plan 34;
 
-# Configuration object
 {
   my $cfg = Template::HAML::Config.new;
   is $cfg.format,        'html5',  'default format is html5';
@@ -19,12 +18,10 @@ plan 34;
   is $cfg.suppress-eval, False,    'default suppress-eval is False';
 }
 
-# Validation
 dies-ok { Template::HAML::Config.new(:format<bogus>) }, 'invalid format dies';
 dies-ok { Template::HAML::Config.new(:output-style<weird>) }, 'invalid output-style dies';
 dies-ok { Template::HAML::Config.new(:attr-quote<x>) }, 'invalid attr-quote dies';
 
-# Format option — XHTML void self-close
 {
   my $cfg = Template::HAML::Config.new(:format<xhtml>);
   is HAML.render(:src("%br\n"), :config($cfg)),
@@ -36,7 +33,6 @@ dies-ok { Template::HAML::Config.new(:attr-quote<x>) }, 'invalid attr-quote dies
      'XHTML void %img emits <img />';
 }
 
-# Format option — HTML5 void no self-close marker
 {
   my $cfg = Template::HAML::Config.new(:format<html5>);
   is HAML.render(:src("%br\n"), :config($cfg)),
@@ -44,7 +40,6 @@ dies-ok { Template::HAML::Config.new(:attr-quote<x>) }, 'invalid attr-quote dies
      'HTML5 void emits bare tag';
 }
 
-# Format affects boolean attribute rendering
 {
   my $cfg = Template::HAML::Config.new(:format<xhtml>);
   is HAML.render(:src("%input\(disabled\)\n"), :config($cfg)),
@@ -57,7 +52,6 @@ dies-ok { Template::HAML::Config.new(:attr-quote<x>) }, 'invalid attr-quote dies
      'HTML5 boolean attr is bare';
 }
 
-# Default doctype follows format
 {
   my $cfg-html5 = Template::HAML::Config.new(:format<html5>);
   is HAML.render(:src("!!!\n"), :config($cfg-html5)),
@@ -75,7 +69,6 @@ dies-ok { Template::HAML::Config.new(:attr-quote<x>) }, 'invalid attr-quote dies
      'XHTML default doctype';
 }
 
-# escape_html
 {
   my $cfg = Template::HAML::Config.new(:escape-html(False));
   is HAML.render(:src("= \$x\n"), :locals(%(x => '<b>')), :config($cfg)),
@@ -96,7 +89,6 @@ dies-ok { Template::HAML::Config.new(:attr-quote<x>) }, 'invalid attr-quote dies
      'escape-html True: != still does not escape';
 }
 
-# escape_attrs
 {
   my $cfg-off = Template::HAML::Config.new(:escape-attrs(False));
   is HAML.render(:src("%a\{href: 'a&b'\}\n"), :config($cfg-off)),
@@ -109,7 +101,6 @@ dies-ok { Template::HAML::Config.new(:attr-quote<x>) }, 'invalid attr-quote dies
      'escape-attrs True (default): ampersand escaped';
 }
 
-# Output style — ugly
 {
   my $cfg = Template::HAML::Config.new(:output-style<ugly>);
   is HAML.render(:src("%div\n  %p hi\n"), :config($cfg)),
@@ -117,7 +108,6 @@ dies-ok { Template::HAML::Config.new(:attr-quote<x>) }, 'invalid attr-quote dies
      'ugly: no whitespace between tags';
 }
 
-# autoclose customization
 {
   my $cfg = Template::HAML::Config.new(:autoclose(<custom-tag br>), :format<xhtml>);
   is HAML.render(:src("%custom-tag\n"), :config($cfg)),
@@ -129,7 +119,6 @@ dies-ok { Template::HAML::Config.new(:attr-quote<x>) }, 'invalid attr-quote dies
      'autoclose without img: img is no longer void';
 }
 
-# Encoding for XML doctype
 {
   my $cfg = Template::HAML::Config.new(:encoding<iso-8859-1>);
   is HAML.render(:src("!!! XML\n"), :config($cfg)),
@@ -137,7 +126,6 @@ dies-ok { Template::HAML::Config.new(:attr-quote<x>) }, 'invalid attr-quote dies
      'encoding option drives XML decl';
 }
 
-# attr_quote
 {
   my $cfg = Template::HAML::Config.new(:attr-quote('"'));
   is HAML.render(:src("%a\{href: '/'\}\n"), :config($cfg)),
@@ -145,7 +133,6 @@ dies-ok { Template::HAML::Config.new(:attr-quote<x>) }, 'invalid attr-quote dies
      'attr-quote " uses double quotes';
 }
 
-# suppress_eval
 {
   my $cfg = Template::HAML::Config.new(:suppress-eval);
   is HAML.render(:src("= \$x\n"), :locals(%(x => 'hello')), :config($cfg)),
@@ -157,12 +144,10 @@ dies-ok { Template::HAML::Config.new(:attr-quote<x>) }, 'invalid attr-quote dies
      'suppress-eval: - skipped, but tags still render';
 }
 
-# Default config singleton round-trip — class-level render still works
 is HAML.render(:src("%p hi\n")),
    "<p>hi</p>\n",
    'class-level render with no config still works';
 
-# Per-render config overrides instance config
 {
   my $h = HAML.new(:config(Template::HAML::Config.new(:format<xhtml>)));
   is $h.render(:src("%br\n")),

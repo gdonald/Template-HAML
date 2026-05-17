@@ -32,7 +32,6 @@ sub fresh-file(IO::Path $root, Str $body --> IO::Path) {
   $f;
 }
 
-# ---- direct codegen path: = statement ----
 {
   my $src = "%p first\n= no_such_sub_xyzzy()\n";
   my &fn  = compile-source($src);
@@ -41,7 +40,6 @@ sub fresh-file(IO::Path $root, Str $body --> IO::Path) {
   is $err.line, 2,             '= statement: line points to template line';
 }
 
-# ---- direct codegen path: != statement (raw) ----
 {
   my $src = "%p hi\n%p body\n!= boom_xyzzy()\n";
   my &fn  = compile-source($src);
@@ -50,7 +48,6 @@ sub fresh-file(IO::Path $root, Str $body --> IO::Path) {
   is $err.line, 3,             '!= statement: line maps to template line 3';
 }
 
-# ---- &= statement ----
 {
   my $src = "\n\n&= boom_xyzzy()\n";
   my &fn  = compile-source($src);
@@ -59,7 +56,6 @@ sub fresh-file(IO::Path $root, Str $body --> IO::Path) {
   is $err.line, 3,             '&= statement: line maps to template line 3';
 }
 
-# ---- == interpolation statement ----
 {
   my $src = "%p first\n%p second\n== bad: #\{boom_xyzzy()}\n";
   my &fn  = compile-source($src);
@@ -68,7 +64,6 @@ sub fresh-file(IO::Path $root, Str $body --> IO::Path) {
   is $err.line, 3,             '== interpolation: line maps to template line';
 }
 
-# ---- silent statement evaluated in control flow head ----
 {
   my $src = "%p ok\n- if boom_xyzzy()\n  %p inside\n";
   my &fn  = compile-source($src);
@@ -77,7 +72,6 @@ sub fresh-file(IO::Path $root, Str $body --> IO::Path) {
   is $err.line, 2,             'if-condition: line maps to template line 2';
 }
 
-# ---- for loop iterator eval ----
 {
   my $src = "\n- for boom_xyzzy() -> \$i\n  %li= \$i\n";
   my &fn  = compile-source($src);
@@ -86,7 +80,6 @@ sub fresh-file(IO::Path $root, Str $body --> IO::Path) {
   is $err.line, 2,             'for-iterator: line maps to template line 2';
 }
 
-# ---- while statement ----
 {
   my $src = "%p first\n- while boom_xyzzy()\n  %p loop\n";
   my &fn  = compile-source($src);
@@ -95,7 +88,6 @@ sub fresh-file(IO::Path $root, Str $body --> IO::Path) {
   is $err.line, 2,             'while statement: line maps to template line 2';
 }
 
-# ---- attribute splat eval ----
 {
   my $src = Q[%p ok] ~ "\n" ~ Q[%a{|boom_xyzzy()} link] ~ "\n";
   my &fn  = compile-source($src);
@@ -104,7 +96,6 @@ sub fresh-file(IO::Path $root, Str $body --> IO::Path) {
   is $err.line, 2,             'attribute splat: line maps to template line 2';
 }
 
-# ---- given/when eval ----
 {
   my $src = "%p ok\n- given 1\n  - when boom_xyzzy()\n    %p inside\n";
   my &fn  = compile-source($src);
@@ -113,7 +104,6 @@ sub fresh-file(IO::Path $root, Str $body --> IO::Path) {
   is $err.line, 3,             'when clause: line maps to template line 3';
 }
 
-# ---- interpolated plain text ----
 {
   my $src = "%p ok\n#\{boom_xyzzy()}\n";
   my &fn  = compile-source($src);
@@ -122,7 +112,6 @@ sub fresh-file(IO::Path $root, Str $body --> IO::Path) {
   is $err.line, 2,             'interpolated plain text: line maps to template line 2';
 }
 
-# ---- end-to-end via render-cached preserves line mapping ----
 {
   my $dir  = fresh-dir;
   my $haml = HAML.new(:compiled-cache-dir($dir));
@@ -132,7 +121,6 @@ sub fresh-file(IO::Path $root, Str $body --> IO::Path) {
   is $err.line, 3,             'render-cached: line maps to template line 3';
 }
 
-# ---- end-to-end via render-file-cached preserves line mapping ----
 {
   my $dir  = fresh-dir;
   my $tpl  = fresh-file($dir, "%p first\n%p second\n%p third\n= boom_xyzzy()\n");

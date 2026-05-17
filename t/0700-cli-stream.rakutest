@@ -37,7 +37,6 @@ sub write-template(Str:D $body --> IO::Path) {
   $p;
 }
 
-# --stream renders a file to stdout
 {
   my $f = write-template("%h1 Title\n%p body\n");
   my $r = capture(['render', '--stream', $f.Str]);
@@ -47,14 +46,12 @@ sub write-template(Str:D $body --> IO::Path) {
   $f.unlink;
 }
 
-# --stream with stdin
 {
   my $r = capture(['render', '--stream', '-'], :stdin("%p hi\n"));
   is $r<exit>, 0, '--stream with stdin exits 0';
   like $r<out>, /'<p>hi</p>'/, 'stream stdin output rendered';
 }
 
-# --stream + -o writes to file
 {
   my $f = write-template("%p one\n%p two\n");
   my $out-path = $*TMPDIR.add("haml-stream-out-{$*PID}-{(^999999).pick}.html");
@@ -67,7 +64,6 @@ sub write-template(Str:D $body --> IO::Path) {
   $out-path.unlink;
 }
 
-# --stream rejects --watch
 {
   my $r = capture(['render', '--stream', '--watch', '-o', 'x.html', 'a.haml']);
   is $r<exit>, 2, '--stream + --watch exits 2';

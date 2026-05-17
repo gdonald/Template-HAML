@@ -10,7 +10,6 @@ sub fmt(Str:D $src) { format-source($src) }
 
 my $nl = "\n";
 
-# Embedded code
 is fmt('= 1 + 2' ~ $nl),
    '= 1 + 2' ~ $nl,
    'expression with =';
@@ -63,7 +62,6 @@ is fmt('- repeat 3' ~ $nl ~ '  %p hi' ~ $nl),
    '- repeat 3' ~ $nl ~ '  %p hi' ~ $nl,
    'repeat block';
 
-# Comments
 is fmt('/ Hello' ~ $nl),
    '/ Hello' ~ $nl,
    'inline HTML comment';
@@ -96,7 +94,6 @@ is fmt('-# inline' ~ $nl ~ '  body line' ~ $nl),
    '-# inline' ~ $nl ~ '  body line' ~ $nl,
    'silent comment with both inline and body';
 
-# Doctype
 is fmt('!!!' ~ $nl),
    '!!!' ~ $nl,
    'bare doctype';
@@ -117,7 +114,6 @@ is fmt('!!! XML iso-8859-1' ~ $nl),
    '!!! XML iso-8859-1' ~ $nl,
    'XML doctype with encoding';
 
-# Filters
 is fmt(':plain' ~ $nl ~ '  hello' ~ $nl),
    ':plain' ~ $nl ~ '  hello' ~ $nl,
    'plain filter';
@@ -130,7 +126,6 @@ is fmt(':css' ~ $nl ~ '  body { color: red; }' ~ $nl),
    ':css' ~ $nl ~ '  body { color: red; }' ~ $nl,
    'css filter';
 
-# Idempotency
 is fmt('!!! 5' ~ $nl ~ '%html' ~ $nl ~ '  %head' ~ $nl ~ '    %title hi' ~ $nl ~ '  %body' ~ $nl ~ '    /' ~ $nl ~ '      %p comment' ~ $nl ~ '    - for $x in @items' ~ $nl ~ '      %li= $x' ~ $nl),
    fmt(fmt('!!! 5' ~ $nl ~ '%html' ~ $nl ~ '  %head' ~ $nl ~ '    %title hi' ~ $nl ~ '  %body' ~ $nl ~ '    /' ~ $nl ~ '      %p comment' ~ $nl ~ '    - for $x in @items' ~ $nl ~ '      %li= $x' ~ $nl)),
    'fmt is idempotent on a mixed document';

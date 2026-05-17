@@ -140,7 +140,6 @@ is HAML.render(:src($src12)),
    "<a class='foo' href='/' title='home'></a>\n",
    'continuation across three lines';
 
-# line numbers are preserved across a multi-line attribute hash
 my $src13 = q:to/HAML/;
 %div{
   class: 'wrap'

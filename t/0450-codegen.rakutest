@@ -21,8 +21,6 @@ sub round-trip(Str $src, %locals, Str $desc, Template::HAML::Config :$config) {
   is $actual, $expected, $desc;
 }
 
-# ---- emit-source returns Raku code ----
-
 {
   my $src = "%p hi\n";
   my $code = HAML.compile-source-to-raku(:$src);
@@ -31,8 +29,6 @@ sub round-trip(Str $src, %locals, Str $desc, Template::HAML::Config :$config) {
   ok $code.contains('Tag.new('),                 'emitted source reconstructs Tag nodes';
 }
 
-# ---- core node types ----
-
 round-trip "%p hello\n",                          %(),                'plain inline tag';
 round-trip "%div\n  %p first\n  %p second\n",     %(),                'nested tags';
 round-trip "%br\n",                               %(),                'void element self-closes';
@@ -40,18 +36,12 @@ round-trip "%p.x.y#main hi\n",                    %(),                'shorthand
 round-trip "%p Plain text content\n",             %(),                'tag with text content';
 round-trip "Plain at top\n",                      %(),                'plain text node';
 
-# ---- doctypes ----
-
 round-trip "!!!\n%html\n  %body\n",               %(),                'html5 doctype';
 round-trip "!!! XML\n",                           %(),                'XML declaration';
-
-# ---- comments ----
 
 round-trip "/ a comment\n",                       %(),                'visible comment';
 round-trip "-# silent\n",                         %(),                'silent comment';
 round-trip "/[if IE]\n  %p hi\n",                 %(),                'conditional comment block';
-
-# ---- statements / control flow ----
 
 round-trip "= \$name\n",                          %(name => 'World'), 'expression statement';
 round-trip "!= \$raw\n",                          %(raw  => '<b>x</b>'), 'unescaped expression';
@@ -88,20 +78,14 @@ round-trip Q:to/HAML/, %(label => 2), 'given/when statement';
     %p other
 HAML
 
-# ---- attributes ----
-
 round-trip Q[%a(href='/' title='Home') home] ~ "\n",      %(),                       'static attrs';
 round-trip Q[%a{href: $url} go] ~ "\n",                   %(url => '/x'),            'dynamic hash attr';
 round-trip Q[%div{data: {foo: 1, bar: 'baz'}} body] ~ "\n", %(),                     'data hash expansion';
-
-# ---- attribute splat ----
 
 my %sp = href => '/about', title => 'About';
 round-trip Q[%a{|$attrs} link] ~ "\n",                    %(attrs => %sp),           'attribute splat';
 
 round-trip Q[%div.shorthand{|$attrs} body] ~ "\n", %(attrs => { class => 'extra' }), 'splat merges with shorthand';
-
-# ---- object reference ----
 
 class Account {
   has Int $.id;
@@ -110,11 +94,7 @@ class Account {
 my $acct = Account.new(:id(7));
 round-trip Q[%div[$acct] hi] ~ "\n",                      %(acct => $acct),          'object reference';
 
-# ---- interpolation in shorthand ----
-
 round-trip Q[%li.item-#{$id} hi] ~ "\n",                  %(id => 42),               'interpolated class shorthand';
-
-# ---- filters ----
 
 round-trip Q:to/HAML/, %(name => 'World'), 'plain filter with interpolation';
 :plain
@@ -126,14 +106,10 @@ round-trip Q:to/HAML/, %(), 'escaped filter';
   <b>x</b>
 HAML
 
-# ---- config preservation ----
-
 {
   my $cfg = Template::HAML::Config.new(:format<xhtml>);
   round-trip "%br\n", %(), :config($cfg), 'xhtml self-close in compiled output';
 }
-
-# ---- multi tree depth ----
 
 round-trip Q:to/HAML/, %(name => 'world'), 'nested with statements and tags';
 %html

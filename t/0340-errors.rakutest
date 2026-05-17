@@ -18,7 +18,6 @@ sub catch-it(&block) {
   $caught;
 }
 
-# X::HAML base attributes
 {
   my $e = X::HAML.new(:line(7), :column(3), :file('foo.haml'), :snippet('%bad'));
   is $e.line,    7,         'X::HAML.line';
@@ -30,7 +29,6 @@ sub catch-it(&block) {
   ok $e.caret.contains('%bad'), 'X::HAML.caret shows snippet';
 }
 
-# Subclasses inherit base attributes
 {
   for X::HAML::ParseFail, X::HAML::IndentMixed, X::HAML::IllegalIndent,
       X::HAML::DuplicateId, X::HAML::DoctypeNotFirst -> $cls {
@@ -41,7 +39,6 @@ sub catch-it(&block) {
   }
 }
 
-# IndentInconsistent carries unit/got
 {
   my $e = X::HAML::IndentInconsistent.new(
     :line(3), :column(1), :unit(2), :got(3), :snippet('   x'),
@@ -52,7 +49,6 @@ sub catch-it(&block) {
   ok $e.message.contains('^'), 'IndentInconsistent shows caret';
 }
 
-# Parse failure on bad input
 {
   my $e = catch-it({ HAML.render(:src("\%9bad\n")) });
   isa-ok $e, X::HAML, 'parse failure raises X::HAML';
@@ -60,7 +56,6 @@ sub catch-it(&block) {
   ok $e.column.defined, 'parse failure has column';
 }
 
-# Multi-line parse failure points to the failing line
 {
   my $src = "\%p hello\n\%9bad\n";
   my $e = catch-it({ HAML.render(:src($src)) });
@@ -69,7 +64,6 @@ sub catch-it(&block) {
   ok $e.snippet.defined, 'parse failure snippet defined';
 }
 
-# Mixed-indent error
 {
   my $src = "\%p\n  \%a hi\n\t\%b bye\n";
   my $e = catch-it({ HAML.render(:src($src)) });
@@ -79,7 +73,6 @@ sub catch-it(&block) {
   ok $e.snippet.defined,     'mixed indent snippet defined';
 }
 
-# Inconsistent indent error
 {
   my $src = "\%p\n  \%a hi\n   \%b bye\n";
   my $e = catch-it({ HAML.render(:src($src)) });
@@ -87,7 +80,6 @@ sub catch-it(&block) {
   is $e.line, 3, 'inconsistent indent line';
 }
 
-# Doctype-not-first
 {
   my $src = "\%p hi\n!!! 5\n";
   my $e = catch-it({ HAML.render(:src($src)) });
@@ -96,21 +88,18 @@ sub catch-it(&block) {
   ok $e.snippet.defined, 'doctype-not-first snippet defined';
 }
 
-# Unknown doctype
 {
   my $e = catch-it({ HAML.render(:src("!!! Bogus\n")) });
   isa-ok $e, X::HAML::UnknownDoctype, 'unknown doctype raises';
   is $e.arg, 'Bogus', 'UnknownDoctype.arg';
 }
 
-# Unknown filter
 {
   my $e = catch-it({ HAML.render(:src(":nope\n  body\n")) });
   isa-ok $e, X::HAML::UnknownFilter, 'unknown filter raises';
   is $e.name, 'nope', 'UnknownFilter.name';
 }
 
-# Void with children
 {
   my $src = "\%br\n  \%span hi\n";
   my $e = catch-it({ HAML.render(:src($src)) });
@@ -118,14 +107,12 @@ sub catch-it(&block) {
   is $e.name, 'br', 'VoidWithChildren.name';
 }
 
-# Orphan else
 {
   my $e = catch-it({ HAML.render(:src("- else\n  \%p hi\n")) });
   isa-ok $e, X::HAML::OrphanElse, 'orphan else raises';
   is $e.kind, 'else', 'OrphanElse.kind';
 }
 
-# Eval error
 {
   my $e = catch-it({ eval-haml('die "boom"', %(), :line(5), :column(2)) });
   isa-ok $e, X::HAML::Eval, 'eval error raises';
@@ -134,7 +121,6 @@ sub catch-it(&block) {
   ok $e.code.defined, 'Eval.code';
 }
 
-# Template not found
 {
   my $haml = HAML.new;
   my $e = catch-it({ $haml.render(:file('does-not-exist')) });
@@ -142,7 +128,6 @@ sub catch-it(&block) {
   is $e.name, 'does-not-exist', 'TemplateNotFound.name';
 }
 
-# haml-debug is a no-op without HAML_DEBUG
 {
   %*ENV<HAML_DEBUG>:delete;
   lives-ok { haml-debug('quiet') }, 'haml-debug no-op when HAML_DEBUG unset';

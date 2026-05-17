@@ -11,7 +11,6 @@ my $GT = chr(62);
 
 sub render(Str $src) { HAML.render(:$src) }
 
-# Outer trim `>`
 is render("%p$GT hi\n"),
    "<p>hi</p>",
    'trim-outer on lone tag strips trailing newline';
@@ -32,7 +31,6 @@ is render("%div\n  %a one\n  %b$GT two\n  %c three\n"),
    "<div>\n  <a>one</a><b>two</b><c>three</c>\n</div>\n",
    'trim-outer on middle child eats surrounding whitespace';
 
-# Inner trim `<`
 is render("%p$LT hi\n"),
    "<p>hi</p>\n",
    'trim-inner with only inline content unchanged';
@@ -45,7 +43,6 @@ is render("%p$LT hello\n  %strong world\n"),
    "<p>hello<strong>world</strong></p>\n",
    'trim-inner with content and child renders inline';
 
-# Combined `<>` / `><`
 is render("%p$LT$GT hi\n"),
    "<p>hi</p>",
    'trim-inner+trim-outer combined (<>) on lone tag';
@@ -58,7 +55,6 @@ is render("%div\n  %p$LT$GT\n    %a hi\n"),
    "<div><p><a>hi</a></p></div>\n",
    'combined trims as only child of parent';
 
-# Edge cases
 is render("%p$GT\n"),
    "<p></p>",
    'trim-outer on empty tag';

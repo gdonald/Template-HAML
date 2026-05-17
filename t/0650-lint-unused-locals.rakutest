@@ -13,19 +13,16 @@ sub diags-for(:$src, :%locals --> List) {
   $linter.lint(:$src, :%locals).list;
 }
 
-# No locals → no diagnostics (rule sleeps without input).
 {
   my @d = diags-for(:src("%p hi\n"));
   is @d.elems, 0, 'no locals → no unused-locals diagnostics';
 }
 
-# Local that is referenced → no diagnostic.
 {
   my @d = diags-for(:src("%p Hello \#\{\$name\}\n"), :locals{ :name<Alice> });
   is @d.elems, 0, 'used local → no diagnostic';
 }
 
-# Local that is not referenced → one diagnostic.
 {
   my @d = diags-for(:src("%p hi\n"), :locals{ :name<Alice> });
   is @d.elems, 1, 'unused local → one diagnostic';
@@ -34,7 +31,6 @@ sub diags-for(:$src, :%locals --> List) {
   like @d[0].message, /'$name'/, 'message names the unused local';
 }
 
-# Multiple locals: only the unused one is reported.
 {
   my @d = diags-for(
     :src("%p Hi \#\{\$name\}\n"),
@@ -46,7 +42,6 @@ sub diags-for(:$src, :%locals --> List) {
   ok @names[1] ~~ /'$role'/, 'second diagnostic names $role';
 }
 
-# Reference inside `=` expression also counts.
 {
   my @d = diags-for(
     :src("= \$total + 1\n"),
@@ -55,7 +50,6 @@ sub diags-for(:$src, :%locals --> List) {
   is @d.elems, 0, 'expression reference counts as used';
 }
 
-# Reference inside `- my ... ` also counts.
 {
   my @d = diags-for(
     :src("- my \$x = \$base * 2\n"),
@@ -64,7 +58,6 @@ sub diags-for(:$src, :%locals --> List) {
   is @d.elems, 0, 'reference inside silent-script counts as used';
 }
 
-# Reference inside an attribute hash counts as used.
 {
   my @d = diags-for(
     :src("%a\{:href(\$url)\} link\n"),
@@ -73,7 +66,6 @@ sub diags-for(:$src, :%locals --> List) {
   is @d.elems, 0, 'attribute-hash reference counts as used';
 }
 
-# `$foo` substring inside `$foobar` should not count as use of `$foo`.
 {
   my @d = diags-for(
     :src("%p Hi \#\{\$foobar\}\n"),
@@ -83,7 +75,6 @@ sub diags-for(:$src, :%locals --> List) {
   like @d[0].message, /'$foo'/, 'diagnostic is about $foo, not $foobar';
 }
 
-# CLI: --locals threaded through to rule.
 sub capture(@args) {
   my $tmp     = $*TMPDIR.add("haml-ul-out-{$*PID}-{(^999999).pick}");
   my $tmp-err = $*TMPDIR.add("haml-ul-err-{$*PID}-{(^999999).pick}");
@@ -105,13 +96,11 @@ sub capture(@args) {
   my $file = $dir.add('greet.haml');
   $file.spurt("%p Hi \#\{\$name\}\n");
 
-  # Unused local 'age' is flagged.
   my $r = capture(['lint', '--locals', 'name,age', $file.Str]);
   is $r<exit>, 1, 'unused local triggers non-zero exit';
   like $r<out>, /'unused-locals'/, 'output names the rule';
   like $r<out>, /'$age'/, 'output names the unused local';
 
-  # When all locals are used the lint passes.
   my $r2 = capture(['lint', '--locals', 'name', $file.Str]);
   is $r2<exit>, 0, 'all-used → exit 0';
   is $r2<out>, '', 'no diagnostic output when all used';

@@ -6,7 +6,6 @@ use Test;
 
 plan 27;
 
-# Interpolation in tag content
 is HAML.render(:src(Q[%p Hello, #{$name}!] ~ "\n"), :locals(%(name => 'world'))),
    "<p>Hello, world!</p>\n",
    '#{...} in tag content';
@@ -31,7 +30,6 @@ is HAML.render(:src(Q[%p Two: #{1+1} and three: #{1+2}] ~ "\n")),
    "<p>Two: 2 and three: 3</p>\n",
    'multiple interpolations on one line';
 
-# Interpolation in attribute values
 is HAML.render(
   :src(Q[%a{href: "/users/#{$id}"}link] ~ "\n"),
   :locals(%(id => 7))
@@ -53,7 +51,6 @@ is HAML.render(
    "<a href='/q?x=a&amp;b'>link</a>\n",
    'interpolated attr value is HTML-escaped';
 
-# Interpolation in plain text
 is HAML.render(:src(Q[Hello, #{$name}!] ~ "\n"), :locals(%(name => 'world'))),
    "Hello, world!\n",
    '#{...} in plain text';
@@ -66,7 +63,6 @@ is HAML.render(:src(Q[#{$x}] ~ "\n"), :locals(%(x => '<x>'))),
    "&lt;x&gt;\n",
    '#{...} in plain text escapes';
 
-# Round-trip with HTML chars
 is HAML.render(:src(Q[%p #{$s}] ~ "\n"), :locals(%(s => '&'))),
    "<p>&amp;</p>\n",
    '& is escaped';
@@ -91,13 +87,11 @@ is HAML.render(:src(Q[%p !{$s}] ~ "\n"), :locals(%(s => '<&>'))),
    "<p><&></p>\n",
    '!{} does not escape HTML chars';
 
-# Plain text with interpolation
 is HAML.render(:src("%div\n" ~ Q[  Hello, #{$name}!] ~ "\n"),
    :locals(%(name => 'foo'))),
    "<div>\n  Hello, foo!\n</div>\n",
    '#{...} in indented plain text';
 
-# Interpolation in HTML-attr-style values
 is HAML.render(
   :src(Q[%a(href="/u/#{$id}")go] ~ "\n"),
   :locals(%(id => 5))
@@ -111,7 +105,6 @@ is HAML.render(
    Q[<a title='a #{1}'>go</a>] ~ "\n",
    'HTML-attr style single-quoted value does not interp';
 
-# Backslash escape inside double-quoted attribute strings still works
 is HAML.render(:src(Q[%a{title: "x\ny"}go] ~ "\n")),
    "<a title='x\ny'>go</a>\n",
    '\\n still decodes when no interp markers';
@@ -121,12 +114,10 @@ is HAML.render(:src(Q[%a{title: "x\ny#{$v}"}go] ~ "\n"),
    "<a title='x\nyZ'>go</a>\n",
    '\\n decodes inside string with interp';
 
-# \#{ escape in attribute values
 is HAML.render(:src(Q[%a{title: "literal \#{x}"}go] ~ "\n")),
    Q[<a title='literal #{x}'>go</a>] ~ "\n",
    '\\#{...} in attrs is literal';
 
-# == operator — plain content with interpolation only
 is HAML.render(:src(Q[== Hello, #{$name}!] ~ "\n"),
                 :locals(%(name => 'world'))),
    "Hello, world!\n",

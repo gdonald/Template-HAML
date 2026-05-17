@@ -7,7 +7,6 @@ use Test;
 
 plan 12;
 
-# XHTML format → :javascript wraps body in CDATA, adds type="text/javascript"
 my $cfg = Template::HAML::Config.new(:format<xhtml>);
 my $r   = HAML.render(:src(q:to/HAML/), :config($cfg));
 :javascript
@@ -17,7 +16,6 @@ is $r,
    "<script type='text/javascript'>\n  //<![CDATA[\n  alert(1);\n  //]]>\n</script>\n",
    'XHTML :javascript wraps in CDATA and adds type';
 
-# XHTML format → :css wraps body in CDATA, adds type="text/css"
 $r = HAML.render(:src(q:to/HAML/), :config($cfg));
 :css
   body { color: red; }
@@ -26,7 +24,6 @@ is $r,
    "<style type='text/css'>\n  /*<![CDATA[*/\n  body \{ color: red; \}\n  /*]]>*/\n</style>\n",
    'XHTML :css wraps in CDATA and adds type';
 
-# cdata=True in HTML5 forces CDATA wrapping on :javascript
 $cfg = Template::HAML::Config.new(:cdata);
 $r = HAML.render(:src(q:to/HAML/), :config($cfg));
 :javascript
@@ -36,7 +33,6 @@ is $r,
    "<script>\n  //<![CDATA[\n  alert(1);\n  //]]>\n</script>\n",
    'cdata=True in HTML5 forces CDATA on :javascript';
 
-# cdata=True in HTML5 forces CDATA on :css
 $r = HAML.render(:src(q:to/HAML/), :config($cfg));
 :css
   body { color: red; }
@@ -45,7 +41,6 @@ is $r,
    "<style>\n  /*<![CDATA[*/\n  body \{ color: red; \}\n  /*]]>*/\n</style>\n",
    'cdata=True in HTML5 forces CDATA on :css';
 
-# mime-type set → :javascript uses that type
 $cfg = Template::HAML::Config.new(:mime-type<application/javascript>);
 $r = HAML.render(:src(q:to/HAML/), :config($cfg));
 :javascript
@@ -55,7 +50,6 @@ is $r,
    "<script type='application/javascript'>\n  go();\n</script>\n",
    'mime-type overrides default type attr';
 
-# Default HTML5 with no mime-type and no cdata → no type, no CDATA (regression)
 $r = HAML.render(:src(q:to/HAML/));
 :javascript
   alert(1);
@@ -72,14 +66,12 @@ is $r,
    "<style>\n  p \{ \}\n</style>\n",
    'HTML5 default :css: no type attr';
 
-# XHTML format with empty body still adds type attr
 $cfg = Template::HAML::Config.new(:format<xhtml>);
 $r = HAML.render(:src(":javascript\n"), :config($cfg));
 is $r,
    "<script type='text/javascript'></script>\n",
    'XHTML empty :javascript still has type';
 
-# attr-quote " is respected
 $cfg = Template::HAML::Config.new(:format<xhtml>, :attr-quote('"'));
 $r = HAML.render(:src(q:to/HAML/), :config($cfg));
 :javascript
@@ -89,7 +81,6 @@ is $r,
    "<script type=\"text/javascript\">\n  //<![CDATA[\n  go();\n  //]]>\n</script>\n",
    'attr-quote affects type attr quoting';
 
-# mime-type wins over XHTML default
 $cfg = Template::HAML::Config.new(:format<xhtml>, :mime-type<application/ecmascript>);
 $r = HAML.render(:src(q:to/HAML/), :config($cfg));
 :javascript
@@ -99,7 +90,6 @@ is $r,
    "<script type='application/ecmascript'>\n  //<![CDATA[\n  go();\n  //]]>\n</script>\n",
    'mime-type overrides XHTML default';
 
-# In XHTML, :css default mime-type is text/css; mime-type wins
 $cfg = Template::HAML::Config.new(:format<xhtml>, :mime-type<text/x-scss>);
 $r = HAML.render(:src(q:to/HAML/), :config($cfg));
 :css
@@ -109,7 +99,6 @@ is $r,
    "<style type='text/x-scss'>\n  /*<![CDATA[*/\n  p \{ \}\n  /*]]>*/\n</style>\n",
    'mime-type overrides default for :css';
 
-# cdata=True but format is XHTML — should still produce one CDATA block (no double-wrap)
 $cfg = Template::HAML::Config.new(:format<xhtml>, :cdata);
 $r = HAML.render(:src(q:to/HAML/), :config($cfg));
 :javascript

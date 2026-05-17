@@ -38,8 +38,6 @@ sub round-trip(
   is $actual, $expected, $desc;
 }
 
-# ---- emit shape ----
-
 {
   my $tree = HAML.parse-source(:src(":plain\n  hi\n"));
   my $code = DirectCodegen.new.emit-direct($tree);
@@ -48,8 +46,6 @@ sub round-trip(
   ok !$code.contains('Filter.new'),
     'filter does not construct AST Filter object';
 }
-
-# ---- built-in filters ----
 
 round-trip ":plain\n  hello\n", %(), ':plain renders body verbatim';
 
@@ -81,8 +77,6 @@ round-trip Q:to/HAML/, %(), ':cdata wraps body';
   some cdata
 HAML
 
-# ---- :raku filter ----
-
 round-trip ":raku\n  1 + 2\n", %(), ':raku evaluates expression';
 
 round-trip Q:to/HAML/, %(name => 'World'), ':raku reads locals';
@@ -90,23 +84,17 @@ round-trip Q:to/HAML/, %(name => 'World'), ':raku reads locals';
   "Hello, " ~ $name
 HAML
 
-# ---- filter inside a tag block ----
-
 round-trip Q:to/HAML/, %(), 'filter inside tag indents correctly';
 %div
   :plain
     nested
 HAML
 
-# ---- filter inside a for loop ----
-
 round-trip Q:to/HAML/, %(items => [1, 2]), 'filter inside for loop';
 - for $items -> $i
   :plain
     item #{$i}
 HAML
-
-# ---- markdown backend missing ----
 
 {
   Template::HAML::Filters::clear-markdown-backend();
@@ -116,8 +104,6 @@ HAML
   dies-ok { &fn(%()) },
     ':markdown without backend throws MarkdownBackendMissing';
 }
-
-# ---- markdown backend present ----
 
 {
   Template::HAML::Filters::register-markdown-backend(:handler(-> Str $body --> Str {
@@ -129,11 +115,7 @@ HAML
     ':markdown uses registered backend';
 }
 
-# ---- empty body filter ----
-
 round-trip ":plain\n", %(), 'filter with no body emits nothing';
-
-# ---- user-registered custom filter ----
 
 {
   Template::HAML::Filters::register-filter(

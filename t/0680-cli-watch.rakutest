@@ -28,7 +28,6 @@ sub capture(@args) {
   { :$exit, :out($out-text), :err($err-text) };
 }
 
-# glob-match basics
 {
   ok glob-match('*.haml', 'view.haml'),       'glob *.haml matches view.haml';
   ok glob-match('*.haml', 'a-b_c.haml'),      'glob *.haml matches a-b_c.haml';
@@ -38,7 +37,6 @@ sub capture(@args) {
   ok glob-match('a*b*c', 'azbzbcc'),          'glob backtracks on multiple stars';
 }
 
-# split-pattern + expand-inputs (no --watch needed)
 {
   my $dir = make-tmpdir;
   $dir.add('one.haml').spurt("%p one\n");
@@ -55,7 +53,6 @@ sub capture(@args) {
   $dir.rmdir;
 }
 
-# render with --out-dir (no watch): mirrored names
 {
   my $dir     = make-tmpdir;
   my $out-dir = make-tmpdir;
@@ -73,7 +70,6 @@ sub capture(@args) {
   $out-dir.rmdir;
 }
 
-# -o + --out-dir is rejected
 {
   my $dir = make-tmpdir;
   my $f   = $dir.add('x.haml');
@@ -85,7 +81,6 @@ sub capture(@args) {
   $dir.rmdir;
 }
 
-# --watch requires -o or --out-dir
 {
   my $dir = make-tmpdir;
   my $f   = $dir.add('x.haml');
@@ -97,7 +92,6 @@ sub capture(@args) {
   $dir.rmdir;
 }
 
-# --max-rebuilds 0: render once and exit (no event loop)
 {
   my $dir     = make-tmpdir;
   my $out-dir = make-tmpdir;
@@ -112,7 +106,6 @@ sub capture(@args) {
   $out-dir.rmdir;
 }
 
-# polling backend: edit triggers re-render
 {
   my $dir     = make-tmpdir;
   my $out-dir = make-tmpdir;
@@ -155,7 +148,6 @@ sub capture(@args) {
   $out-dir.rmdir;
 }
 
-# glob matching no files is an error
 {
   my $dir = make-tmpdir;
   my $r = capture(['render', $dir.add('*.haml').Str]);
@@ -164,7 +156,6 @@ sub capture(@args) {
   $dir.rmdir;
 }
 
-# --poll requires a positive integer
 {
   my $dir = make-tmpdir;
   my $f   = $dir.add('x.haml');
@@ -176,14 +167,12 @@ sub capture(@args) {
   $dir.rmdir;
 }
 
-# stdin with --watch is rejected
 {
   my $r = capture(['render', '-', '--watch', '-o', 'x.html']);
   isnt $r<exit>, 0, 'stdin + --watch non-zero exit';
   like $r<err>, /'stdin'/, 'mentions stdin';
 }
 
-# render help mentions --watch
 {
   my $r = capture(['render', '--help']);
   like $r<out>, /'--watch'/, 'render help mentions --watch';

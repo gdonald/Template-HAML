@@ -28,16 +28,12 @@ sub direct-render(
   &fn(%locals, :_haml_ctx($ctx));
 }
 
-# ---- eval-direct emits CATCH that re-throws as X::HAML::Eval ----
-
 {
   my $tree = HAML.parse-source(:src("= 1/0\n"));
   my $code = DirectCodegen.new.emit-direct($tree);
   ok $code.contains('X::HAML::Eval.new(:code'),
     'output-op statement is wrapped with a template-line CATCH';
 }
-
-# ---- output op with bad expression maps to template line ----
 
 {
   my $src = qq[%p first\n= 1/0\n];
@@ -55,8 +51,6 @@ sub direct-render(
   is $err.line, 2, 'error reports template line 2';
 }
 
-# ---- silent op with bad expression also wrapped ----
-
 {
   my $src = qq[- die "boom"\n];
   my $err;
@@ -70,8 +64,6 @@ sub direct-render(
   is $err.line, 1, 'silent op error reports line 1';
 }
 
-# ---- bad for-loop iter ----
-
 {
   my $src = qq[- for die("oops") -> \$i\n  %p hi\n];
   my $err;
@@ -84,8 +76,6 @@ sub direct-render(
   isa-ok $err, X::HAML::Eval, 'bad for-iter wrapped';
   is $err.line, 1, 'for-iter error reports line 1';
 }
-
-# ---- bad if-cond on later line ----
 
 {
   my $src = qq[%p first\n%p second\n- if die("noo")\n  %p inner\n];
