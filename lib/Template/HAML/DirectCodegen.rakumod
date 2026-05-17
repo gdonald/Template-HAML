@@ -588,7 +588,7 @@ class DirectCodegen is export {
       if $obj.defined && $obj ~~ Statement
          && ($obj.kind eq 'if' || $obj.kind eq 'unless') {
         my ($chain, $consumed) = self!emit-if-chain(@kids, $i, $offset);
-        @lines.append: $chain;
+        @lines.append: @($chain);
         $i += $consumed;
       } elsif $obj.defined && $obj ~~ Statement
               && ($obj.kind eq 'elsif' || $obj.kind eq 'else') {
@@ -701,7 +701,12 @@ class DirectCodegen is export {
     @lines.push: '';
     @lines.append: self!uses;
     @lines.push: '';
-    @lines.push: self!signature('our sub render') ~ ' is export {';
+    @lines.push: 'our sub haml-render(%locals = %(), Template::HAML::Config :$config, :$ctx --> Str) is export {';
+    @lines.push: '  &_haml_body(%locals, :' ~ CONFIG-VAR.substr(1) ~ '($config), :'
+      ~ CTX-VAR.substr(1) ~ '($ctx));';
+    @lines.push: '}';
+    @lines.push: '';
+    @lines.push: self!signature('sub _haml_body') ~ ' {';
     @lines.append: self!preamble(@locals);
     @lines.append: @body;
     @lines.append: self!postamble;

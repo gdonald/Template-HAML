@@ -1,9 +1,12 @@
 
+use MONKEY-SEE-NO-EVAL;
+
 use Template::HAML::Actions;
 use Template::HAML::Cache;
 use Template::HAML::Codegen;
 use Template::HAML::Config;
 use Template::HAML::Context;
+use Template::HAML::DirectCodegen;
 use Template::HAML::Multiline;
 use Template::HAML::Node;
 use Template::HAML::Renderer;
@@ -49,6 +52,13 @@ sub slurp-template(IO::Path:D $path, Template::HAML::Config:D $cfg --> Str) {
 
 my %fn-cache;
 my %repo-cache;
+my %direct-cache;
+
+sub direct-cache-clear(--> Int) {
+  my $n = %direct-cache.elems;
+  %direct-cache = ();
+  $n;
+}
 
 sub fn-cache-clear(--> Int) {
   my $n = %fn-cache.elems;
@@ -76,7 +86,7 @@ sub cache-repo-for(IO::Path:D $cache-dir --> CompUnit::Repository::FileSystem) {
   );
 }
 
-sub load-render-fn(IO::Path:D $cache-dir, Str:D $key --> Code) {
+sub load-render-fn(IO::Path:D $cache-dir, Str:D $key, Str:D :$sub-name = 'render' --> Code) {
   my $repo     = cache-repo-for($cache-dir);
   my $mod-name = compiled-module-name($key);
   my $spec     = CompUnit::DependencySpecification.new(:short-name($mod-name));
@@ -85,7 +95,11 @@ sub load-render-fn(IO::Path:D $cache-dir, Str:D $key --> Code) {
   for $mod-name.split('::') -> $part {
     $stash = $stash{$part}.WHO;
   }
-  $stash<&render>;
+  $stash{'&' ~ $sub-name};
+}
+
+sub render-fn-name-for(Template::HAML::Config:D $cfg --> Str) {
+  $cfg.emit eq 'direct' ?? 'haml-render' !! 'render';
 }
 
 class HAML is export {
@@ -256,10 +270,23 @@ class HAML is export {
   }
 
   method !do-render-src(Str:D $src, %locals, Template::HAML::Config $cfg, $ctx) {
+    return self!do-render-direct($src, %locals, $cfg, $ctx) if $cfg.emit eq 'direct';
+
     my $tree = self!compile-source($src, $cfg);
 
     my $*HAML-CTX = $ctx;
     Renderer.new(:%locals, :config($cfg)).render($tree);
+  }
+
+  method !do-render-direct(Str:D $src, %locals, Template::HAML::Config $cfg, $ctx) {
+    my $key = compute-cache-key($src, $cfg);
+    unless %direct-cache{$key}:exists {
+      my $tree = self!compile-source($src, $cfg);
+      my $code = DirectCodegen.new(:config($cfg)).emit-direct($tree);
+      %direct-cache{$key} = EVAL $code;
+    }
+    my &fn = %direct-cache{$key};
+    fn(%locals, :_haml_config($cfg), :_haml_ctx($ctx));
   }
 
   method !do-render-stream(
@@ -381,7 +408,9 @@ class HAML is export {
     my $path = cache-path($!compiled-cache-dir, $key);
     return $path if $path.e;
     my $tree = self!compile-source($decoded, $cfg);
-    my $code = Codegen.new(:config($cfg)).emit-module($tree, :module-name(compiled-module-name($key)));
+    my $code = $cfg.emit eq 'direct'
+      ?? DirectCodegen.new(:config($cfg)).emit-direct-module($tree, :module-name(compiled-module-name($key)))
+      !! Codegen.new(:config($cfg)).emit-module($tree, :module-name(compiled-module-name($key)));
     write-cache-file($path, $code);
     $path;
   }
@@ -399,7 +428,10 @@ class HAML is export {
     my $key = compute-cache-key($decoded, $cfg);
     unless %fn-cache{$key}:exists {
       self.compile-to-cache(:src($decoded), :config($cfg));
-      %fn-cache{$key} = load-render-fn($!compiled-cache-dir, $key);
+      %fn-cache{$key} = load-render-fn(
+        $!compiled-cache-dir, $key,
+        :sub-name(render-fn-name-for($cfg)),
+      );
     }
     my &fn = %fn-cache{$key};
     my $ctx = Template::HAML::Context.new(
@@ -432,7 +464,9 @@ class HAML is export {
     return $path if $path.e;
     my $src  = slurp-template(self!resolve-file-for-cache($file), $cfg);
     my $tree = self!compile-source($src, $cfg);
-    my $code = Codegen.new(:config($cfg)).emit-module($tree, :module-name(compiled-module-name($key)));
+    my $code = $cfg.emit eq 'direct'
+      ?? DirectCodegen.new(:config($cfg)).emit-direct-module($tree, :module-name(compiled-module-name($key)))
+      !! Codegen.new(:config($cfg)).emit-module($tree, :module-name(compiled-module-name($key)));
     write-cache-file($path, $code);
     $path;
   }
@@ -443,7 +477,10 @@ class HAML is export {
     my $key      = self.compiled-cache-key-for-file(:$file, :config($cfg));
     unless %fn-cache{$key}:exists {
       self.compile-file-to-cache(:$file, :config($cfg));
-      %fn-cache{$key} = load-render-fn($!compiled-cache-dir, $key);
+      %fn-cache{$key} = load-render-fn(
+        $!compiled-cache-dir, $key,
+        :sub-name(render-fn-name-for($cfg)),
+      );
     }
     my &fn = %fn-cache{$key};
     my $ctx = Template::HAML::Context.new(

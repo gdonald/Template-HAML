@@ -23,7 +23,9 @@ nav:
   - API: api.md
   - CLI: cli.md
   - Canonical form: canonical-form.md
-  - Tests: testing.md
+  - Development:
+    - Tests: dev/testing.md
+    - Benchmarks: dev/benchmarks.md
 theme:
   name: 'material'
 markdown_extensions:

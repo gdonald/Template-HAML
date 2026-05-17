@@ -75,6 +75,7 @@ sub ser-config(Template::HAML::Config:D $c --> Str) is export {
   @parts.push: ':output-indent-width('  ~ $c.output-indent-width    ~ ')';
   @parts.push: ':remove-whitespace('    ~ ser-bool($c.remove-whitespace) ~ ')';
   @parts.push: ':trace('                ~ ser-bool($c.trace)        ~ ')';
+  @parts.push: ':emit('                 ~ raku-str($c.emit)         ~ ')';
   @parts.push: ':autoclose('            ~ ser-str-list($c.autoclose) ~ ')';
   @parts.push: ':preserve('             ~ ser-str-list($c.preserve)  ~ ')';
   'Template::HAML::Config.new(' ~ @parts.join(', ') ~ ')';

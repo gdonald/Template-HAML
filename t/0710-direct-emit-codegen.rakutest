@@ -108,7 +108,7 @@ round-trip "%p first\n%p> trimmed\n%p last\n", %(), 'trim-outer strips surroundi
   my $tree = HAML.parse-source(:src("%p hello\n"));
   my $mod-src = DirectCodegen.new.emit-direct-module($tree, :module-name<DirectEmitTest>);
   ok $mod-src.contains('unit module DirectEmitTest;'), 'module emits unit module declaration';
-  ok $mod-src.contains('our sub render'),              'module emits render sub';
+  ok $mod-src.contains('our sub haml-render'),         'module emits haml-render entry point';
 }
 
 # ---- unsupported nodes throw clearly ----

@@ -45,6 +45,7 @@ class Template::HAML::Config is export {
   has Int  $.output-indent-width is rw = 2;
   has Bool $.remove-whitespace is rw = False;
   has Bool $.trace           is rw = False;
+  has Str  $.emit            is rw = 'ast';
   has @.autoclose            is rw;
   has @.preserve             is rw;
 
@@ -62,6 +63,7 @@ class Template::HAML::Config is export {
     Int  :$!output-indent-width = 2,
     Bool :$!remove-whitespace = False,
     Bool :$!trace           = False,
+    Str  :$!emit            = 'ast',
     :@autoclose,
     :@preserve,
   ) {
@@ -69,6 +71,7 @@ class Template::HAML::Config is export {
     self.validate-output-style($!output-style);
     self.validate-attr-quote($!attr-quote);
     self.validate-encoding($!encoding);
+    self.validate-emit($!emit);
     $!encoding = canonical-encoding($!encoding);
     @!autoclose = @autoclose.elems ?? @autoclose !! @DEFAULT-VOID-ELEMENTS;
     @!preserve  = @preserve.elems  ?? @preserve  !! @DEFAULT-PRESERVE-ELEMENTS;
@@ -87,6 +90,11 @@ class Template::HAML::Config is export {
   method validate-attr-quote(Str $q) {
     die "invalid attr-quote '$q'; expected ' or \""
       unless $q eq "'" || $q eq '"';
+  }
+
+  method validate-emit(Str $e) {
+    die "invalid emit '$e'; expected 'ast' or 'direct'"
+      unless $e eq 'ast' || $e eq 'direct';
   }
 
   method validate-encoding(Str $e) {
@@ -135,6 +143,7 @@ class Template::HAML::Config is export {
       output-indent-width => $!output-indent-width,
       remove-whitespace   => $!remove-whitespace,
       trace               => $!trace,
+      emit                => $!emit,
       autoclose           => @!autoclose,
       preserve            => @!preserve,
     ;

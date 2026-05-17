@@ -117,6 +117,70 @@ failures inside compiled templates raise an `X::HAML::Eval` whose `.line`
 and `.column` point back to the originating HAML template — the same as
 the interpreter.
 
+## Direct-emit codegen (opt-in)
+
+The default codegen path (above) emits Raku source that **rebuilds the parse
+tree** at render time and runs `Template::HAML::Renderer` over it. The
+*direct-emit* path emits Raku source that performs **inline string
+concatenation** directly — no AST is reconstructed, and embedded Raku
+expressions/control flow are inlined into the closure body rather than
+re-`EVAL`ed per render.
+
+```raku
+my $cfg  = Template::HAML::Config.new(:emit<direct>);
+my $html = HAML.render(:src("%p Hello, \#\{\$name}!\n"),
+                       :locals(name => 'World'),
+                       :config($cfg));
+```
+
+The `:emit` config field accepts `'ast'` (default) or `'direct'`. The same
+field flows through every entry point: `HAML.render`, `HAML.render-cached`,
+`HAML.render-file-cached`. The cache key embeds `:emit`, so AST and direct
+caches are stored under different filenames and coexist freely.
+
+### What direct emit changes
+
+- Tags, plain text, comments, and doctypes become literal `$out ~= "…"`
+  appends.
+- `=`, `!=`, `&=`, `==`, `~`, and `-` statements are inlined as native Raku
+  expressions in the closure body — no `EVAL` per render call. Bare
+  identifier expressions still resolve through `eval-bare-ident` to keep
+  context-method dispatch working.
+- `- if`, `- elsif`, `- else`, `- unless`, `- for`, `- while`, `- repeat`,
+  `- given`, `- when`, `- default` become native Raku `if/for/while/given`
+  blocks.
+- Dynamic attributes (interpolated values, `{|%splat}`, `[$obj-ref]`) build
+  a `Tag` object once via `state` and call a shared
+  `render-direct-tag-open` helper per render.
+- Filter bodies are embedded as Raku string literals; dispatch goes through
+  `lookup-filter($name)` at render time so user-registered filters still
+  work.
+- Every inlined Raku expression is wrapped in a `CATCH` that re-throws as
+  `X::HAML::Eval` with the originating template line and column. Line
+  mapping behaves the same as the AST path.
+
+### Currently incompatible with direct emit
+
+These templates will throw `X::HAML::DirectCodegenUnsupported` at codegen
+time. Either re-render with `:emit<ast>` or rewrite the template.
+
+- `remove-whitespace` config (would need trim-inner sub-buffering).
+- Tag `trim-inner` modifier (`%div<` / `<>`).
+- Preserved tags (`<pre>`, `<textarea>`) with children — they need an inner
+  buffer so newlines can be encoded as `&#x000A;` after children render.
+
+Direct emit also currently bypasses post-render passes that rely on having
+the full output buffer in shape — most notably the helpers
+`find-and-preserve` and any user-installed visitor that mutates the AST at
+render time. If your template relies on those, stay on `:emit<ast>`.
+
+### Streaming
+
+`HAML.render-supply` does not yet support `:emit<direct>` — streaming stays
+on the AST path even if the config requests `direct`. (The streaming
+emitter is structured around walking the parse tree node-by-node, which is
+exactly the thing direct emit eliminates.)
+
 ## On-disk compiled-template cache
 
 The emitter from [`compile-source-to-raku`](#hamlcompile-source-to-raku) can be

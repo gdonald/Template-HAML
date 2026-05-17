@@ -31,6 +31,7 @@ sub config-fingerprint(Template::HAML::Config $cfg --> Str) is export {
     $cfg.hyphenate-data-attrs.Str,
     $cfg.output-indent-width.Str,
     $cfg.remove-whitespace.Str,
+    $cfg.emit,
     $cfg.autoclose.sort.join(','),
     $cfg.preserve.sort.join(','),
   ).join("\x[1F]");

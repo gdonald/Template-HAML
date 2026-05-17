@@ -9,7 +9,7 @@ use Template::HAML::DirectCodegen;
 use Template::HAML::ViewContext;
 use Test;
 
-plan 27;
+plan 28;
 
 sub direct-render(
   Str $src, %locals = (),
@@ -231,4 +231,14 @@ round-trip Q:to/HAML/, %(a => 1, b => 2), 'multiple if-chains as siblings';
   %p A
 - if $b
   %p B
+HAML
+
+# Regression: if-chain nested inside a tag body — previously the chain's
+# emitted lines were collapsed onto a single line because @lines.append
+# treated the chain List as a scalar, mangling the generated Raku source.
+round-trip Q:to/HAML/, %(cond => True, x => 'X'), 'if-chain inside tag body';
+%div
+  - if $cond
+    %p
+      = $x
 HAML

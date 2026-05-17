@@ -1,0 +1,131 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Template::HAML::Config;
+use Test;
+
+plan 16;
+
+# ---- Config validation ----
+
+{
+  my $cfg = Template::HAML::Config.new;
+  is $cfg.emit, 'ast', 'default emit is ast';
+}
+
+{
+  my $cfg = Template::HAML::Config.new(:emit<direct>);
+  is $cfg.emit, 'direct', 'emit can be set to direct';
+}
+
+dies-ok { Template::HAML::Config.new(:emit<wrong>) },
+  'invalid emit value is rejected';
+
+# ---- clone-with preserves emit ----
+
+{
+  my $cfg = Template::HAML::Config.new(:emit<direct>);
+  my $c2 = $cfg.clone-with;
+  is $c2.emit, 'direct', 'clone-with carries emit forward';
+}
+
+{
+  my $cfg = Template::HAML::Config.new(:emit<direct>);
+  my $c2 = $cfg.clone-with(:emit<ast>);
+  is $c2.emit, 'ast', 'clone-with(:emit) overrides';
+}
+
+# ---- HAML.render uses direct emit when configured ----
+
+sub round-trip(Str $src, %locals, Str $desc) {
+  my $expected = HAML.render(:$src, :%locals);
+  my $cfg      = Template::HAML::Config.new(:emit<direct>);
+  my $actual   = HAML.render(:$src, :%locals, :config($cfg));
+  is $actual, $expected, $desc;
+}
+
+round-trip "%p hello\n",                              %(), 'simple tag via :emit<direct>';
+round-trip "= \$name\n",                              %(name => 'World'),
+  'inline expression via :emit<direct>';
+round-trip "- for ^3 -> \$i\n  %li= \$i\n",           %(), 'for loop via :emit<direct>';
+round-trip ":plain\n  hi #\{\$name\}\n",              %(name => 'X'),
+  'filter via :emit<direct>';
+round-trip Q[%a{|$attrs} go] ~ "\n",
+  %(attrs => { href => '/x', title => 'X' }),
+  'splat attrs via :emit<direct>';
+
+# ---- HAML.render :file works with :emit<direct> ----
+
+{
+  my $tmp = $*TMPDIR.add('haml-emit-test-' ~ $*PID);
+  mkdir $tmp unless $tmp.e;
+  LEAVE { $tmp.dir».unlink; rmdir $tmp if $tmp.e }
+
+  my $tpl = $tmp.add('hello.haml');
+  $tpl.spurt("%h1 Hello, \#\{\$name\}!\n");
+
+  my $haml = HAML.new(:search-paths($tmp.absolute));
+  my $cfg  = Template::HAML::Config.new(:emit<direct>);
+  my $out  = $haml.render(:file<hello>, :locals(name => 'World'), :config($cfg));
+  is $out.chomp, '<h1>Hello, World!</h1>', 'HAML.render(:file) works with :emit<direct>';
+}
+
+# ---- render-cached uses DirectCodegen for emit=direct ----
+
+{
+  my $tmp = $*TMPDIR.add('haml-emit-cache-' ~ $*PID);
+  mkdir $tmp unless $tmp.e;
+  LEAVE {
+    my sub rm-rec($d) {
+      return unless $d.e;
+      if $d.d {
+        rm-rec($_) for $d.dir;
+        rmdir $d;
+      } else {
+        $d.unlink;
+      }
+    }
+    rm-rec($tmp);
+  }
+
+  my $haml = HAML.new(:compiled-cache-dir($tmp));
+  my $cfg  = Template::HAML::Config.new(:emit<direct>);
+  my $src  = "%p Hello, \#\{\$name\}!\n";
+  my $path = $haml.compile-to-cache(:$src, :config($cfg));
+  ok $path.e, 'compile-to-cache wrote a module file';
+  my $contents = $path.slurp;
+  ok $contents.contains('our sub haml-render'),
+    'cached module exposes haml-render entry point';
+  ok $contents.contains('sub _haml_body'),
+    'cached module has internal _haml_body sub';
+
+  my $out = $haml.render-cached(:$src, :locals(name => 'World'), :config($cfg));
+  is $out.chomp, '<p>Hello, World!</p>', 'render-cached works with :emit<direct>';
+}
+
+# ---- ast and direct cache files are distinct (config fingerprint differs) ----
+
+{
+  my $tmp = $*TMPDIR.add('haml-emit-keys-' ~ $*PID);
+  mkdir $tmp unless $tmp.e;
+  LEAVE {
+    my sub rm-rec($d) {
+      return unless $d.e;
+      if $d.d {
+        rm-rec($_) for $d.dir;
+        rmdir $d;
+      } else {
+        $d.unlink;
+      }
+    }
+    rm-rec($tmp);
+  }
+
+  my $haml = HAML.new(:compiled-cache-dir($tmp));
+  my $src  = "%p hi\n";
+  my $ast  = $haml.compiled-cache-key(:$src, :config(Template::HAML::Config.new(:emit<ast>)));
+  my $dir  = $haml.compiled-cache-key(:$src, :config(Template::HAML::Config.new(:emit<direct>)));
+  isnt $ast, $dir,
+    'ast and direct emit produce distinct cache keys';
+}
