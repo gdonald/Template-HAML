@@ -8,7 +8,7 @@
   "auth": "zef:gdonald",
   "depends": [],
   "build-depends": [],
-  "test-depends": ["Test", "Test::META"],
+  "test-depends": ["Test", "Test::META", "BDD::Behave"],
   "provides": {
     "Template::HAML": "lib/Template/HAML.rakumod",
     "Template::HAML::Actions": "lib/Template/HAML/Actions.rakumod",

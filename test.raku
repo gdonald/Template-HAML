@@ -15,7 +15,8 @@ my @stages = (
     :env(%())                                                                  },
   { :name<prove6-ast>,    :cmd['prove6', "-j$jobs", '-Ilib', 't'],
     :env(%(:HAML_DEFAULT_EMIT<ast>))                                           },
-  # { :name<behave>, :cmd['raku',   '-Ilib',   'bin/behave']  },
+  { :name<behave>,        :cmd['behave', '--exclude-tag', 'benchmark'],
+    :env(%())                                                                  },
 );
 
 my %durations;

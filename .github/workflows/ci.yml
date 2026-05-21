@@ -3,6 +3,9 @@ on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      HAML_BENCH_ITERS: 10
+      HAML_RUN_BENCH: 1
     steps:
       - uses: actions/checkout@v4
       - uses: Raku/setup-raku@v1
@@ -23,3 +26,5 @@ jobs:
         run: zef install --/test App::Prove6
       - name: Run tests
         run: ./test.raku
+      - name: Run benchmarks
+        run: behave --benchmark specs/bench/
