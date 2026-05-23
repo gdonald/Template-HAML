@@ -1,0 +1,67 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Template::HAML::X;
+use Test;
+
+plan 14;
+
+sub renders-to-parse-fail($src, %locals = %()) {
+  my $err;
+  CATCH { when X::HAML::ParseFail { $err = $_; CATCH {}; return $_; } }
+  HAML.render(:$src, :%locals);
+  Nil;
+}
+
+{
+  my $e = renders-to-parse-fail("%meta\{name: 'description', content: \$desc\}\n", %(desc => 'D'));
+  ok $e ~~ X::HAML::ParseFail, '\$var as hash-attr value raises X::HAML::ParseFail';
+  is $e.line, 1, '... error on line 1';
+  is $e.column, 6, '... error column points at the opening {';
+}
+
+{
+  my $e = renders-to-parse-fail("%a\{aria-label: 'home'\} hi\n");
+  ok $e ~~ X::HAML::ParseFail, 'hyphen bareword hash key raises X::HAML::ParseFail';
+  is $e.column, 3, '... error column points at the opening {';
+}
+
+{
+  my $e = renders-to-parse-fail("%a\{:href<x>, :aria-label<home>\} hi\n");
+  ok $e ~~ X::HAML::ParseFail, 'colon-pair attr value raises X::HAML::ParseFail';
+}
+
+{
+  my $src = '%meta(name=' ~ Q['description'] ~ ' content=$desc)' ~ "\n";
+  my $e = renders-to-parse-fail($src, %(desc => 'D'));
+  ok $e ~~ X::HAML::ParseFail, '\$var as html-attr value raises X::HAML::ParseFail';
+  is $e.column, 6, '... error column points at the opening (';
+}
+
+{
+  my $src = "%meta\{name: 'description', content: \$desc\}\n";
+  my $threw  = False;
+  my $output = '';
+  try {
+    CATCH { when X::HAML::ParseFail { $threw = True; } }
+    $output = HAML.render(:$src, :locals(%(desc => 'D')));
+  }
+  ok $threw, 'void element with failed attrs throws (no spurious open tag)';
+  ok !$output.contains('</meta>'),
+     '... and never produces a spurious </meta> close tag';
+}
+
+is HAML.render(:src(Q[%a{href: '/'} link] ~ "\n")), "<a href='/'>link</a>\n",
+   'normal hash-attrs still work';
+
+is HAML.render(:src(Q[%a(href='/') link] ~ "\n")), "<a href='/'>link</a>\n",
+   'normal html-style attrs still work';
+
+is HAML.render(:src(Q[%p hello { stuff }] ~ "\n")), Q[<p>hello { stuff }</p>] ~ "\n",
+   'literal braces in plain content are not mistaken for failed attrs';
+
+is HAML.render(:src(Q[%a{} link] ~ "\n")), "<a>link</a>\n",
+   'empty hash-attrs are not a parse error';
+
+done-testing;

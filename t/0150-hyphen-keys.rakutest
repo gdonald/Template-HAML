@@ -2,6 +2,7 @@
 use v6.d;
 use lib 'lib';
 use Template::HAML;
+use Template::HAML::X;
 use Test;
 
 plan 3;
@@ -14,6 +15,6 @@ is HAML.render(:src(Q[%a{"aria-label" => "x"}] ~ "\n")),
    "<a aria-label='x'></a>\n",
    'hyphenated double-quoted string key';
 
-my $r = HAML.render(:src(Q[%a{data-id: 1}] ~ "\n"));
-nok $r.contains("data-id='1'"),
-   'bareword data-id is not parsed as an attribute';
+throws-like { HAML.render(:src(Q[%a{data-id: 1}] ~ "\n")) },
+            X::HAML::ParseFail,
+            'bareword hyphen key raises ParseFail';

@@ -37,6 +37,10 @@ grammar Grammar is export {
   token trim-modifiers  { <[<>]> ** 0..2 }
   token void-marker     { '/' }
 
+  token tag-output-op   { '!=' | '&=' | '==' | '=' | '~' }
+  token tag-output-expr { \N+ }
+  token tag-output-tail { \h* <tag-output-op> \h* [ <tag-output-expr> ]? }
+
   token sq-content { [ \\ . | <-[\\ ']> ]* }
   token dq-content { [ \\ . | <-[\\ "]> ]* }
   rule  single-quoted-string { "'" <sq-content> "'" }
@@ -114,8 +118,10 @@ grammar Grammar is export {
     <params-hash>?
     <trim-modifiers>
     <void-marker>?
-    <to-eol>
-    <.eol>
+    [
+      || <tag-output-tail> <.eol>
+      || <to-eol> <.eol>
+    ]
   }
 
   token statement { <indent> <output-op> <.ws> <expr> <.eol> }

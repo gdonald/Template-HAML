@@ -36,6 +36,8 @@ class Tag is export {
   has @.attrs;
   has @.source-attrs;
   has Str  $.content;
+  has Str  $.output-op      = '';
+  has Str  $.output-expr    = '';
   has @.classes             of Str;
   has @.ids                 of Str;
   has @.obj-ref-args        of Str;
@@ -46,6 +48,7 @@ class Tag is export {
 
   submethod BUILD(
     :$!indent, :$!name, :@attrs, :$!content,
+    :$!output-op = '', :$!output-expr = '',
     :@!classes, :@!ids,
     :@!obj-ref-args,
     Bool :$!self-close = False,
@@ -61,10 +64,12 @@ class Tag is export {
 
     self.merge-shorthands;
 
-    if !$!self-close && self.is-void && $!content.chars == 0 {
+    if !$!self-close && self.is-void && $!content.chars == 0 && !$!output-op.chars {
       $!self-close = True;
     }
   }
+
+  method has-output(--> Bool) { $!output-op.chars > 0 }
 
   method is-void { $!config.is-void($!name) }
 

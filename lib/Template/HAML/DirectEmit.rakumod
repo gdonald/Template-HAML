@@ -76,6 +76,22 @@ sub eval-direct(
   block();
 }
 
+sub haml-format-output(
+  $value,
+  Str:D $op,
+  Bool :$escape-html = True,
+  --> Str
+) is export {
+  my $is-safe = $value ~~ Template::HAML::Helpers::SafeString;
+  my $str = $value.defined ?? $value.Str !! '';
+  my $escape = $op eq '&=' ?? True
+            !! $op eq '!=' ?? False
+            !! $escape-html;
+  $str = html-escape($str) if $escape && !$is-safe;
+  $str = $str.subst("\n", '&#x000A;', :g) if $op eq '~';
+  $str;
+}
+
 sub render-direct-tag-open(
   Tag:D $tag, %locals, Int :$offset = 0 --> Str
 ) is export {

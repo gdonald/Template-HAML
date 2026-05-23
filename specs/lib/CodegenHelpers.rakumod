@@ -24,12 +24,20 @@ sub direct-render(
   &fn(%locals, :_haml_ctx($ctx));
 }
 
+sub clone-locals(%h) {
+  my %out;
+  for %h.kv -> $k, $v {
+    %out{$k} = $v ~~ Positional ?? $v.clone !! $v ~~ Associative ?? $v.clone !! $v;
+  }
+  %out;
+}
+
 sub round-trip-check(
   Str $src, %locals,
   Template::HAML::Config :$config,
   :$context,
 ) is export {
-  my $expected = HAML.render(:$src, :%locals, :$config, :$context);
-  my $actual   = direct-render($src, %locals, :$config, :$context);
+  my $expected = HAML.render(:$src, :locals(clone-locals(%locals)), :$config, :$context);
+  my $actual   = direct-render($src, clone-locals(%locals), :$config, :$context);
   expect($actual).to.eq($expected);
 }

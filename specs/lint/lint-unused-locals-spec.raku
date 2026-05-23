@@ -60,7 +60,7 @@ describe 'UnusedLocalsRule', {
 
     it 'counts an attribute-hash reference as used', {
       my @d = diags-for(
-        :src("%a\{:href(\$url)\} link\n"),
+        :src("%a\{href: \"\#\{\$url\}\"\} link\n"),
         :locals{ :url('/x') },
       );
       expect(@d.elems).to.be(0);

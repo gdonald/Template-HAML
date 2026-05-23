@@ -201,7 +201,22 @@ class Actions is export {
       @obj-ref-args = split-obj-ref-args($body);
     }
 
-    my $content = $/<to-eol>.defined ?? $/<to-eol>.Str.trim !! '';
+    my $output-op   = '';
+    my $output-expr = '';
+    my $content     = '';
+
+    if $/<tag-output-tail>.defined {
+      $output-op = $/<tag-output-tail><tag-output-op>.Str;
+      $output-expr = $/<tag-output-tail><tag-output-expr>.defined
+        ?? $/<tag-output-tail><tag-output-expr>.Str.trim
+        !! '';
+    } else {
+      my $rest = $/<to-eol>.defined ?? $/<to-eol>.Str !! '';
+      if $rest.starts-with('{') || $rest.starts-with('(') {
+        self!throw-bad-attrs($/, $rest);
+      }
+      $content = $rest.trim;
+    }
 
     my $trim    = $/<trim-modifiers>.Str;
     my $trim-outer = $trim.contains('>');
@@ -210,6 +225,7 @@ class Actions is export {
 
     my $object = Tag.new(
       :$indent, :$name, :@attrs, :$content,
+      :$output-op, :$output-expr,
       :@classes, :@ids, :@obj-ref-args,
       :$self-close, :$trim-outer, :$trim-inner,
       :$line, :$column,
@@ -218,6 +234,23 @@ class Actions is export {
     );
     self.add-node($object);
     $!seen-content = True;
+  }
+
+  method !throw-bad-attrs($/, Str $rest) {
+    my $orig = $/.orig.Str;
+    my $pos  = $/<to-eol>.from;
+    my $before = $orig.substr(0, $pos);
+    my $line    = 1 + $before.comb("\n").elems;
+    my $last-nl = $before.rindex("\n");
+    my $column  = $last-nl.defined ?? $pos - $last-nl !! $pos + 1;
+
+    my $start = $last-nl.defined ?? $last-nl + 1 !! 0;
+    my $end   = $orig.index("\n", $pos) // $orig.chars;
+    my $snippet = $orig.substr($start, $end - $start);
+
+    X::HAML::ParseFail.new(
+      :$line, :$column, :$snippet,
+    ).throw;
   }
 
   method statement($/) {

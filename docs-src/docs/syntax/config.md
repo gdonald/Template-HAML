@@ -33,6 +33,7 @@ $h.render(:src("%br\n"));                     # uses the instance config
 | `output-indent-width` | `2`          | Number of spaces per indent level in pretty output.                                              |
 | `remove-whitespace`   | `False`      | When true, every tag is treated as if both `>` and `<` modifiers were present (except preserved tags keep their inner whitespace). |
 | `trace`               | `False`      | When true, render-time `X::HAML::Eval` errors include the compiled-block source and a template-line → block-line breadcrumb. See [trace](#trace). |
+| `emit`                | `'direct'`   | Codegen path: `'direct'` inlines `$out ~= ...` Raku, `'ast'` rebuilds the parse tree at render time. Overridden by `HAML_DEFAULT_EMIT=ast`. See [API: Direct-emit codegen](../api.md#direct-emit-codegen-default). |
 | `autoclose`           | HTML5 voids  | List of element names that auto-self-close: `area base br col embed hr img input link meta param source track wbr`. |
 | `preserve`            | `<pre textarea>` | List of elements whose inner whitespace is preserved.                                       |
 

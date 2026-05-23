@@ -423,11 +423,44 @@ class Renderer is export {
   }
 
   method interpolate-content(Tag:D $obj, %locals --> Str) {
+    if $obj.has-output {
+      return self.render-tag-output($obj, %locals);
+    }
     return '' unless $obj.content.defined && $obj.content.chars;
     interpolate(
       $obj.content, %locals,
       :line($obj.line), :column($obj.column),
     );
+  }
+
+  method render-tag-output(Tag:D $obj, %locals --> Str) {
+    return '' unless $obj.output-expr.chars;
+    my $op = $obj.output-op;
+
+    if $op eq '==' {
+      return interpolate(
+        $obj.output-expr, %locals,
+        :line($obj.line), :column($obj.column),
+      );
+    }
+
+    return '' if $!config.suppress-eval;
+
+    my $value = eval-haml(
+      $obj.output-expr, %locals,
+      :line($obj.line), :column($obj.column),
+    );
+    my $is-safe = $value ~~ Template::HAML::Helpers::SafeString;
+    my $str = $value.defined ?? $value.Str !! '';
+
+    my $escape = $op eq '&=' ?? True
+              !! $op eq '!=' ?? False
+              !! $!config.escape-html;
+    $str = html-escape($str) if $escape && !$is-safe;
+    if $op eq '~' {
+      $str = $str.subst("\n", '&#x000A;', :g);
+    }
+    $str;
   }
 
   method render-filter(Node:D $node, %locals, Int $offset) {

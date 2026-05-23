@@ -12,7 +12,18 @@ A line beginning with `!!!` declares the document's doctype. It must be the firs
 <!DOCTYPE html>
 ```
 
-With no argument, `!!!` emits the format-default doctype. The default format is HTML5; other formats are not yet configurable.
+With no argument, `!!!` emits the format-default doctype. The format
+comes from the [`format`](config.md) config option and the default is
+`html5`. The other formats produce different defaults:
+
+| `format` | Argument-less `!!!` output                                                                                |
+|----------|-----------------------------------------------------------------------------------------------------------|
+| `html5`  | `<!DOCTYPE html>`                                                                                          |
+| `html4`  | `<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">`  |
+| `xhtml`  | `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">` |
+
+Named variants (below) ignore the `format` option and always emit the
+exact doctype the variant names.
 
 ## Named variants
 

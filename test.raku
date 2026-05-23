@@ -8,14 +8,14 @@ $*OUT.out-buffer = False;
 
 chdir $*PROGRAM.parent;
 
-my $jobs = $*KERNEL.cpu-cores // 2;
+my $jobs = max(2, ($*KERNEL.cpu-cores // 2) - 2);
 
 my @stages = (
   { :name<prove6-direct>, :cmd['prove6', "-j$jobs", '-Ilib', 't'],
     :env(%())                                                                  },
   { :name<prove6-ast>,    :cmd['prove6', "-j$jobs", '-Ilib', 't'],
     :env(%(:HAML_DEFAULT_EMIT<ast>))                                           },
-  { :name<behave>,        :cmd['behave', '--exclude-tag', 'benchmark'],
+  { :name<behave>,        :cmd['behave', '--exclude-tag', 'benchmark', '--parallel', $jobs.Str],
     :env(%())                                                                  },
 );
 
@@ -43,8 +43,8 @@ for @stages -> $s {
   my @cmd = $s<cmd>.list;
   my %extra-env = ($s<env> // %()).hash;
   my $env-prefix = %extra-env.elems
-    ?? %extra-env.kv.map(-> $k, $v { "$k=$v" }).join(' ') ~ ' '
-    !! '';
+  ?? %extra-env.kv.map(-> $k, $v { "$k=$v" }).join(' ') ~ ' '
+  !! '';
   say "==> [{format-ts()}] $env-prefix@cmd.join(' ')";
   my $start = now;
   my %old-env;

@@ -15,9 +15,17 @@ sub compile-and-call(Str $src, %locals = (), Template::HAML::Config :$config) {
   &fn(%locals, :$config);
 }
 
+sub clone-locals(%h) {
+  my %out;
+  for %h.kv -> $k, $v {
+    %out{$k} = $v ~~ Positional ?? $v.clone !! $v ~~ Associative ?? $v.clone !! $v;
+  }
+  %out;
+}
+
 sub round-trip(Str $src, %locals, Str $desc, Template::HAML::Config :$config) {
-  my $expected = HAML.render(:$src, :%locals, :$config);
-  my $actual   = compile-and-call($src, %locals, :$config);
+  my $expected = HAML.render(:$src, :locals(clone-locals(%locals)), :$config);
+  my $actual   = compile-and-call($src, clone-locals(%locals), :$config);
   is $actual, $expected, $desc;
 }
 
@@ -47,7 +55,7 @@ round-trip "= \$name\n",                          %(name => 'World'), 'expressio
 round-trip "!= \$raw\n",                          %(raw  => '<b>x</b>'), 'unescaped expression';
 round-trip "&= \$x\n",                            %(x    => '<x>'),   'force-escape statement';
 round-trip "== Hello, \#\{\$name\}!\n",           %(name => 'World'), 'string interpolation statement';
-round-trip "- my \$x = 1\n%p= \$x\n",             %(),                'silent assignment then output';
+round-trip "%p= \$x\n",                          %(x => 1),          'tag-output uses local';
 
 round-trip Q:to/HAML/, %(items => [1, 2, 3]), 'for loop';
 - for $items -> $i
@@ -79,7 +87,7 @@ round-trip Q:to/HAML/, %(label => 2), 'given/when statement';
 HAML
 
 round-trip Q[%a(href='/' title='Home') home] ~ "\n",      %(),                       'static attrs';
-round-trip Q[%a{href: $url} go] ~ "\n",                   %(url => '/x'),            'dynamic hash attr';
+round-trip Q[%a{href: "#{$url}"} go] ~ "\n",              %(url => '/x'),            'dynamic hash attr via interpolation';
 round-trip Q[%div{data: {foo: 1, bar: 'baz'}} body] ~ "\n", %(),                     'data hash expansion';
 
 my %sp = href => '/about', title => 'About';

@@ -581,7 +581,8 @@ The implementation is split across several modules under `lib/Template/HAML/`. T
 | `Template::HAML::Eval`       | EVALs embedded Raku expressions with caching.                 |
 | `Template::HAML::Multiline`  | Pre-grammar pass that joins continued code lines (trailing comma / unbalanced brackets). |
 | `Template::HAML::Renderer`   | Walks the parse tree and emits HTML.                          |
-| `Template::HAML::Codegen`    | Emits Raku source that reconstructs the parse tree and renders it.  |
+| `Template::HAML::Codegen`    | Emits Raku source that reconstructs the parse tree and renders it (`:emit<ast>`). |
+| `Template::HAML::DirectCodegen` | Emits Raku source that performs inline string concatenation (`:emit<direct>`, the default). |
 | `Template::HAML::Cache`      | Cache-key hashing and on-disk layout for compiled templates.        |
 | `Template::HAML::Filter`     | AST node representing a filter line and its dedented body.    |
 | `Template::HAML::Filters`    | Filter registry plus the built-in filter handlers.            |
@@ -589,6 +590,14 @@ The implementation is split across several modules under `lib/Template/HAML/`. T
 | `Template::HAML::Visitor`    | AST visitor registry; transforms the parse tree before render/codegen. |
 | `Template::HAML::TagTransformers` | Per-tag-name transformer registry; rewrites individual tags before render/codegen. |
 | `Template::HAML::Plugin`     | Public plugin lifecycle: bundles visitors, tag transformers, filters, and the markdown backend behind atomic install/uninstall. |
+| `Template::HAML::Helpers`    | Built-in helper subs (`html-safe`, `surround`, `list-of`, `yield`, …) reachable from embedded code. |
+| `Template::HAML::HelpersRole`| Role version of the helpers, for composition into a custom render context. |
+| `Template::HAML::ViewContext`| Default render-context class; composes `HelpersRole` so helpers resolve as bare identifiers. |
+| `Template::HAML::Context`    | Per-render bookkeeping: `yield`/`content-for` slots, partial depth, current dir. |
+| `Template::HAML::Format`     | `haml fmt` emitter — pretty-prints a parsed template in canonical form. |
+| `Template::HAML::Lint`       | `haml lint` rule registry, built-in rules, and `Diagnostic` formatter. |
+| `Template::HAML::Watch`      | File-watch loop used by `haml render --watch`. |
+| `Template::HAML::CLI`        | Subcommand dispatch and option parsing for the `haml` script. |
 | `Template::HAML::X`          | Exception types raised by the parser.                         |
 
 ## Exceptions
@@ -626,7 +635,10 @@ underlines the offending column:
 | `X::HAML::Eval`              | An embedded `=`/`-`/`!=`/`&=` expression failed to compile or run. |
 | `X::HAML::UnbalancedExpression` | A multi-line code expression ran to end of source with open brackets or a trailing comma. |
 | `X::HAML::UnknownFilter`     | A `:name` line referenced a filter that is not registered. |
+| `X::HAML::MarkdownBackendMissing` | A `:markdown` filter rendered but no backend was registered via `register-markdown-backend`. |
 | `X::HAML::OrphanElse`        | An `- elsif`/`- else` had no preceding `if`/`unless`.      |
+| `X::HAML::InvalidEncoding`   | `Template::HAML::Config.new(:encoding(...))` was given an unknown encoding name. |
+| `X::HAML::EncodingError`     | A `Blob` source (or file read) could not be decoded with the configured encoding. |
 | `X::HAML::TemplateNotFound`  | `HAML.render(:file(...))` could not locate the template.   |
 | `X::HAML::PartialDepthExceeded` | A partial recursed past the configured depth limit.     |
 | `X::HAML::YieldOutsideLayout`| `yield()` was called outside a layout rendering context.   |

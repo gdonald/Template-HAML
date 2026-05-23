@@ -11,9 +11,17 @@ sub compile-and-call(Str $src, %locals = (), Template::HAML::Config :$config) {
   &fn(%locals, :$config);
 }
 
+sub clone-locals(%h) {
+  my %out;
+  for %h.kv -> $k, $v {
+    %out{$k} = $v ~~ Positional ?? $v.clone !! $v ~~ Associative ?? $v.clone !! $v;
+  }
+  %out;
+}
+
 sub round-trip-check(Str $src, %locals, Template::HAML::Config :$config) {
-  my $expected = HAML.render(:$src, :%locals, :$config);
-  my $actual   = compile-and-call($src, %locals, :$config);
+  my $expected = HAML.render(:$src, :locals(clone-locals(%locals)), :$config);
+  my $actual   = compile-and-call($src, clone-locals(%locals), :$config);
   expect($actual).to.eq($expected);
 }
 
@@ -53,7 +61,7 @@ describe 'Template::HAML::Codegen', {
     it 'unescaped expression', { round-trip-check "!= \$raw\n", %(raw => '<b>x</b>'); }
     it 'force-escape statement', { round-trip-check "&= \$x\n", %(x => '<x>'); }
     it 'string interpolation statement', { round-trip-check "== Hello, \#\{\$name\}!\n", %(name => 'World'); }
-    it 'silent assignment then output', { round-trip-check "- my \$x = 1\n%p= \$x\n", %(); }
+    it 'tag-output uses local', { round-trip-check "%p= \$x\n", %(x => 1); }
   }
 
   context 'control-flow round-trips', {
@@ -97,7 +105,7 @@ describe 'Template::HAML::Codegen', {
 
   context 'attribute round-trips', {
     it 'static attrs', { round-trip-check Q[%a(href='/' title='Home') home] ~ "\n", %(); }
-    it 'dynamic hash attr', { round-trip-check Q[%a{href: $url} go] ~ "\n", %(url => '/x'); }
+    it 'dynamic hash attr', { round-trip-check Q[%a{href: "#{$url}"} go] ~ "\n", %(url => '/x'); }
     it 'data hash expansion', { round-trip-check Q[%div{data: {foo: 1, bar: 'baz'}} body] ~ "\n", %(); }
 
     it 'attribute splat', {

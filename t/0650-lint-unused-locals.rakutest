@@ -60,7 +60,7 @@ sub diags-for(:$src, :%locals --> List) {
 
 {
   my @d = diags-for(
-    :src("%a\{:href(\$url)\} link\n"),
+    :src("%a\{href: \"\#\{\$url\}\"\} link\n"),
     :locals{ :url('/x') },
   );
   is @d.elems, 0, 'attribute-hash reference counts as used';

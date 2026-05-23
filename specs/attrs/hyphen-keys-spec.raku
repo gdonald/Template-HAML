@@ -1,6 +1,7 @@
 use lib 'lib';
 use BDD::Behave;
 use Template::HAML;
+use Template::HAML::X;
 
 describe 'hyphenated attribute keys', {
   it 'parses a hyphenated string key with rocket', {
@@ -13,8 +14,8 @@ describe 'hyphenated attribute keys', {
       .to.eq("<a aria-label='x'></a>\n");
   }
 
-  it 'does not parse a bareword hyphen-key as an attribute', {
-    my $r = HAML.render(:src(Q[%a{data-id: 1}] ~ "\n"));
-    expect($r.contains("data-id='1'")).to.be-falsy;
+  it 'raises X::HAML::ParseFail on a bareword hyphen-key', {
+    expect({ HAML.render(:src(Q[%a{data-id: 1}] ~ "\n")) })
+      .to.raise-error(X::HAML::ParseFail);
   }
 }

@@ -53,7 +53,16 @@ class DirectCodegen is export {
   }
 
   method !try-precompile(Str $expr) {
-    my @all-locals = flat @!current-locals.list, @!scope-vars.list;
+    # Loop variables (in @!scope-vars) can shadow a top-level local of the
+    # same name. The wrapper signature must not list a name twice; prefer the
+    # innermost (scope-vars) over the outer (current-locals).
+    my %seen;
+    my @all-locals;
+    for flat @!scope-vars.list, @!current-locals.list -> $name {
+      next if %seen{$name};
+      %seen{$name} = True;
+      @all-locals.push: $name;
+    }
     # If the expression declares any locals with `my $name`, exclude those
     # names from the wrapper signature so the precheck doesn't trip a
     # "Redeclaration of symbol" compile-time advisory.
@@ -81,7 +90,13 @@ class DirectCodegen is export {
   }
 
   method !block-source(Str $expr --> Str) {
-    my @all-locals = flat @!current-locals.list, @!scope-vars.list;
+    my %seen;
+    my @all-locals;
+    for flat @!scope-vars.list, @!current-locals.list -> $name {
+      next if %seen{$name};
+      %seen{$name} = True;
+      @all-locals.push: $name;
+    }
     my $sig = @all-locals.elems
       ?? '-> ' ~ @all-locals.map({ '$' ~ $_ }).join(', ') ~ ' {'
       !! '-> {';
@@ -177,20 +192,23 @@ class DirectCodegen is export {
 
   method !scan-locals(Node:D $tree --> List) {
     my %seen;
-    my %bound;
-    self!scan-node-locals($tree, %seen, %bound);
-    %seen.keys.grep({ !%bound{$_} }).sort.list;
+    self!scan-node-locals($tree, %seen);
+    %seen.keys.sort.list;
   }
 
-  method !scan-node-locals(Node:D $node, %seen, %bound) {
+  method !scan-node-locals(Node:D $node, %seen) {
     my $obj = $node.object;
     if $obj.defined && $obj ~~ Statement {
-      self!scan-statement-locals($obj, %seen, %bound);
+      self!scan-statement-locals($obj, %seen);
+    } elsif $obj.defined && $obj ~~ Tag && $obj.has-output {
+      if $obj.output-op ne '==' {
+        self!collect-ident-names($obj.output-expr // '', %seen);
+      }
     }
-    self!scan-node-locals($_, %seen, %bound) for $node.children;
+    self!scan-node-locals($_, %seen) for $node.children;
   }
 
-  method !scan-statement-locals(Statement:D $s, %seen, %bound) {
+  method !scan-statement-locals(Statement:D $s, %seen) {
     given $s.kind {
       when 'expression' {
         if $s.op ne '==' && !$s.is-bare-ident {
@@ -199,7 +217,6 @@ class DirectCodegen is export {
       }
       when 'for' {
         self!collect-ident-names($s.loop-iter // '', %seen);
-        %bound{$s.loop-var} = True if $s.loop-var;
       }
       when 'if' | 'elsif' | 'unless' | 'while' | 'repeat' | 'given' | 'when' {
         unless $s.is-bare-ident {
@@ -260,6 +277,9 @@ class DirectCodegen is export {
   }
 
   method !content-expr(Tag:D $t --> Str) {
+    if $t.has-output {
+      return self!tag-output-expr-source($t);
+    }
     my $content = $t.content // '';
     return raku-str('') unless $content.chars;
     if has-interp($content) {
@@ -270,6 +290,31 @@ class DirectCodegen is export {
     } else {
       raku-str($content);
     }
+  }
+
+  method !tag-output-expr-source(Tag:D $t --> Str) {
+    my $op   = $t.output-op;
+    my $expr = $t.output-expr;
+    my $line = $t.line   // 0;
+    my $col  = $t.column // 0;
+
+    return raku-str('') unless $expr.chars;
+
+    if $op eq '==' {
+      return 'interpolate(' ~ raku-str($expr)
+        ~ ', ' ~ LOCALS-DYN-VAR
+        ~ ', :line(' ~ $line ~ '), :column(' ~ $col ~ '))';
+    }
+
+    return raku-str('') if $!config.suppress-eval;
+
+    my $value-expr = self!wrap-eval($expr, $line, $col);
+    my $escape-bool-raku = $!config.escape-html ?? 'True' !! 'False';
+
+    'haml-format-output('
+      ~ $value-expr
+      ~ ', ' ~ raku-str($op)
+      ~ ', :escape-html(' ~ $escape-bool-raku ~ '))';
   }
 
   method !emit-tag-lines(Node:D $node, Tag:D $t, Int $offset --> List) {
@@ -384,9 +429,10 @@ class DirectCodegen is export {
     @lines.push: '  ' ~ BUF-VAR ~ ' ~= ' ~ raku-str(TRIM-BEFORE) ~ ';' if $trim-outer;
 
     my $content = $t.content // '';
+    my $has-content = $content.chars > 0 || $t.has-output;
 
     if $trim-inner {
-      if $content.chars {
+      if $has-content {
         @lines.push: '  ' ~ BUF-VAR ~ ' ~= ' ~ $open-expr ~ ' ~ ' ~ $content-rk ~ ';';
       } else {
         @lines.push: '  ' ~ BUF-VAR ~ ' ~= ' ~ $open-expr ~ ';';
@@ -407,7 +453,7 @@ class DirectCodegen is export {
       );
       @lines.push: '  ' ~ BUF-VAR ~ ' ~= ' ~ $close-expr ~ ';';
     } else {
-      if $content.chars {
+      if $has-content {
         @lines.push: '  ' ~ BUF-VAR ~ ' ~= ' ~ $open-expr ~ ' ~ ' ~ $content-rk ~ ' ~ "\n";';
       } else {
         @lines.push: '  ' ~ BUF-VAR ~ ' ~= ' ~ $open-expr ~ ' ~ "\n";';
@@ -812,7 +858,18 @@ class DirectCodegen is export {
     @lines.push: '  my ' ~ LOCALS-DYN-VAR ~ ' = ' ~ LOCALS-VAR ~ ';';
     @lines.push: '  my ' ~ BUF-VAR ~ ' = "";';
     for @locals -> $name {
-      @lines.push: '  my $' ~ $name ~ ' = ' ~ LOCALS-VAR ~ '<' ~ $name ~ '>;';
+      # Bind via Proxy so a reference to a name the user did not pass in
+      # :locals raises X::HAML::Eval lazily at use time, not eagerly here.
+      my $key  = raku-str($name);
+      my $diag = raku-str('Variable \'$' ~ $name ~ '\' is not declared');
+      @lines.push:
+        '  my $' ~ $name ~ ' := Proxy.new('
+        ~ 'FETCH => -> $ { ' ~ LOCALS-VAR ~ '{' ~ $key ~ '}:exists '
+        ~ '?? ' ~ LOCALS-VAR ~ '{' ~ $key ~ '} '
+        ~ '!! X::HAML::Eval.new(:code(' ~ raku-str('$' ~ $name)
+        ~ '), :line(0), :column(0), :reason(' ~ $diag ~ ')).throw }, '
+        ~ 'STORE => -> $, $val { ' ~ LOCALS-VAR ~ '{' ~ $key ~ '} = $val }'
+        ~ ');';
     }
     @lines.append: @!tag-preamble-lines;
     @lines.List;

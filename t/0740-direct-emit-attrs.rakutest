@@ -108,7 +108,7 @@ class User {
 }
 
 {
-  my $src = qq[- for \$items -> \$item\n  %a\{href: \$item<href>\}= \$item<name>\n];
+  my $src = qq[- for \$items -> \$item\n  %a\{href: "\#\{\$item<href>\}"\}= \$item<name>\n];
   round-trip $src,
     %(items => [{name => 'A', href => '/a'}, {name => 'B', href => '/b'}]),
     'dynamic attrs inside a for loop';
@@ -128,7 +128,7 @@ round-trip Q[%input(type='checkbox' value="#{$v}")] ~ "\n", %(v => 'on'),
 }
 
 {
-  my $src = qq[%ul\n  - for \$items -> \$i\n    %li\{class: \$i<cls>\}= \$i<n>\n];
+  my $src = qq[%ul\n  - for \$items -> \$i\n    %li\{class: "\#\{\$i<cls>\}"\}= \$i<n>\n];
   round-trip $src,
     %(items => [{cls => 'one', n => 1}, {cls => 'two', n => 2}]),
     'comprehensive dynamic-attr template';

@@ -1,0 +1,96 @@
+
+use v6.d;
+use lib 'lib';
+use Template::HAML;
+use Template::HAML::Config;
+use Test;
+
+plan 20;
+
+is HAML.render(:src("%h1= \$title\n"), :locals(%(title => 'Welcome'))),
+   "<h1>Welcome</h1>\n",
+   '%tag= \$expr evaluates and emits the expression as inline content';
+
+is HAML.render(:src("%h1 = \$title\n"), :locals(%(title => 'W'))),
+   "<h1>W</h1>\n",
+   'whitespace between tag head and = is allowed';
+
+is HAML.render(:src("%p= \$x\n%li= \$x\n"), :locals(%(x => 'X'))),
+   "<p>X</p>\n<li>X</li>\n",
+   '%tag= works on multiple tags';
+
+is HAML.render(:src("%h1=\$x\n"), :locals(%(x => 'tight'))),
+   "<h1>tight</h1>\n",
+   '%tag= with no space before the expression works';
+
+is HAML.render(:src("%p= '<b>'\n")),
+   "<p>&lt;b&gt;</p>\n",
+   '%tag= HTML-escapes by default';
+
+is HAML.render(:src("%p!= \$raw\n"), :locals(%(raw => '<b>bold</b>'))),
+   "<p><b>bold</b></p>\n",
+   '%tag!= emits raw (unescaped)';
+
+is HAML.render(:src("%p&= \$x\n"), :locals(%(x => '<x>'))),
+   "<p>&lt;x&gt;</p>\n",
+   '%tag&= forces HTML escape';
+
+is HAML.render(:src("%h1== Hello, \#\{\$name\}!\n"), :locals(%(name => 'World'))),
+   "<h1>Hello, World!</h1>\n",
+   '%tag== performs interpolation only';
+
+is HAML.render(:src("%pre~ \"a\\nb\"\n")),
+   "<pre>a&#x000A;b</pre>\n",
+   '%tag~ preserves newlines as &#x000A;';
+
+is HAML.render(:src("%p.lead= \$msg\n"), :locals(%(msg => 'hi'))),
+   "<p class='lead'>hi</p>\n",
+   '%tag with class shorthand + = works';
+
+is HAML.render(:src("%p#hero= \$msg\n"), :locals(%(msg => 'hi'))),
+   "<p id='hero'>hi</p>\n",
+   '%tag with id shorthand + = works';
+
+is HAML.render(:src(Q[%a(href='/')= $label] ~ "\n"), :locals(%(label => 'home'))),
+   "<a href='/'>home</a>\n",
+   '%tag(html-attrs)= expr works';
+
+is HAML.render(:src(Q[%a{href: '/'}= $label] ~ "\n"), :locals(%(label => 'home'))),
+   "<a href='/'>home</a>\n",
+   '%tag{hash-attrs}= expr works';
+
+is HAML.render(:src(".lead= \$msg\n"), :locals(%(msg => 'hi'))),
+   "<div class='lead'>hi</div>\n",
+   'implicit div with shorthand + = works';
+
+is HAML.render(:src("%ul\n  - for ^3 -> \$i\n    %li= \$i\n")),
+   "<ul>\n  <li>0</li>\n  <li>1</li>\n  <li>2</li>\n</ul>\n",
+   '%li= \$i inside a for loop binds the loop variable';
+
+{
+  my $cfg = Template::HAML::Config.new(:emit<ast>);
+  is HAML.render(:src("%h1= \$title\n"), :locals(%(title => 'AST!')), :config($cfg)),
+     "<h1>AST!</h1>\n",
+     '%tag= \$expr works under :emit<ast>';
+
+  is HAML.render(:src("%p!= \$raw\n"), :locals(%(raw => '<b>raw</b>')), :config($cfg)),
+     "<p><b>raw</b></p>\n",
+     '%tag!= works under :emit<ast>';
+}
+
+{
+  my $cfg = Template::HAML::Config.new(:!escape-html);
+  is HAML.render(:src("%p= \$x\n"), :locals(%(x => '<b>')), :config($cfg)),
+     "<p><b></p>\n",
+     '%tag= respects :escape-html=False (no escape)';
+}
+
+is HAML.render(:src(Q[%p hello { not parsed as attrs }] ~ "\n")),
+   Q[<p>hello { not parsed as attrs }</p>] ~ "\n",
+   'a literal { later in text is not mistaken for a failed hash';
+
+is HAML.render(:src("%p hello (not attrs)\n")),
+   "<p>hello (not attrs)</p>\n",
+   'a literal ( later in text is not mistaken for failed html-attrs';
+
+done-testing;

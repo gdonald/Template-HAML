@@ -15,13 +15,39 @@ Template::HAML supports a Ruby-style attribute hash on any tag:
 Today the supported value types inside `{ ... }` are:
 
 - Single-quoted strings: `'value'`
-- Double-quoted strings: `"value"`
+- Double-quoted strings: `"value"` (supports `#{...}` interpolation)
+- Numbers: `123`, `-4.5`
+- Booleans: `True`, `False`, `Nil`
 - Symbols (treated as strings): `:value`
+- Arrays of the above: `['a', 'b']`
+- Hashes of the above: `{ id: 1, role: 'main' }`
 
 ```haml
 %input{type: :text, name: 'email'}
 %a{href: "/", class: 'home'} Home
 ```
+
+To embed a Raku local variable, use double-quoted interpolation or an
+attribute splat — never a bareword `$var`. A hash whose value the parser
+cannot read raises `X::HAML::ParseFail` pointing at the opening `{`:
+
+```haml
+%a{href: "#{$url}"} go            -- works (interpolation)
+%a{|$attrs} go                     -- works (splat)
+%a{href: $url} go                  -- X::HAML::ParseFail
+%a{aria-label: 'home'} hi          -- X::HAML::ParseFail (hyphen bareword key)
+```
+
+Hyphenated keys must be quoted:
+
+```haml
+%a{'aria-label' => 'home'} hi
+%a{"data-id" => 1} click
+```
+
+The same rule applies to HTML-style `(...)` attrs: values must be quoted
+strings; a `$var` value or any other unparseable construct raises
+`X::HAML::ParseFail`.
 
 ## Multiple attributes
 

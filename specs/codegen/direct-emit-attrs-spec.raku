@@ -90,7 +90,7 @@ describe 'direct-emit attributes', {
 
   context 'dynamic attrs in templates', {
     it 'dynamic attrs inside a for loop', {
-      my $src = qq[- for \$items -> \$item\n  %a\{href: \$item<href>\}= \$item<name>\n];
+      my $src = qq[- for \$items -> \$item\n  %a\{href: "\#\{\$item<href>\}"\}= \$item<name>\n];
       round-trip-check $src,
         %(items => [{name => 'A', href => '/a'}, {name => 'B', href => '/b'}]);
     }
@@ -110,7 +110,7 @@ describe 'direct-emit attributes', {
     }
 
     it 'comprehensive dynamic-attr template', {
-      my $src = qq[%ul\n  - for \$items -> \$i\n    %li\{class: \$i<cls>\}= \$i<n>\n];
+      my $src = qq[%ul\n  - for \$items -> \$i\n    %li\{class: "\#\{\$i<cls>\}"\}= \$i<n>\n];
       round-trip-check $src,
         %(items => [{cls => 'one', n => 1}, {cls => 'two', n => 2}]);
     }

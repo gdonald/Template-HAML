@@ -89,6 +89,10 @@ sub ser-tag(Tag:D $t, Str :$config-var = '$cfg' --> Str) is export {
   @parts.push: ':column(' ~ ($t.column // 0) ~ ')';
   @parts.push: ':output-indent-width(' ~ $t.output-indent-width ~ ')';
   @parts.push: ':content(' ~ raku-str($t.content // '') ~ ')';
+  if $t.has-output {
+    @parts.push: ':output-op('   ~ raku-str($t.output-op)   ~ ')';
+    @parts.push: ':output-expr(' ~ raku-str($t.output-expr) ~ ')';
+  }
   @parts.push: ':self-close' if $t.self-close;
   @parts.push: ':trim-outer' if $t.trim-outer;
   @parts.push: ':trim-inner' if $t.trim-inner;
