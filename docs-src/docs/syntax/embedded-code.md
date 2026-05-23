@@ -6,12 +6,13 @@ expression.
 
 ## Operators
 
-| Operator | Behavior                                                   |
-|----------|------------------------------------------------------------|
-| `=`      | Evaluate the expression, HTML-escape the result, emit it.  |
-| `!=`     | Evaluate the expression, emit the result without escaping. |
-| `&=`     | Evaluate the expression, force HTML-escape, emit it.       |
-| `-`      | Evaluate the expression for side effects only — emit nothing. |
+| Operator | Behavior                                                                                                    |
+| -------- | ----------------------------------------------------------------------------------------------------------- |
+| `=`      | Evaluate the expression, HTML-escape the result, emit it.                                                   |
+| `!=`     | Evaluate the expression, emit the result without escaping.                                                  |
+| `&=`     | Evaluate the expression, force HTML-escape, emit it.                                                        |
+| `==`     | Emit the line verbatim, interpolating `#{...}` / `!{...}` only — the body is *not* evaluated as Raku.       |
+| `-`      | Evaluate the expression for side effects only — emit nothing.                                               |
 | `~`      | Like `=`, but additionally replace newlines in the result with `&#x000A;`. See [Whitespace](whitespace.md). |
 
 ```haml

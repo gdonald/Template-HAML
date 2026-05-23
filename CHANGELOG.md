@@ -2,6 +2,72 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.9.1 — 2026-05-23
+
+### Added
+
+- **Tag shorthand interpolation.** `#{...}` and `!{...}` inside class and id
+  shorthand (`.#{cls}`, `##{id}`).
+- **Object references.** `[obj]` / `[obj, :prefix]` after a tag emits stable
+  `class` and `id` derived from the object's type and identity.
+- **Attribute splats.** `*%h` and `*@a` inside `{...}` / `(...)` to merge hashes
+  and pair-lists into the attribute set, with the same ordering and boolean
+  rules as literal attributes.
+- **Template codegen.** Compile a parsed template to a reusable Raku sub via
+  `Template::HAML::Codegen`, cached on disk and keyed on source + config.
+- **Direct-emit codegen.** `Template::HAML::DirectEmit` lowers templates to
+  straight-line `print` / `write` calls for hot paths, bypassing the AST walker.
+- **Streaming render.** `render-stream` writes incrementally to any `IO::Handle`
+  or `Supplier`, with backpressure-aware chunking.
+- **Cross-process precompilation cache.** Compiled templates persist under
+  `.precomp/` keyed on path + mtime + config hash and are reused across
+  processes.
+- **Cache invalidation.** Mtime + config-hash checks invalidate stale entries;
+  manual `Template::HAML::Cache.clear` for tests and dev loops.
+- **Codegen error mapping.** Runtime exceptions thrown from generated code map
+  back to original template `:file`, `:line`, `:column` via a side-table.
+- **Render-time scope.** Locals, helpers, and `content-for` blocks share a
+  single scope object so partials and layouts see consistent state.
+- **Function memoization.** Pure helpers can opt in to per-render memoization
+  with `is memoized`.
+- **Plugin API.** `Template::HAML::Plugin` lets third-party packages register
+  filters, helpers, doctypes, and tag transformers from a single entry point.
+- **AST visitor hook.** `Template::HAML::Visitor` exposes pre- and post-order
+  walks over the parsed tree for linters, formatters, and analyzers.
+- **Tag transformer registry.** Register callbacks that rewrite tag nodes
+  before codegen (e.g. auto-`rel="noopener"` on external links).
+- **Pluggable markdown filter.** `:markdown` filter backed by any registered
+  markdown implementation; ships with a default adapter.
+- **`haml render`.** Render a template file or stdin to stdout / `-o`, with
+  `--locals`, `--format`, `--escape-html` / `--no-escape-html`, `--ugly`.
+- **`haml fmt`.** Canonicalize indentation, attribute order, and quote style;
+  `--check` exits non-zero on diff for CI.
+- **`haml lint`.** Static checks for duplicate ids, unused locals, illegal
+  indentation, and unknown filters/doctypes.
+- **`--watch` for CLI.** Re-renders on file change with debounce.
+- **Trace for template debugging.** `TEMPLATE_HAML_TRACE=1` annotates output
+  with source positions as HTML comments.
+- **String encoding validation.** Non-UTF-8 input fails fast with a clear
+  `X::HAML::ParseFail` instead of silently producing mojibake.
+- **`page-class` helper.** Emits a stable `class` attribute for the document
+  body based on controller/action or template path.
+- **Bench harness.** `bench/` scripts for parse, codegen, and render timings
+  against a fixed corpus.
+- **Meta-provides testing.** `AUTHOR_TESTING=1` checks every module under
+  `lib/` is listed in `META6.json` provides.
+
+### Changed
+
+- **Interior whitespace.** Runs of internal whitespace in plain text and
+  attribute values are squeezed to a single space under `:ugly` output, matching
+  Ruby HAML.
+
+### Fixed
+
+- **Grammar bugs.** Several edge cases around nested interpolation, attribute
+  parsing, and indent re-entry after blank lines.
+- **CI.** Test matrix and dependency installation on GitHub Actions.
+
 ## v0.9.0 — 2026-05-11
 
 First release. Targets feature parity with Ruby HAML 5.x. Built on Raku
