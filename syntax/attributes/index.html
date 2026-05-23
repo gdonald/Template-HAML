@@ -1271,13 +1271,36 @@
 <p>Today the supported value types inside <code>{ ... }</code> are:</p>
 <ul>
 <li>Single-quoted strings: <code>'value'</code></li>
-<li>Double-quoted strings: <code>"value"</code></li>
+<li>Double-quoted strings: <code>"value"</code> (supports <code>#{...}</code> interpolation)</li>
+<li>Numbers: <code>123</code>, <code>-4.5</code></li>
+<li>Booleans: <code>True</code>, <code>False</code>, <code>Nil</code></li>
 <li>Symbols (treated as strings): <code>:value</code></li>
+<li>Arrays of the above: <code>['a', 'b']</code></li>
+<li>Hashes of the above: <code>{ id: 1, role: 'main' }</code></li>
 </ul>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">%input</span><span class="p">{</span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="ss">:text</span><span class="p">,</span><span class="w"> </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;email&#39;</span><span class="p">}</span>
 <span class="nt">%a</span><span class="p">{</span><span class="ss">href</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">class</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;home&#39;</span><span class="p">}</span> Home
 </code></pre></div></td></tr></table></div>
+<p>To embed a Raku local variable, use double-quoted interpolation or an
+attribute splat — never a bareword <code>$var</code>. A hash whose value the parser
+cannot read raises <code>X::HAML::ParseFail</code> pointing at the opening <code>{</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">%a</span><span class="p">{</span><span class="ss">href</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">#{</span><span class="vg">$url</span><span class="si">}</span>&quot;} go            -- works (interpolation)
+<span class="nt">%a</span><span class="p">{</span><span class="o">|</span><span class="vg">$attrs</span><span class="p">}</span> go                     -- works (splat)
+<span class="nt">%a</span><span class="p">{</span><span class="ss">href</span><span class="p">:</span><span class="w"> </span><span class="vg">$url</span><span class="p">}</span> go                  -- X::HAML::ParseFail
+<span class="nt">%a</span><span class="p">{</span><span class="n">aria</span><span class="o">-</span><span class="ss">label</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;home&#39;</span><span class="p">}</span> hi          -- X::HAML::ParseFail (hyphen bareword key)
+</code></pre></div></td></tr></table></div>
+<p>Hyphenated keys must be quoted:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">%a</span><span class="p">{</span><span class="s1">&#39;aria-label&#39;</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;home&#39;</span><span class="p">}</span> hi
+<span class="nt">%a</span><span class="p">{</span><span class="s2">&quot;data-id&quot;</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="mi">1</span><span class="p">}</span> click
+</code></pre></div></td></tr></table></div>
+<p>The same rule applies to HTML-style <code>(...)</code> attrs: values must be quoted
+strings; a <code>$var</code> value or any other unparseable construct raises
+<code>X::HAML::ParseFail</code>.</p>
 <h2 id="multiple-attributes">Multiple attributes<a class="headerlink" href="#multiple-attributes" title="Permanent link">&para;</a></h2>
 <p>Separate attributes with commas:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">%a</span><span class="p">{</span><span class="ss">href</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;/&#39;</span><span class="p">,</span><span class="w"> </span><span class="ss">class</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;home&#39;</span><span class="p">,</span><span class="w"> </span><span class="nb">id</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;home-link&#39;</span><span class="p">}</span> Home

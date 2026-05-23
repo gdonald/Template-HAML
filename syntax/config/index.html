@@ -1403,6 +1403,11 @@
 <td>When true, render-time <code>X::HAML::Eval</code> errors include the compiled-block source and a template-line → block-line breadcrumb. See <a href="#trace">trace</a>.</td>
 </tr>
 <tr>
+<td><code>emit</code></td>
+<td><code>'direct'</code></td>
+<td>Codegen path: <code>'direct'</code> inlines <code>$out ~= ...</code> Raku, <code>'ast'</code> rebuilds the parse tree at render time. Overridden by <code>HAML_DEFAULT_EMIT=ast</code>. See <a href="../../api/#direct-emit-codegen-default">API: Direct-emit codegen</a>.</td>
+</tr>
+<tr>
 <td><code>autoclose</code></td>
 <td>HTML5 voids</td>
 <td>List of element names that auto-self-close: <code>area base br col embed hr img input link meta param source track wbr</code>.</td>

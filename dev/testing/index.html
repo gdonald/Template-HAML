@@ -940,21 +940,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#run-the-suite" class="md-nav__link">
+  <a href="#run" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Run the suite
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#author-tests" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Author tests
+        Run
       
     </span>
   </a>
@@ -1054,21 +1043,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#run-the-suite" class="md-nav__link">
+  <a href="#run" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Run the suite
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#author-tests" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Author tests
+        Run
       
     </span>
   </a>
@@ -1118,21 +1096,53 @@
 
 
 <h1 id="tests">Tests<a class="headerlink" href="#tests" title="Permanent link">&para;</a></h1>
-<p>The test suite lives under <code>t/</code>. Each file uses Raku's built-in <code>Test</code> module.</p>
-<h2 id="run-the-suite">Run the suite<a class="headerlink" href="#run-the-suite" title="Permanent link">&para;</a></h2>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>prove6<span class="w"> </span>-Ilib<span class="w"> </span>t/
+<p>Template::HAML has two parallel test suites:</p>
+<ul>
+<li><code>t/</code> — <code>prove6</code>-driven <code>.rakutest</code> files, one per feature area.</li>
+<li><code>specs/</code> — BDD-Behave specs grouped by feature directory (<code>specs/attrs/</code>,
+  <code>specs/codegen/</code>, ...). Each <code>.rakutest</code> under <code>t/</code> has a paired
+  <code>*-spec.raku</code> under <code>specs/</code>.</li>
+</ul>
+<p>The two suites cover the same behavior from different angles: the
+<code>.rakutest</code> files test the public API at the unit level; the BDD specs
+describe expected behavior in a <code>describe</code>/<code>context</code>/<code>it</code> form and are
+the source of truth for the documented syntax.</p>
+<h2 id="run">Run<a class="headerlink" href="#run" title="Permanent link">&para;</a></h2>
+<p>The canonical way to run the full suite is the project's driver script:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>./test.raku
 </code></pre></div></td></tr></table></div>
-<p><code>prove6</code> is a TAP runner; <code>-Ilib</code> puts the project's modules on the include path. Install test-depends from <code>META6.json</code> first if you don't have them:</p>
+<p>It runs three stages in order:</p>
+<ol>
+<li><code>prove6 -j&lt;cores&gt; -Ilib t/</code> against the default direct-emit codegen.</li>
+<li><code>prove6 -j&lt;cores&gt; -Ilib t/</code> with <code>HAML_DEFAULT_EMIT=ast</code> so every test
+   also runs against the AST walker.</li>
+<li><code>behave --exclude-tag benchmark</code> for the BDD specs (benchmarks are
+   excluded from the default run; see <a href="../benchmarks/">Benchmarks</a>).</li>
+</ol>
+<p>Author-only checks are gated behind <code>AUTHOR_TESTING=1</code>; <code>test.raku</code> sets
+that automatically, so the META validation in <code>t/0000-meta.rakutest</code> and
+<code>t/0010-meta-provides.rakutest</code> runs as part of the local suite.</p>
+<p>To run a single stage manually:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code>prove6<span class="w"> </span>-Ilib<span class="w"> </span>t/<span class="w">                                  </span><span class="c1"># direct emit</span>
+<span class="nv">HAML_DEFAULT_EMIT</span><span class="o">=</span>ast<span class="w"> </span>prove6<span class="w"> </span>-Ilib<span class="w"> </span>t/<span class="w">            </span><span class="c1"># AST walker</span>
+behave<span class="w"> </span>--exclude-tag<span class="w"> </span>benchmark<span class="w">                   </span><span class="c1"># BDD specs</span>
+</code></pre></div></td></tr></table></div>
+<p>Install test-depends from <code>META6.json</code> first if you don't have them:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>zef<span class="w"> </span>install<span class="w"> </span>--deps-only<span class="w"> </span>--/test<span class="w"> </span>--test-depends<span class="w"> </span>.
 </code></pre></div></td></tr></table></div>
-<h2 id="author-tests">Author tests<a class="headerlink" href="#author-tests" title="Permanent link">&para;</a></h2>
-<p>Author-only checks are gated behind <code>AUTHOR_TESTING=1</code>. The META validation in <code>t/000-meta.rakutest</code> runs only when this variable is set, so contributors don't fail builds over local metadata churn.</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">AUTHOR_TESTING</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>prove6<span class="w"> </span>-Ilib<span class="w"> </span>t/
-</code></pre></div></td></tr></table></div>
 <h2 id="golden-file-tests">Golden-file tests<a class="headerlink" href="#golden-file-tests" title="Permanent link">&para;</a></h2>
-<p><code>t/041-golden-files.rakutest</code> iterates <code>t/fixtures/golden/*.haml</code> against <code>t/fixtures/golden/*.html</code> and asserts the rendered output matches the recorded golden output. Add a new fixture by dropping a matched <code>.haml</code>/<code>.html</code> pair into that directory.</p>
+<p><code>t/0410-golden-files.rakutest</code> iterates <code>t/fixtures/golden/*.haml</code> against
+<code>t/fixtures/golden/*.html</code> and asserts the rendered output matches the
+recorded golden output. Add a new fixture by dropping a matched
+<code>.haml</code>/<code>.html</code> pair into that directory.</p>
 <h2 id="ci">CI<a class="headerlink" href="#ci" title="Permanent link">&para;</a></h2>
-<p>Every push to <code>main</code> and every PR runs <code>prove6 -Ilib t/</code> via the GitHub Actions workflow at <code>.github/workflows/ci.yml</code>. The matrix covers the latest Rakudo release and the prior minor release, and caches <code>~/.zef</code> per OS/version.</p>
+<p>Every push and every pull request runs the workflow at
+<code>.github/workflows/ci.yml</code> on <code>ubuntu-latest</code>. The workflow installs
+Rakudo, BDD-Behave, project test-deps, and <code>App::Prove6</code>, then runs
+<code>./test.raku</code> followed by <code>behave --benchmark specs/bench/</code> to exercise
+the benchmark harness as a smoke test (with <code>HAML_BENCH_ITERS=10</code>).</p>
 
 
 

@@ -2464,7 +2464,11 @@ considerations, and design rationale.</p>
 </tr>
 <tr>
 <td><code>Template::HAML::Codegen</code></td>
-<td>Emits Raku source that reconstructs the parse tree and renders it.</td>
+<td>Emits Raku source that reconstructs the parse tree and renders it (<code>:emit&lt;ast&gt;</code>).</td>
+</tr>
+<tr>
+<td><code>Template::HAML::DirectCodegen</code></td>
+<td>Emits Raku source that performs inline string concatenation (<code>:emit&lt;direct&gt;</code>, the default).</td>
 </tr>
 <tr>
 <td><code>Template::HAML::Cache</code></td>
@@ -2493,6 +2497,38 @@ considerations, and design rationale.</p>
 <tr>
 <td><code>Template::HAML::Plugin</code></td>
 <td>Public plugin lifecycle: bundles visitors, tag transformers, filters, and the markdown backend behind atomic install/uninstall.</td>
+</tr>
+<tr>
+<td><code>Template::HAML::Helpers</code></td>
+<td>Built-in helper subs (<code>html-safe</code>, <code>surround</code>, <code>list-of</code>, <code>yield</code>, …) reachable from embedded code.</td>
+</tr>
+<tr>
+<td><code>Template::HAML::HelpersRole</code></td>
+<td>Role version of the helpers, for composition into a custom render context.</td>
+</tr>
+<tr>
+<td><code>Template::HAML::ViewContext</code></td>
+<td>Default render-context class; composes <code>HelpersRole</code> so helpers resolve as bare identifiers.</td>
+</tr>
+<tr>
+<td><code>Template::HAML::Context</code></td>
+<td>Per-render bookkeeping: <code>yield</code>/<code>content-for</code> slots, partial depth, current dir.</td>
+</tr>
+<tr>
+<td><code>Template::HAML::Format</code></td>
+<td><code>haml fmt</code> emitter — pretty-prints a parsed template in canonical form.</td>
+</tr>
+<tr>
+<td><code>Template::HAML::Lint</code></td>
+<td><code>haml lint</code> rule registry, built-in rules, and <code>Diagnostic</code> formatter.</td>
+</tr>
+<tr>
+<td><code>Template::HAML::Watch</code></td>
+<td>File-watch loop used by <code>haml render --watch</code>.</td>
+</tr>
+<tr>
+<td><code>Template::HAML::CLI</code></td>
+<td>Subcommand dispatch and option parsing for the <code>haml</code> script.</td>
 </tr>
 <tr>
 <td><code>Template::HAML::X</code></td>
@@ -2591,8 +2627,20 @@ underlines the offending column:</p>
 <td>A <code>:name</code> line referenced a filter that is not registered.</td>
 </tr>
 <tr>
+<td><code>X::HAML::MarkdownBackendMissing</code></td>
+<td>A <code>:markdown</code> filter rendered but no backend was registered via <code>register-markdown-backend</code>.</td>
+</tr>
+<tr>
 <td><code>X::HAML::OrphanElse</code></td>
 <td>An <code>- elsif</code>/<code>- else</code> had no preceding <code>if</code>/<code>unless</code>.</td>
+</tr>
+<tr>
+<td><code>X::HAML::InvalidEncoding</code></td>
+<td><code>Template::HAML::Config.new(:encoding(...))</code> was given an unknown encoding name.</td>
+</tr>
+<tr>
+<td><code>X::HAML::EncodingError</code></td>
+<td>A <code>Blob</code> source (or file read) could not be decoded with the configured encoding.</td>
 </tr>
 <tr>
 <td><code>X::HAML::TemplateNotFound</code></td>

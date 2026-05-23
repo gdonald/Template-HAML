@@ -1102,7 +1102,33 @@
 </code></pre></div></td></tr></table></div>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">&lt;!DOCTYPE html&gt;</span>
 </code></pre></div></td></tr></table></div>
-<p>With no argument, <code>!!!</code> emits the format-default doctype. The default format is HTML5; other formats are not yet configurable.</p>
+<p>With no argument, <code>!!!</code> emits the format-default doctype. The format
+comes from the <a href="../config/"><code>format</code></a> config option and the default is
+<code>html5</code>. The other formats produce different defaults:</p>
+<table>
+<thead>
+<tr>
+<th><code>format</code></th>
+<th>Argument-less <code>!!!</code> output</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>html5</code></td>
+<td><code>&lt;!DOCTYPE html&gt;</code></td>
+</tr>
+<tr>
+<td><code>html4</code></td>
+<td><code>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd"&gt;</code></td>
+</tr>
+<tr>
+<td><code>xhtml</code></td>
+<td><code>&lt;!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"&gt;</code></td>
+</tr>
+</tbody>
+</table>
+<p>Named variants (below) ignore the <code>format</code> option and always emit the
+exact doctype the variant names.</p>
 <h2 id="named-variants">Named variants<a class="headerlink" href="#named-variants" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

@@ -1116,88 +1116,65 @@
 
 
 <h1 id="benchmarks">Benchmarks<a class="headerlink" href="#benchmarks" title="Permanent link">&para;</a></h1>
-<p>The repo ships a small bench harness at <code>bench/render.raku</code> that compares the
-two codegen paths — the direct-emit codegen (default) and the AST walker
+<p>The repo ships two parallel bench harnesses that compare the two codegen
+paths — the direct-emit codegen (default) and the AST walker
 (<code>:emit&lt;ast&gt;</code>, see <a href="../../api/#direct-emit-codegen-default">API</a>) — on a
-fixed set of representative templates.</p>
+fixed set of representative templates:</p>
+<ul>
+<li><code>specs/bench/render-spec.raku</code> — BDD-Behave spec, tagged
+  <code>:tag&lt;benchmark&gt;</code> so it is skipped by the default test run and driven
+  separately via <code>behave --benchmark specs/bench/</code>.</li>
+<li><code>t/0790-bench.rakutest</code> — <code>prove6</code>-style harness, skipped unless
+  <code>HAML_RUN_BENCH=1</code> is set in the environment.</li>
+</ul>
+<p>Both files share the same template cases and the same render setup, so
+either entry point produces a comparable measurement.</p>
 <h2 id="run">Run<a class="headerlink" href="#run" title="Permanent link">&para;</a></h2>
-<p>From the project root:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>bench/render.raku
+<p>From the project root, driving the BDD-Behave spec:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>behave<span class="w"> </span>--benchmark<span class="w"> </span>specs/bench/
 </code></pre></div></td></tr></table></div>
-<p>This runs each case for 5000 iterations. Override with <code>--iters</code>:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>bench/render.raku<span class="w"> </span>--iters<span class="o">=</span><span class="m">20000</span>
+<p>Driving the <code>prove6</code> harness:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">HAML_RUN_BENCH</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>prove6<span class="w"> </span>-Ilib<span class="w"> </span>t/0790-bench.rakutest
 </code></pre></div></td></tr></table></div>
-<p>The shebang is <code>#!/usr/bin/env -S raku -Ilib</code>, so the script picks up the
-project's <code>lib/</code> automatically as long as you run it from the repo root.</p>
+<p>Both harnesses honor <code>HAML_BENCH_ITERS</code> to override the iteration count
+(default <code>5000</code> for the BDD spec, <code>100</code> for the <code>prove6</code> test):</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">HAML_BENCH_ITERS</span><span class="o">=</span><span class="m">20000</span><span class="w"> </span>behave<span class="w"> </span>--benchmark<span class="w"> </span>specs/bench/
+<span class="nv">HAML_BENCH_ITERS</span><span class="o">=</span><span class="m">1000</span><span class="w"> </span><span class="nv">HAML_RUN_BENCH</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>prove6<span class="w"> </span>-Ilib<span class="w"> </span>t/0790-bench.rakutest
+</code></pre></div></td></tr></table></div>
 <h2 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h2>
-<p>A table with one row per template case:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span></pre></div></td><td class="code"><div><pre><span></span><code>                                AST (ms)  Direct (ms)       Δ (ms)  speedup
------------------------------------------------------------------------------
-static tags only                  674.81       111.45       563.36    6.05×
-inline expressions                357.13        98.69       258.45    3.62×
-for-loop over a list             2295.91       634.32      1661.59    3.62×
-if/elsif/else chain               533.03        89.73       443.30    5.94×
-dynamic attributes                312.32       135.32       177.00    2.31×
-attribute splat                   219.63       132.34        87.29    1.66×
-filter (:plain) inside loop       799.68       349.18       450.49    2.29×
-mixed realistic template         6585.97       438.66      6147.31   15.01×
+<p>The <code>prove6</code> harness prints one TAP diagnostic per case:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code># static tags only                  iters=100  ast=8.41ms  direct=2.31ms  speedup=3.64x
+# inline expressions                iters=100  ast=4.92ms  direct=1.43ms  speedup=3.44x
+# for-loop over a list              iters=100  ast=44.7ms  direct=12.8ms  speedup=3.49x
+...
 </code></pre></div></td></tr></table></div>
-<p>Columns:</p>
-<table>
-<thead>
-<tr>
-<th>Column</th>
-<th>Meaning</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>AST (ms)</code></td>
-<td>Total wall-clock time for <code>iters</code> renders via <code>:emit&lt;ast&gt;</code>.</td>
-</tr>
-<tr>
-<td><code>Direct (ms)</code></td>
-<td>Same, via <code>:emit&lt;direct&gt;</code>.</td>
-</tr>
-<tr>
-<td><code>Δ (ms)</code></td>
-<td><code>AST − Direct</code>. Positive means direct emit was faster.</td>
-</tr>
-<tr>
-<td><code>speedup</code></td>
-<td><code>AST / Direct</code>.</td>
-</tr>
-</tbody>
-</table>
-<p>Each case is run once for both paths before the timed loop, so the
+<p>The BDD-Behave benchmark mode renders comparable per-case tables driven
+by the <code>benchmark 'ast' { ... }</code> / <code>benchmark 'direct' { ... }</code> blocks
+inside the spec.</p>
+<p>Each case is warmed once for both paths before the timed loop, so the
 per-template precompile/EVAL cost is excluded from the timings — what's
 being measured is steady-state render speed.</p>
 <h2 id="cases">Cases<a class="headerlink" href="#cases" title="Permanent link">&para;</a></h2>
-<p>The cases live in the <code>bench-cases</code> sub at the bottom of
-<a href="https://github.com/gdonald/Template-HAML/blob/main/bench/render.raku"><code>bench/render.raku</code></a>.
-Each entry is a <code>(name, src, locals)</code> record. Add a case by appending to the
-returned list — the harness reflows the table to fit.</p>
+<p>The cases are declared in <a href="https://github.com/gdonald/Template-HAML/blob/main/specs/bench/render-spec.raku"><code>specs/bench/render-spec.raku</code></a>
+(mirrored by <code>t/0790-bench.rakutest</code>). Each entry is a <code>(name, src, locals)</code>
+record. Add a case by appending to the list — the harnesses pick it up
+automatically.</p>
 <h2 id="caveats">Caveats<a class="headerlink" href="#caveats" title="Permanent link">&para;</a></h2>
 <ul>
 <li>The numbers are wall-clock and depend on machine load. Run a few times if
   the comparison is close.</li>
-<li>The harness times <code>HAML.render(:src, …)</code> end-to-end. The first render for
-  each path warms internal caches; subsequent renders reuse the cached
-  closure, so the times reflect the steady-state cost, not first-render
+<li>The harness times <code>HAML.render(:src, ...)</code> end-to-end. The first render
+  for each path warms internal caches; subsequent renders reuse the
+  cached closure, so the times reflect the steady-state cost, not first-render
   cost.</li>
 <li><code>:emit&lt;direct&gt;</code> covers the same template-level features as the AST
   renderer (trim modifiers, <code>remove-whitespace</code>, preserved tags with
-  children, tab-offset propagation). The only path it does not yet drive is
-  streaming (<code>HAML.render-supply</code>), which stays on the AST renderer
+  children, tab-offset propagation). The only path it does not yet drive
+  is streaming (<code>HAML.render-supply</code>), which stays on the AST renderer
   regardless of <code>:emit</code>. See
   <a href="../../api/#feature-parity-with-the-ast-renderer">API: Feature parity with the AST renderer</a>.</li>
 </ul>
