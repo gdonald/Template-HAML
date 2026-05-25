@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.9.2 — 2026-05-25
+
+### Changed
+
+- **CI workflow.** Added a `name:` and `workflow_dispatch` trigger so the
+  pipeline can be re-run manually from the GitHub Actions UI.
+- **CI dependencies.** Dropped the explicit install step for `BDD::Behave`
+  from git; it now resolves through normal `--test-depends` from the Raku
+  ecosystem.
+
 ## v0.9.1 — 2026-05-23
 
 ### Added
