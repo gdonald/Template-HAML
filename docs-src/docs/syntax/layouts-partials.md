@@ -85,6 +85,15 @@ renders:
 </html>
 ```
 
+The same call works with the compiled cache via `render-file-cached`:
+
+```raku
+$haml.render-file-cached(:file<home/index>, :layout<layouts/app>);
+```
+
+Both the inner template and the layout are compiled, cached on disk, and
+memoized in-process. See the API reference for details.
+
 ### Named content blocks
 
 Inner templates can fill *named* slots in a layout with `content-for`.

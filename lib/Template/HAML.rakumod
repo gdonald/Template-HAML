@@ -477,10 +477,8 @@ class HAML is export {
     $path;
   }
 
-  method render-file-cached(Str:D :$file!, :%locals, Template::HAML::Config :$config, :$context --> Str) {
-    my $cfg      = $config // ($!config // Template::HAML::Config.new);
-    my $resolved = self!resolve-file-for-cache($file);
-    my $key      = self.compiled-cache-key-for-file(:$file, :config($cfg));
+  method !load-cached-fn(Str:D $file, Template::HAML::Config:D $cfg --> Code) {
+    my $key = self.compiled-cache-key-for-file(:$file, :config($cfg));
     unless %fn-cache{$key}:exists {
       self.compile-file-to-cache(:$file, :config($cfg));
       %fn-cache{$key} = load-render-fn(
@@ -488,13 +486,31 @@ class HAML is export {
         :sub-name(render-fn-name-for($cfg)),
       );
     }
-    my &fn = %fn-cache{$key};
+    %fn-cache{$key};
+  }
+
+  method render-file-cached(Str:D :$file!, :$layout, :%locals, Template::HAML::Config :$config, :$context --> Str) {
+    my $cfg      = $config // ($!config // Template::HAML::Config.new);
+    my $resolved = self!resolve-file-for-cache($file);
+    my &fn       = self!load-cached-fn($file, $cfg);
+
     my $ctx = Template::HAML::Context.new(
       :haml(self),
       :current-dir($resolved.dirname),
       :user-context($context // default-user-context()),
     );
-    fn(%locals, :config($cfg), :$ctx);
+
+    my $inner = fn(%locals, :config($cfg), :$ctx);
+
+    return $inner unless $layout.defined;
+
+    my $layout-resolved = self!resolve-file-for-cache($layout);
+    my &layout-fn       = self!load-cached-fn($layout, $cfg);
+
+    $ctx.yield-content = $inner;
+    $ctx.current-dir   = $layout-resolved.dirname;
+
+    layout-fn(%locals, :config($cfg), :$ctx);
   }
 
   method clear-compiled-cache(--> Int) {

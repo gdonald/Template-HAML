@@ -333,6 +333,22 @@ Like `render-cached`, the compiled `&fn` is memoized in-process by cache key
 (which includes the file's mtime). An edited file produces a new key and a
 fresh load through `require`; an unchanged file reuses the in-memory closure.
 
+`render-file-cached` also accepts `:layout`, mirroring `HAML.render(:file, :layout)`:
+
+```raku
+my Str $html = $haml.render-file-cached(
+  :file<home>,
+  :layout<layouts/app>,
+  :%locals,
+);
+```
+
+Both the inner template and the layout are compiled, cached on disk, and
+memoized in-process independently. Editing either file invalidates only that
+file's cache entry. The layout sees the inner render through `= yield` (and
+`yield(:name<...>)` for named blocks via `content-for`), exactly as the
+non-cached `render(:file, :layout)` path does.
+
 ### `HAML.clear-compiled-cache`
 
 ```raku

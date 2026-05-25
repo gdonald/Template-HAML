@@ -1,0 +1,178 @@
+
+use v6.d;
+use lib 'lib', 'specs/lib';
+use SpecHelpers;
+use Template::HAML;
+use Template::HAML::Cache;
+use Template::HAML::Config;
+use Test;
+
+plan 13;
+
+sub rm-rf(IO::Path $p) {
+  return unless $p.e;
+  for $p.dir -> $c {
+    $c.d ?? rm-rf($c) !! $c.unlink;
+  }
+  $p.rmdir;
+}
+
+{
+  my $dir   = fresh-dir;
+  my $views = $dir.add('views');
+  my $layouts = $views.add('layouts');
+  $views.mkdir;
+  $layouts.mkdir;
+
+  $views.add('inner.html.haml').spurt("%h1 Inner\n");
+  $layouts.add('app.html.haml').spurt(q:to/END/);
+  %html
+    %body
+      = yield
+  END
+
+  my $haml = HAML.new(
+    :compiled-cache-dir($dir.add('cache')),
+    :search-paths($views.absolute),
+  );
+  my $cached = $haml.render-file-cached(:file<inner>, :layout<layouts/app>);
+  my $plain  = HAML.new(:search-paths($views.absolute)).render(:file<inner>, :layout<layouts/app>);
+
+  is $cached, $plain, 'cached layout output matches interpreter';
+  like $cached, /'<html>'/, 'layout html tag present';
+  like $cached, /'<body>'/, 'layout body tag present';
+  like $cached, /'<h1>Inner</h1>'/, 'inner content yielded into layout';
+
+  LEAVE { rm-rf($dir); }
+}
+
+{
+  my $dir   = fresh-dir;
+  my $views = $dir.add('views');
+  my $layouts = $views.add('layouts');
+  $views.mkdir;
+  $layouts.mkdir;
+
+  $views.add('home.html.haml').spurt("%p home\n");
+  $layouts.add('app.html.haml').spurt("%body\n  = yield\n");
+
+  my $haml = HAML.new(
+    :compiled-cache-dir($dir.add('cache')),
+    :search-paths($views.absolute),
+  );
+
+  $haml.clear-compiled-fn-cache;
+
+  $haml.render-file-cached(:file<home>, :layout<layouts/app>);
+  my $after-first = $haml.compiled-fn-cache-size;
+  is $after-first, 2, 'first cached render with layout memoizes two fns';
+
+  $haml.render-file-cached(:file<home>, :layout<layouts/app>);
+  is $haml.compiled-fn-cache-size, $after-first,
+    'second cached render reuses memoized fns';
+
+  LEAVE { rm-rf($dir); $haml.clear-compiled-fn-cache; }
+}
+
+{
+  my $dir   = fresh-dir;
+  my $views = $dir.add('views');
+  my $layouts = $views.add('layouts');
+  $views.mkdir;
+  $layouts.mkdir;
+
+  my $page = $views.add('page.html.haml');
+  $page.spurt("%p one\n");
+  $layouts.add('app.html.haml').spurt("%body\n  = yield\n");
+
+  my $haml = HAML.new(
+    :compiled-cache-dir($dir.add('cache')),
+    :search-paths($views.absolute),
+  );
+
+  my $first = $haml.render-file-cached(:file<page>, :layout<layouts/app>);
+  like $first, /'<p>one</p>'/, 'initial inner rendered';
+
+  sleep 1.1;
+  $page.spurt("%p two\n");
+  my $second = $haml.render-file-cached(:file<page>, :layout<layouts/app>);
+  like $second, /'<p>two</p>'/, 'edited inner reflected on next render';
+
+  LEAVE { rm-rf($dir); }
+}
+
+{
+  my $dir   = fresh-dir;
+  my $views = $dir.add('views');
+  my $layouts = $views.add('layouts');
+  $views.mkdir;
+  $layouts.mkdir;
+
+  $views.add('inner.html.haml').spurt("%h1 hi\n");
+  my $lay = $layouts.add('app.html.haml');
+  $lay.spurt("%body\n  = yield\n");
+
+  my $haml = HAML.new(
+    :compiled-cache-dir($dir.add('cache')),
+    :search-paths($views.absolute),
+  );
+
+  my $first = $haml.render-file-cached(:file<inner>, :layout<layouts/app>);
+  like $first, /'<body>'/, 'initial layout uses body';
+
+  sleep 1.1;
+  $lay.spurt("%main\n  = yield\n");
+  my $second = $haml.render-file-cached(:file<inner>, :layout<layouts/app>);
+  like $second, /'<main>'/, 'edited layout reflected on next render';
+
+  LEAVE { rm-rf($dir); }
+}
+
+{
+  my $dir   = fresh-dir;
+  my $views = $dir.add('views');
+  my $layouts = $views.add('layouts');
+  $views.mkdir;
+  $layouts.mkdir;
+
+  $layouts.add('named.html.haml').spurt(q:to/END/);
+  %html
+    %head
+      %title
+        != yield(:name<title>)
+    %body
+      = yield
+  END
+  $views.add('with-title.html.haml').spurt(q:to/END/);
+  - content-for('title', { 'My Page' })
+  %p Body content
+  END
+
+  my $haml = HAML.new(
+    :compiled-cache-dir($dir.add('cache')),
+    :search-paths($views.absolute),
+  );
+
+  my $out = $haml.render-file-cached(:file<with-title>, :layout<layouts/named>);
+  like $out, /'My Page'/, 'named yield filled through cached layout';
+  like $out, /'<p>Body content</p>'/, 'default yield filled through cached layout';
+
+  LEAVE { rm-rf($dir); }
+}
+
+{
+  my $dir   = fresh-dir;
+  my $views = $dir.add('views');
+  $views.mkdir;
+  $views.add('plain.html.haml').spurt("%p plain\n");
+
+  my $haml = HAML.new(
+    :compiled-cache-dir($dir.add('cache')),
+    :search-paths($views.absolute),
+  );
+
+  is $haml.render-file-cached(:file<plain>), "<p>plain</p>\n",
+    'render-file-cached without :layout still works';
+
+  LEAVE { rm-rf($dir); }
+}
