@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.9.3 — 2026-05-25
+
+### Added
+
+- **`:layout` for `render-file-cached`.** Mirrors `HAML.render(:file, :layout)`.
+  Both the inner template and the layout are compiled, cached on disk, and
+  memoized in-process independently; editing either file invalidates only that
+  file's entry. The layout sees the inner render through `= yield` and
+  `yield(:name<...>)` / `content-for`.
+
 ## v0.9.2 — 2026-05-25
 
 ### Changed
