@@ -2017,6 +2017,22 @@ resolves relative paths the same way <code>HAML.render(:file)</code> does.</p>
 <p>Like <code>render-cached</code>, the compiled <code>&amp;fn</code> is memoized in-process by cache key
 (which includes the file's mtime). An edited file produces a new key and a
 fresh load through <code>require</code>; an unchanged file reuses the in-memory closure.</p>
+<p><code>render-file-cached</code> also accepts <code>:layout</code>, mirroring <code>HAML.render(:file, :layout)</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nb">Str</span> <span class="nv">$html</span> = <span class="nv">$haml</span>.<span class="n">render-file-cached</span>(
+  :<span class="n">file</span><span class="s">&lt;home&gt;</span>,
+  :<span class="n">layout</span><span class="s">&lt;layouts/app&gt;</span>,
+  :<span class="nv">%locals</span>,
+);
+</code></pre></div></td></tr></table></div>
+<p>Both the inner template and the layout are compiled, cached on disk, and
+memoized in-process independently. Editing either file invalidates only that
+file's cache entry. The layout sees the inner render through <code>= yield</code> (and
+<code>yield(:name&lt;...&gt;)</code> for named blocks via <code>content-for</code>), exactly as the
+non-cached <code>render(:file, :layout)</code> path does.</p>
 <h3 id="hamlclear-compiled-cache"><code>HAML.clear-compiled-cache</code><a class="headerlink" href="#hamlclear-compiled-cache" title="Permanent link">&para;</a></h3>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nb">Int</span> <span class="nv">$removed</span> = <span class="nv">$haml</span>.<span class="n">clear-compiled-cache</span>;
 </code></pre></div></td></tr></table></div>

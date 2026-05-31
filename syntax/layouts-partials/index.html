@@ -1318,6 +1318,11 @@ first; its output is then substituted for <code>yield</code> in the layout.</p>
   <span class="p">&lt;/</span><span class="nt">body</span><span class="p">&gt;</span>
 <span class="p">&lt;/</span><span class="nt">html</span><span class="p">&gt;</span>
 </code></pre></div></td></tr></table></div>
+<p>The same call works with the compiled cache via <code>render-file-cached</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$haml</span>.<span class="n">render-file-cached</span>(:<span class="n">file</span><span class="s">&lt;home/index&gt;</span>, :<span class="n">layout</span><span class="s">&lt;layouts/app&gt;</span>);
+</code></pre></div></td></tr></table></div>
+<p>Both the inner template and the layout are compiled, cached on disk, and
+memoized in-process. See the API reference for details.</p>
 <h3 id="named-content-blocks">Named content blocks<a class="headerlink" href="#named-content-blocks" title="Permanent link">&para;</a></h3>
 <p>Inner templates can fill <em>named</em> slots in a layout with <code>content-for</code>.
 The layout retrieves them via <code>yield(:name&lt;...&gt;)</code>:</p>
