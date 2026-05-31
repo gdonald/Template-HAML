@@ -5,6 +5,10 @@ on:
   pull_request:
   workflow_dispatch:
 
+env:
+  HAML_BENCH_ITERS: 10
+  HAML_RUN_BENCH: 1
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -13,9 +17,6 @@ jobs:
       matrix:
         stage: [prove6-direct, prove6-ast, behave]
     name: ${{ matrix.stage }}
-    env:
-      HAML_BENCH_ITERS: 10
-      HAML_RUN_BENCH: 1
     steps:
       - uses: actions/checkout@v4
       - uses: Raku/setup-raku@v1
@@ -37,6 +38,25 @@ jobs:
         run: zef install --/test App::Prove6
       - name: Run tests
         run: ./test.raku ${{ matrix.stage }}
+
+  benchmark:
+    runs-on: ubuntu-latest
+    name: benchmark
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Raku/setup-raku@v1
+        with:
+          raku-version: 'latest'
+      - name: Raku version
+        run: raku --version
+      - name: Cache zef
+        uses: actions/cache@v4
+        with:
+          path: ~/.zef
+          key: zef-ubuntu-latest-${{ hashFiles('META6.json') }}
+          restore-keys: |
+            zef-ubuntu-latest-
+      - name: Install dependencies
+        run: zef install --deps-only --/test --test-depends .
       - name: Run benchmarks
-        if: matrix.stage == 'behave'
         run: behave --benchmark specs/bench/
