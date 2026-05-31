@@ -19,6 +19,15 @@ my @stages = (
     :env(%())                                                                  },
 );
 
+my $only = @*ARGS[0];
+
+my @run-stages = $only ?? @stages.grep({ .<name> eq $only }).list !! @stages;
+
+if $only && !@run-stages {
+  note "Unknown stage '$only'. Valid stages: {@stages.map(*.<name>).join(', ')}";
+  exit 2;
+}
+
 my %durations;
 my $total-start = now;
 
@@ -30,16 +39,18 @@ sub format-ts(--> Str) {
 }
 
 END {
-  say '';
-  say '==> Runtimes';
-  for @stages -> $s {
-    next unless %durations{$s<name>}:exists;
-    printf "  %-9s %7.2fs\n", $s<name>, %durations{$s<name>};
+  if %durations {
+    say '';
+    say '==> Runtimes';
+    for @run-stages -> $s {
+      next unless %durations{$s<name>}:exists;
+      printf "  %-9s %7.2fs\n", $s<name>, %durations{$s<name>};
+    }
+    printf "  %-9s %7.2fs\n", 'total', (now - $total-start).Num;
   }
-  printf "  %-9s %7.2fs\n", 'total', (now - $total-start).Num;
 }
 
-for @stages -> $s {
+for @run-stages -> $s {
   my @cmd = $s<cmd>.list;
   my %extra-env = ($s<env> // %()).hash;
   my $env-prefix = %extra-env.elems

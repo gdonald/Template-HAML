@@ -8,6 +8,11 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        stage: [prove6-direct, prove6-ast, behave]
+    name: ${{ matrix.stage }}
     env:
       HAML_BENCH_ITERS: 10
       HAML_RUN_BENCH: 1
@@ -28,8 +33,10 @@ jobs:
       - name: Install dependencies
         run: zef install --deps-only --/test --test-depends .
       - name: Install prove6
+        if: matrix.stage != 'behave'
         run: zef install --/test App::Prove6
       - name: Run tests
-        run: ./test.raku
+        run: ./test.raku ${{ matrix.stage }}
       - name: Run benchmarks
+        if: matrix.stage == 'behave'
         run: behave --benchmark specs/bench/
