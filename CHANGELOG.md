@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.9.4 — 2026-05-31
+
+### Changed
+
+- **CI test runs.** The test suite is split across multiple parallel jobs so
+  the pipeline finishes faster and failures are easier to localize.
+- **CI benchmarks.** The benchmark run moved into its own dedicated job,
+  separate from the test jobs.
+- **Ecosystem metadata.** Packaging metadata tweaked so the distribution links correctly on raku.land.
+
 ## v0.9.3 — 2026-05-25
 
 ### Added
