@@ -2,6 +2,7 @@ use lib 'lib';
 use BDD::Behave;
 use MONKEY-SEE-NO-EVAL;
 use Template::HAML;
+use Template::HAML::Config;
 use Template::HAML::Context;
 use Template::HAML::HelpersRole;
 use Template::HAML::ViewContext;
@@ -194,6 +195,40 @@ describe 'HAML render context', {
       my $ctx = Template::HAML::Context.new(:user-context(MyView.new));
       my $out = fn(%(), :ctx($ctx));
       expect($out).to.match(/'world'/);
+    }
+  }
+
+  context 'context methods with arguments', {
+    it 'calls a context method bare with an argument', {
+      my $out = HAML.render(:src("%p\n  = shout('hi')\n"), :context(MyView.new));
+      expect($out).to.match(/'HI'/);
+    }
+
+    it 'passes a local as an argument to a bare helper call', {
+      my $out = HAML.render(
+        :src("%p\n  = shout(\$name)\n"),
+        :context(MyView.new),
+        :locals(%(name => 'yo')),
+      );
+      expect($out).to.match(/'YO'/);
+    }
+
+    it 'binds a hyphenated helper name for a bare call with arguments', {
+      my class HyphenView does Template::HAML::HelpersRole {
+        method wrap-it($s) { "[$s]" }
+      }
+
+      my $out = HAML.render(:src("%p\n  = wrap-it('x')\n"), :context(HyphenView.new));
+      expect($out).to.match(/'[x]'/);
+    }
+
+    it 'resolves arg helpers through the interpreted renderer too', {
+      my $out = HAML.render(
+        :src("%p\n  = shout('hi')\n"),
+        :context(MyView.new),
+        :config(Template::HAML::Config.new(:emit('ast'))),
+      );
+      expect($out).to.match(/'HI'/);
     }
   }
 }

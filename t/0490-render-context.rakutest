@@ -191,4 +191,44 @@ subtest 'codegen round-trip preserves bare-ident lookup', {
   like $out, /'world'/, 'compiled template resolves bare ident via ctx';
 }
 
+subtest 'context helpers are callable bare with arguments', {
+  my $out = HAML.render(
+    :src("%p\n  = shout('hi')\n"),
+    :context(MyView.new),
+  );
+  like $out, /'HI'/, 'a context method with an argument resolves bare';
+}
+
+subtest 'a context helper with arguments can reference a local', {
+  my $out = HAML.render(
+    :src("%p\n  = shout(\$name)\n"),
+    :context(MyView.new),
+    :locals(%(name => 'yo')),
+  );
+  like $out, /'YO'/, 'a bare helper call passes a local as an argument';
+}
+
+subtest 'a hyphenated context helper is callable bare with arguments', {
+  my class HyphenView does Template::HAML::HelpersRole {
+    method wrap-it($s) { "[$s]" }
+  }
+
+  my $out = HAML.render(
+    :src("%p\n  = wrap-it('x')\n"),
+    :context(HyphenView.new),
+  );
+  like $out, /'[x]'/, 'a hyphenated helper name binds and calls';
+}
+
+subtest 'arg helpers work through the interpreted (ast) renderer too', {
+  use Template::HAML::Config;
+
+  my $out = HAML.render(
+    :src("%p\n  = shout('hi')\n"),
+    :context(MyView.new),
+    :config(Template::HAML::Config.new(:emit('ast'))),
+  );
+  like $out, /'HI'/, 'a context method with an argument resolves bare under ast emit';
+}
+
 done-testing;

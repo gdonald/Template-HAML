@@ -7,6 +7,7 @@ use Template::HAML::Codegen;
 use Template::HAML::Config;
 use Template::HAML::Context;
 use Template::HAML::DirectCodegen;
+use Template::HAML::Eval;
 use Template::HAML::Multiline;
 use Template::HAML::Node;
 use Template::HAML::Renderer;
@@ -285,10 +286,11 @@ class HAML is export {
   }
 
   method !do-render-direct(Str:D $src, %locals, Template::HAML::Config $cfg, $ctx) {
-    my $key = compute-cache-key($src, $cfg);
+    my @helper-names = context-helper-names($ctx.defined ?? $ctx.user-context !! Nil);
+    my $key = compute-cache-key($src, $cfg) ~ "\x[1D]" ~ @helper-names.join(',');
     unless %direct-cache{$key}:exists {
       my $tree = self!compile-source($src, $cfg);
-      my $code = DirectCodegen.new(:config($cfg)).emit-direct($tree);
+      my $code = DirectCodegen.new(:config($cfg), :@helper-names).emit-direct($tree);
       %direct-cache{$key} = EVAL $code;
     }
     my &fn = %direct-cache{$key};

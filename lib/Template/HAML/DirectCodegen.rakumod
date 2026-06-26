@@ -47,9 +47,11 @@ class DirectCodegen is export {
   has @!tag-preamble-lines;
   has @!current-locals;
   has @!scope-vars;
+  has @.helper-names;
 
-  submethod BUILD(Template::HAML::Config :$config) {
+  submethod BUILD(Template::HAML::Config :$config, :@helper-names) {
     $!config = $config // Template::HAML::Config.new;
+    @!helper-names = @helper-names;
   }
 
   method !try-precompile(Str $expr) {
@@ -74,13 +76,14 @@ class DirectCodegen is export {
     my $sig = @sig-locals.elems
       ?? '-> ' ~ @sig-locals.map({ '$' ~ $_ }).join(', ') ~ ' {'
       !! '-> {';
+    my $helpers = @!helper-names.map({ 'my &' ~ $_ ~ ' = -> |__haml { Nil }; ' }).join('');
     my $body =
       'use Template::HAML::Helpers; '
       ~ 'use Template::HAML::Filters; '
       ~ 'use Template::HAML::Interpolation; '
       ~ 'use Template::HAML::Tag; '
       ~ 'use Template::HAML::Config; '
-      ~ $sig ~ "\n" ~ $expr ~ "\n}";
+      ~ $sig ~ "\n" ~ $helpers ~ $expr ~ "\n}";
     my $err;
     {
       CATCH { default { $err = .message; } }
@@ -857,6 +860,11 @@ class DirectCodegen is export {
     @lines.push: '  my $*HAML-CFG = $_haml_cfg;';
     @lines.push: '  my ' ~ LOCALS-DYN-VAR ~ ' = ' ~ LOCALS-VAR ~ ';';
     @lines.push: '  my ' ~ BUF-VAR ~ ' = "";';
+    for @!helper-names -> $name {
+      @lines.push:
+        '  my &' ~ $name ~ ' = -> |__haml { ' ~ CTX-VAR
+        ~ '.user-context."' ~ $name ~ '"(|__haml) };';
+    }
     for @locals -> $name {
       # Bind via Proxy so a reference to a name the user did not pass in
       # :locals raises X::HAML::Eval lazily at use time, not eagerly here.
