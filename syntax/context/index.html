@@ -704,6 +704,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#context-methods-with-arguments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Context methods with arguments
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#default-context" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1065,6 +1076,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#context-methods-with-arguments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Context methods with arguments
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#default-context" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1195,6 +1217,26 @@ Examples:</p>
    Raku evaluator. If the name isn't a valid Raku identifier in scope, you'll
    get <code>X::HAML::Eval</code>.</li>
 </ol>
+<h2 id="context-methods-with-arguments">Context methods with arguments<a class="headerlink" href="#context-methods-with-arguments" title="Permanent link">&para;</a></h2>
+<p>A context method is also callable as a bare name <strong>with arguments</strong>, so a
+helper that takes parameters reads like a plain function call, no sigil:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">AppView</span> <span class="k">does</span> <span class="n">Template::HAML::HelpersRole</span> {
+  <span class="k">method</span> <span class="n">link-to</span>(<span class="nv">$text</span>, <span class="nv">$href</span>) { <span class="s">qq{&lt;a href=&quot;$href&quot;&gt;$text&lt;/a&gt;}</span> }
+}
+</code></pre></div></td></tr></table></div>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">%nav</span>
+<span class="w">  </span><span class="p">!=</span><span class="w"> </span><span class="n">link</span><span class="o">-</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;Home&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+<span class="w">  </span><span class="p">!=</span><span class="w"> </span><span class="n">link</span><span class="o">-</span><span class="n">to</span><span class="p">(</span><span class="n">label</span><span class="p">,</span><span class="w"> </span><span class="n">url</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+<p>Each context method named in an expression is bound as a lexical routine for
+that render, dispatching to the context. Locals are still referenced with their
+sigil (<code>$label</code>), since only standalone bare identifiers resolve to a local.
+Built-in helpers (<code>surround</code>, <code>list-of</code>, …) remain callable as before. This
+works in the interpreted renderer and the default direct-emit renderer.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
