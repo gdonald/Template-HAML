@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.9.5 — 2026-06-27
+
+### Added
+
+- **Render context.** `HAML.render` accepts a `:context` named argument whose
+  methods become reachable inside templates as bare identifiers in expression
+  position and control-flow conditions. Resolution order is locals, then context
+  method, then the normal Raku evaluator.
+- **Helpers with arguments.** A context method is callable as a bare name with
+  arguments (`!= link-to('Home', '/')`), dispatching to the context, in both the
+  interpreted and direct-emit renderers.
+- **User-provided helpers.** `Template::HAML::HelpersRole` and
+  `Template::HAML::ViewContext` are the two composition points for adding
+  template-facing helpers. Mix the role into your own class to keep the built-in
+  helpers, or subclass `ViewContext`.
+- **Overriding built-ins.** A context method takes precedence over the built-in
+  helper of the same name, so replacing `surround`, `list-of`, `partial`, etc.
+  for a render is just defining a method with that name.
+- **Explicit helper declaration.** A `haml-helper-names` method lets a context
+  declare helpers that `.^methods` introspection cannot see, such as those added
+  at runtime or served through `FALLBACK`.
+
 ## v0.9.4 — 2026-05-31
 
 ### Changed
@@ -10,7 +32,8 @@ All notable changes to this project will be documented in this file.
   the pipeline finishes faster and failures are easier to localize.
 - **CI benchmarks.** The benchmark run moved into its own dedicated job,
   separate from the test jobs.
-- **Ecosystem metadata.** Packaging metadata tweaked so the distribution links correctly on raku.land.
+- **Ecosystem metadata.** Packaging metadata tweaked so the distribution links
+  correctly on raku.land.
 
 ## v0.9.3 — 2026-05-25
 
