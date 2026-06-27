@@ -4,6 +4,7 @@ use MONKEY-SEE-NO-EVAL;
 use Template::HAML;
 use Template::HAML::Config;
 use Template::HAML::Context;
+use Template::HAML::Eval;
 use Template::HAML::HelpersRole;
 use Template::HAML::ViewContext;
 
@@ -229,6 +230,64 @@ describe 'HAML render context', {
         :config(Template::HAML::Config.new(:emit('ast'))),
       );
       expect($out).to.match(/'HI'/);
+    }
+  }
+
+  context 'overriding a built-in helper', {
+    my class OverrideView does Template::HAML::HelpersRole {
+      method surround($pre, $post, &block) { 'OVERRIDDEN' }
+    }
+
+    let(:out, {
+      HAML.render(
+        :src("%div\n  != surround('[', ']', \{ 'inner' })\n"),
+        :context(OverrideView.new),
+      )
+    });
+
+    it 'uses the context method of the same name', {
+      expect(out).to.match(/'OVERRIDDEN'/);
+    }
+
+    it 'does not fall back to the built-in helper', {
+      expect(out).to.not.match(/'[inner]'/);
+    }
+  }
+
+  context 'declaring helpers explicitly with haml-helper-names', {
+    it 'resolves a dynamic helper introspection cannot see', {
+      my class DynamicView does Template::HAML::HelpersRole {
+        method haml-helper-names { <ping> }
+        method FALLBACK($name, |args) {
+          $name eq 'ping' ?? 'pong' !! die "no method $name";
+        }
+      }
+
+      my $out = HAML.render(:src("%p\n  = ping\n"), :context(DynamicView.new));
+      expect($out).to.match(/'pong'/);
+    }
+  }
+
+  context 'context-helper-names', {
+    it 'returns nothing without a user', {
+      expect(context-helper-names(Nil)).to.eq([]);
+    }
+
+    it 'trusts an explicit haml-helper-names list, filtered and sorted', {
+      my class ExplicitView {
+        method haml-helper-names { <zebra apple apple Bad 9bad ok-name> }
+      }
+
+      expect(context-helper-names(ExplicitView.new)).to.eq([<apple ok-name zebra>]);
+    }
+
+    it 'lists methods a context adds beyond the Any surface', {
+      my class PlainView {
+        method greet { 'hi' }
+        method wave  { 'bye' }
+      }
+
+      expect(context-helper-names(PlainView.new)).to.eq([<greet wave>]);
     }
   }
 }

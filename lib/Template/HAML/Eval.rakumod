@@ -14,25 +14,29 @@ sub compile-key(Str $code, @keys, @helpers) {
   $code ~ "\0" ~ @keys.join("\0") ~ "\0\0" ~ @helpers.join("\0");
 }
 
-# The built-in helpers are already bare-callable through the Helpers import, so
-# they need no per-context binding; only user-added methods do.
-my constant BUILTIN-HELPERS = set <
-  html-safe haml-concat escape-once surround precede succeed list-of
-  find-and-preserve capture-haml yield content-for tab-up tab-down
-  partial page-class
->;
+sub valid-helper-name(Str() $name --> Bool) {
+  so $name ~~ / ^ <[a..z_]> <[\w-]>* $ /
+}
 
-# Methods a view-context object adds beyond the universal Any/Mu surface and the
-# built-in helpers are its template helpers. Cached per context type.
+# A view-context's template helpers are the methods it adds beyond the universal
+# Any/Mu surface. Built-in helper names (surround, partial, …) are included when
+# the context defines them, so a context can override a built-in. A context may
+# instead declare its helpers explicitly with a `haml-helper-names` method, which
+# is required when the helpers are installed in a way `.^methods` does not report
+# (metaprogrammed or dynamic per instance); that list is trusted and not cached.
 sub context-helper-names($user) is export {
   return [] without $user;
+
+  if $user.^can('haml-helper-names') {
+    return $user.haml-helper-names.map(*.Str).grep(&valid-helper-name).unique.sort.Array;
+  }
 
   with %helper-name-cache{$user.WHAT} { return @$_ }
 
   my %base   = Any.^methods(:all).map(*.name).Set;
   my @names  = $user.^methods(:all)
     .map(*.name)
-    .grep({ $_ ~~ / ^ <[a..z_]> <[\w-]>* $ / && !%base{$_} && !BUILTIN-HELPERS{$_} })
+    .grep({ valid-helper-name($_) && !%base{$_} })
     .unique
     .sort
     .Array;

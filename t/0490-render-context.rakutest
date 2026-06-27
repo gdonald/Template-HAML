@@ -2,6 +2,7 @@
 use v6.d;
 use lib 'lib';
 use Template::HAML;
+use Template::HAML::Eval;
 use Template::HAML::HelpersRole;
 use Template::HAML::ViewContext;
 use Test;
@@ -229,6 +230,55 @@ subtest 'arg helpers work through the interpreted (ast) renderer too', {
     :config(Template::HAML::Config.new(:emit('ast'))),
   );
   like $out, /'HI'/, 'a context method with an argument resolves bare under ast emit';
+}
+
+subtest 'a context method overrides a built-in helper of the same name', {
+  my class OverrideView does Template::HAML::HelpersRole {
+    method surround($pre, $post, &block) { 'OVERRIDDEN' }
+  }
+
+  my $out = HAML.render(
+    :src("%div\n  != surround('[', ']', \{ 'inner' })\n"),
+    :context(OverrideView.new),
+  );
+
+  like $out,   /'OVERRIDDEN'/, 'the context surround method is used';
+  unlike $out, /'[inner]'/,    'the built-in surround is not used';
+}
+
+subtest 'haml-helper-names declares helpers introspection cannot see', {
+  my class DynamicView does Template::HAML::HelpersRole {
+    method haml-helper-names { <ping> }
+    method FALLBACK($name, |args) {
+      $name eq 'ping' ?? 'pong' !! die "no method $name";
+    }
+  }
+
+  my $out = HAML.render(:src("%p\n  = ping\n"), :context(DynamicView.new));
+  like $out, /'pong'/, 'an explicitly declared dynamic helper resolves bare';
+}
+
+subtest 'context-helper-names returns nothing without a user', {
+  is-deeply context-helper-names(Nil), [], 'an undefined user yields no helper names';
+}
+
+subtest 'context-helper-names trusts an explicit haml-helper-names list', {
+  my class ExplicitView {
+    method haml-helper-names { <zebra apple apple Bad 9bad ok-name> }
+  }
+
+  is-deeply context-helper-names(ExplicitView.new), [<apple ok-name zebra>],
+    'the list is filtered to valid names, de-duplicated, and sorted';
+}
+
+subtest 'context-helper-names lists methods a context adds beyond the Any surface', {
+  my class PlainView {
+    method greet { 'hi' }
+    method wave  { 'bye' }
+  }
+
+  is-deeply context-helper-names(PlainView.new), [<greet wave>],
+    'only the context-added methods are reported';
 }
 
 done-testing;
