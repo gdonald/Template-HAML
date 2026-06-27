@@ -1,5 +1,4 @@
 .precomp
-docs/
 docs-src/site/
 line_counts.raku
 .fezignore
