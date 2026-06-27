@@ -715,6 +715,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#overriding-a-built-in-helper" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overriding a built-in helper
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#declaring-helpers-explicitly" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Declaring helpers explicitly
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#default-context" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1087,6 +1109,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#overriding-a-built-in-helper" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overriding a built-in helper
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#declaring-helpers-explicitly" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Declaring helpers explicitly
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#default-context" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1245,6 +1289,41 @@ works in the interpreted renderer and the default direct-emit renderer.</p>
 <span class="p">-</span><span class="w"> </span><span class="k">else</span>
 <span class="w">  </span><span class="nt">%p</span><span class="p">=</span><span class="w"> </span><span class="kp">public</span><span class="o">-</span><span class="n">greeting</span>
 </code></pre></div></td></tr></table></div>
+<h2 id="overriding-a-built-in-helper">Overriding a built-in helper<a class="headerlink" href="#overriding-a-built-in-helper" title="Permanent link">&para;</a></h2>
+<p>A context method takes precedence over the built-in helper of the same name. To
+replace <code>surround</code>, <code>partial</code>, <code>list-of</code>, or any other built-in for a given
+render, define a method with that name on your context:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">AppView</span> <span class="k">does</span> <span class="n">Template::HAML::HelpersRole</span> {
+  <span class="k">method</span> <span class="n">surround</span>(<span class="nv">$pre</span>, <span class="nv">$post</span>, <span class="nv">&amp;block</span>) { <span class="s">&quot;{$pre}OVERRIDDEN{$post}&quot;</span> }
+}
+</code></pre></div></td></tr></table></div>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nt">%div</span>
+<span class="w">  </span><span class="p">!=</span><span class="w"> </span><span class="n">surround</span><span class="p">(</span><span class="s1">&#39;[&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;]&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s1">&#39;inner&#39;</span><span class="w"> </span><span class="p">})</span>
+</code></pre></div></td></tr></table></div>
+<p>renders <code>&lt;div&gt;[OVERRIDDEN]&lt;/div&gt;</code> instead of the built-in <code>[inner]</code>. Because the
+default <code>ViewContext</code> exposes the built-ins as methods, every built-in name is
+resolved through the context, so overriding one is just defining it.</p>
+<h2 id="declaring-helpers-explicitly">Declaring helpers explicitly<a class="headerlink" href="#declaring-helpers-explicitly" title="Permanent link">&para;</a></h2>
+<p>Helper discovery normally introspects the context with <code>.^methods</code>. Helpers
+installed in a way that introspection does not report, such as methods added at
+runtime with <code>^add_method</code> or handled through <code>FALLBACK</code>, are invisible to that
+scan. Declare them with a <code>haml-helper-names</code> method that returns their names:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">DynamicView</span> <span class="k">does</span> <span class="n">Template::HAML::HelpersRole</span> {
+  <span class="k">method</span> <span class="n">haml-helper-names</span> { <span class="s">&lt;ping pong&gt;</span> }
+  <span class="k">method</span> <span class="n">FALLBACK</span>(<span class="nv">$name</span>, |<span class="nb">args</span>) { ... }
+}
+</code></pre></div></td></tr></table></div>
+<p>When <code>haml-helper-names</code> is present its list is trusted verbatim: each entry is
+kept if it is a valid helper name (starts with a lowercase letter or underscore,
+then word characters or hyphens), then de-duplicated and sorted. The list is not
+cached, so a context whose helper set varies per instance can return a different
+list each time.</p>
 <h2 id="default-context">Default context<a class="headerlink" href="#default-context" title="Permanent link">&para;</a></h2>
 <p>If you don't pass <code>:context</code>, the renderer constructs a
 <code>Template::HAML::ViewContext</code> for you. It composes the
