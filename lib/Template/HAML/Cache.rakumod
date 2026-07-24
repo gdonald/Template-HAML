@@ -41,9 +41,10 @@ sub config-fingerprint(Template::HAML::Config $cfg --> Str) is export {
 sub compute-cache-key(
   Str:D $src,
   Template::HAML::Config $config,
+  :@helper-names,
   --> Str
 ) is export {
-  my $material = $src ~ "\x[1E]" ~ config-fingerprint($config);
+  my $material = $src ~ "\x[1E]" ~ config-fingerprint($config) ~ "\x[1D]" ~ @helper-names.join(',');
   my $h        = fnv1a64($material);
   $h.fmt('%016x');
 }
@@ -52,12 +53,14 @@ sub compute-file-cache-key(
   IO::Path:D $path,
   Numeric:D  $mtime,
   Template::HAML::Config $config,
+  :@helper-names,
   --> Str
 ) is export {
   my $material =
     $path.absolute
     ~ "\x[1F]" ~ $mtime.Str
-    ~ "\x[1E]" ~ config-fingerprint($config);
+    ~ "\x[1E]" ~ config-fingerprint($config)
+    ~ "\x[1D]" ~ @helper-names.join(',');
   my $h = fnv1a64($material);
   $h.fmt('%016x');
 }

@@ -399,25 +399,26 @@ class HAML is export {
     self!compile-source(decode-input($src, $cfg), $cfg);
   }
 
-  method compiled-cache-key(:$src!, Template::HAML::Config :$config --> Str) {
+  method compiled-cache-key(:$src!, Template::HAML::Config :$config, :$context --> Str) {
     my $cfg = $config // ($!config // Template::HAML::Config.new);
-    compute-cache-key(decode-input($src, $cfg), $cfg);
+    my @helper-names = $context.defined ?? context-helper-names($context) !! ();
+    compute-cache-key(decode-input($src, $cfg), $cfg, :@helper-names);
   }
 
-  method compiled-cache-path(:$src!, Template::HAML::Config :$config --> IO::Path) {
-    my $key = self.compiled-cache-key(:$src, :$config);
+  method compiled-cache-path(:$src!, Template::HAML::Config :$config, :$context --> IO::Path) {
+    my $key = self.compiled-cache-key(:$src, :$config, :$context);
     cache-path($!compiled-cache-dir, $key);
   }
 
-  method compile-to-cache(:$src!, Template::HAML::Config :$config --> IO::Path) {
+  method compile-to-cache(:$src!, Template::HAML::Config :$config, :@helper-names --> IO::Path) {
     my $cfg  = $config // ($!config // Template::HAML::Config.new);
     my $decoded = decode-input($src, $cfg);
-    my $key  = compute-cache-key($decoded, $cfg);
+    my $key  = compute-cache-key($decoded, $cfg, :@helper-names);
     my $path = cache-path($!compiled-cache-dir, $key);
     return $path if $path.e;
     my $tree = self!compile-source($decoded, $cfg);
     my $code = $cfg.emit eq 'direct'
-      ?? DirectCodegen.new(:config($cfg)).emit-direct-module($tree, :module-name(compiled-module-name($key)))
+      ?? DirectCodegen.new(:config($cfg), :@helper-names).emit-direct-module($tree, :module-name(compiled-module-name($key)))
       !! Codegen.new(:config($cfg)).emit-module($tree, :module-name(compiled-module-name($key)));
     write-cache-file($path, $code);
     $path;
@@ -433,9 +434,11 @@ class HAML is export {
   method render-cached(:$src!, :%locals, Template::HAML::Config :$config, :$context --> Str) {
     my $cfg = $config // ($!config // Template::HAML::Config.new);
     my $decoded = decode-input($src, $cfg);
-    my $key = compute-cache-key($decoded, $cfg);
+    my $user-context = $context // default-user-context();
+    my @helper-names = $context.defined ?? context-helper-names($context) !! ();
+    my $key = compute-cache-key($decoded, $cfg, :@helper-names);
     unless %fn-cache{$key}:exists {
-      self.compile-to-cache(:src($decoded), :config($cfg));
+      self.compile-to-cache(:src($decoded), :config($cfg), :@helper-names);
       %fn-cache{$key} = load-render-fn(
         $!compiled-cache-dir, $key,
         :sub-name(render-fn-name-for($cfg)),
@@ -444,7 +447,7 @@ class HAML is export {
     my &fn = %fn-cache{$key};
     my $ctx = Template::HAML::Context.new(
       :haml(self.WHAT === HAML ?? self.WHAT !! self),
-      :user-context($context // default-user-context()),
+      :user-context($user-context),
     );
     fn(%locals, :config($cfg), :$ctx);
   }
@@ -454,35 +457,36 @@ class HAML is export {
     $resolved.IO;
   }
 
-  method compiled-cache-key-for-file(Str:D :$file!, Template::HAML::Config :$config --> Str) {
+  method compiled-cache-key-for-file(Str:D :$file!, Template::HAML::Config :$config, :$context, :@helper-names is copy --> Str) {
     my $cfg  = $config // ($!config // Template::HAML::Config.new);
+    @helper-names = context-helper-names($context) if $context.defined && !@helper-names;
     my $path = self!resolve-file-for-cache($file);
-    compute-file-cache-key($path, $path.modified.Num, $cfg);
+    compute-file-cache-key($path, $path.modified.Num, $cfg, :@helper-names);
   }
 
-  method compiled-cache-path-for-file(Str:D :$file!, Template::HAML::Config :$config --> IO::Path) {
-    my $key = self.compiled-cache-key-for-file(:$file, :$config);
+  method compiled-cache-path-for-file(Str:D :$file!, Template::HAML::Config :$config, :$context --> IO::Path) {
+    my $key = self.compiled-cache-key-for-file(:$file, :$config, :$context);
     cache-path($!compiled-cache-dir, $key);
   }
 
-  method compile-file-to-cache(Str:D :$file!, Template::HAML::Config :$config --> IO::Path) {
+  method compile-file-to-cache(Str:D :$file!, Template::HAML::Config :$config, :@helper-names --> IO::Path) {
     my $cfg  = $config // ($!config // Template::HAML::Config.new);
-    my $key  = self.compiled-cache-key-for-file(:$file, :config($cfg));
+    my $key  = self.compiled-cache-key-for-file(:$file, :config($cfg), :@helper-names);
     my $path = cache-path($!compiled-cache-dir, $key);
     return $path if $path.e;
     my $src  = slurp-template(self!resolve-file-for-cache($file), $cfg);
     my $tree = self!compile-source($src, $cfg);
     my $code = $cfg.emit eq 'direct'
-      ?? DirectCodegen.new(:config($cfg)).emit-direct-module($tree, :module-name(compiled-module-name($key)))
+      ?? DirectCodegen.new(:config($cfg), :@helper-names).emit-direct-module($tree, :module-name(compiled-module-name($key)))
       !! Codegen.new(:config($cfg)).emit-module($tree, :module-name(compiled-module-name($key)));
     write-cache-file($path, $code);
     $path;
   }
 
-  method !load-cached-fn(Str:D $file, Template::HAML::Config:D $cfg --> Code) {
-    my $key = self.compiled-cache-key-for-file(:$file, :config($cfg));
+  method !load-cached-fn(Str:D $file, Template::HAML::Config:D $cfg, :@helper-names --> Code) {
+    my $key = self.compiled-cache-key-for-file(:$file, :config($cfg), :@helper-names);
     unless %fn-cache{$key}:exists {
-      self.compile-file-to-cache(:$file, :config($cfg));
+      self.compile-file-to-cache(:$file, :config($cfg), :@helper-names);
       %fn-cache{$key} = load-render-fn(
         $!compiled-cache-dir, $key,
         :sub-name(render-fn-name-for($cfg)),
@@ -492,14 +496,16 @@ class HAML is export {
   }
 
   method render-file-cached(Str:D :$file!, :$layout, :%locals, Template::HAML::Config :$config, :$context --> Str) {
-    my $cfg      = $config // ($!config // Template::HAML::Config.new);
-    my $resolved = self!resolve-file-for-cache($file);
-    my &fn       = self!load-cached-fn($file, $cfg);
+    my $cfg          = $config // ($!config // Template::HAML::Config.new);
+    my $user-context = $context // default-user-context();
+    my @helper-names = $context.defined ?? context-helper-names($context) !! ();
+    my $resolved     = self!resolve-file-for-cache($file);
+    my &fn           = self!load-cached-fn($file, $cfg, :@helper-names);
 
     my $ctx = Template::HAML::Context.new(
       :haml(self),
       :current-dir($resolved.dirname),
-      :user-context($context // default-user-context()),
+      :user-context($user-context),
     );
 
     my $inner = fn(%locals, :config($cfg), :$ctx);
@@ -507,7 +513,7 @@ class HAML is export {
     return $inner unless $layout.defined;
 
     my $layout-resolved = self!resolve-file-for-cache($layout);
-    my &layout-fn       = self!load-cached-fn($layout, $cfg);
+    my &layout-fn       = self!load-cached-fn($layout, $cfg, :@helper-names);
 
     $ctx.yield-content = $inner;
     $ctx.current-dir   = $layout-resolved.dirname;

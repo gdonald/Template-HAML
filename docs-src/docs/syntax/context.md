@@ -122,6 +122,15 @@ then word characters or hyphens), then de-duplicated and sorted. The list is not
 cached, so a context whose helper set varies per instance can return a different
 list each time.
 
+## Helpers and the compiled cache
+
+A context's helper names take part in the compiled-template cache key used by
+`render-cached` and `render-file-cached`. The compiled module is specialized to
+the helper set, so the same source rendered against two contexts with different
+helpers compiles and caches separately, and a helper is never resolved against a
+module compiled for a context that lacked it. See
+[On-disk compiled-template cache](../api.md#on-disk-compiled-template-cache).
+
 ## Default context
 
 If you don't pass `:context`, the renderer constructs a

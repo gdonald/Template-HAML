@@ -1,0 +1,63 @@
+
+use v6.d;
+use lib 'lib', 'specs/lib';
+use SpecHelpers;
+use Template::HAML;
+use Template::HAML::HelpersRole;
+use Test;
+
+plan 6;
+
+class SiteContext does Template::HAML::HelpersRole {
+  has $.name;
+  method site-name { $!name }
+}
+
+class GreetContext does Template::HAML::HelpersRole {
+  has $.who;
+  method greeting { "Hello, $!who" }
+}
+
+sub rm-rf(IO::Path $p) {
+  return unless $p.e;
+  for $p.dir -> $c {
+    $c.d ?? rm-rf($c) !! $c.unlink;
+  }
+  $p.rmdir;
+}
+
+{
+  my $dir  = fresh-dir;
+  my $haml = HAML.new(:compiled-cache-dir($dir));
+
+  my $out = $haml.render-cached(:src("%h1= site-name\n"), :context(SiteContext.new(:name('Acme'))));
+  like $out, /'<h1>Acme</h1>'/, 'string-cached render resolves a context helper';
+
+  my $plain = HAML.new.render(:src("%h1= site-name\n"), :context(SiteContext.new(:name('Acme'))));
+  is $out, $plain, 'string-cached helper output matches interpreter';
+
+  LEAVE { rm-rf($dir); }
+}
+
+{
+  my $dir  = fresh-dir;
+  my $haml = HAML.new(:compiled-cache-dir($dir));
+
+  my $site  = $haml.render-cached(:src("%h1= site-name\n"), :context(SiteContext.new(:name('Acme'))));
+  my $greet = $haml.render-cached(:src("%h1= greeting\n"), :context(GreetContext.new(:who('World'))));
+
+  like $site,  /'<h1>Acme</h1>'/,          'site helper bound for the site context';
+  like $greet, /'<h1>Hello, World</h1>'/,  'greeting helper bound for the greet context';
+
+  LEAVE { rm-rf($dir); }
+}
+
+{
+  my $src   = "%h1 hi\n";
+  my $site  = HAML.new.compiled-cache-key(:$src, :context(SiteContext.new(:name('Acme'))));
+  my $greet = HAML.new.compiled-cache-key(:$src, :context(GreetContext.new(:who('World'))));
+  isnt $site, $greet, 'different helper sets produce different cache keys';
+
+  my $bare  = HAML.new.compiled-cache-key(:$src);
+  isnt $site, $bare, 'a helper-bearing context differs from the no-context key';
+}

@@ -1,0 +1,110 @@
+
+use v6.d;
+use lib 'lib', 'specs/lib';
+use SpecHelpers;
+use Template::HAML;
+use Template::HAML::HelpersRole;
+use Test;
+
+plan 7;
+
+class SiteContext does Template::HAML::HelpersRole {
+  has $.name;
+  method site-name { $!name }
+}
+
+class GreetContext does Template::HAML::HelpersRole {
+  has $.who;
+  method greeting { "Hello, $!who" }
+}
+
+sub rm-rf(IO::Path $p) {
+  return unless $p.e;
+  for $p.dir -> $c {
+    $c.d ?? rm-rf($c) !! $c.unlink;
+  }
+  $p.rmdir;
+}
+
+sub views-and-layouts(IO::Path $dir) {
+  my $views   = $dir.add('views');
+  my $layouts = $views.add('layouts');
+  $views.mkdir;
+  $layouts.mkdir;
+  ($views, $layouts);
+}
+
+{
+  my $dir = fresh-dir;
+  my ($views, $layouts) = views-and-layouts($dir);
+
+  $views.add('page.html.haml').spurt("%h1= site-name\n");
+  $layouts.add('app.html.haml').spurt(qq:to/END/);
+  %html
+    %head
+      %title= site-name
+    %body
+      = yield
+  END
+
+  my $haml = HAML.new(
+    :compiled-cache-dir($dir.add('cache')),
+    :search-paths($views.absolute),
+  );
+
+  my $out = $haml.render-file-cached(
+    :file<page>, :layout<layouts/app>, :context(SiteContext.new(:name('Acme'))),
+  );
+
+  like $out, /'<h1>Acme</h1>'/, 'helper resolved in the inner template';
+  like $out, /'<title>Acme</title>'/, 'helper resolved in the layout';
+
+  my $plain = HAML.new(:search-paths($views.absolute)).render(
+    :file<page>, :layout<layouts/app>, :context(SiteContext.new(:name('Acme'))),
+  );
+  is $out, $plain, 'cached helper output matches interpreter';
+
+  LEAVE { rm-rf($dir); }
+}
+
+{
+  my $dir = fresh-dir;
+  my ($views, $layouts) = views-and-layouts($dir);
+
+  $views.add('site.html.haml').spurt("%h1= site-name\n");
+  $views.add('greet.html.haml').spurt("%h1= greeting\n");
+  $layouts.add('app.html.haml').spurt("%body\n  = yield\n");
+
+  my $haml = HAML.new(
+    :compiled-cache-dir($dir.add('cache')),
+    :search-paths($views.absolute),
+  );
+
+  my $site = $haml.render-file-cached(:file<site>, :layout<layouts/app>, :context(SiteContext.new(:name('Acme'))));
+  like $site, /'<h1>Acme</h1>'/, 'site helper bound for the site context';
+
+  my $greet = $haml.render-file-cached(:file<greet>, :layout<layouts/app>, :context(GreetContext.new(:who('World'))));
+  like $greet, /'<h1>Hello, World</h1>'/, 'greeting helper bound for the greet context';
+
+  LEAVE { rm-rf($dir); }
+}
+
+{
+  my $dir = fresh-dir;
+  my ($views, $layouts) = views-and-layouts($dir);
+  $views.add('page.html.haml').spurt("%h1 hi\n");
+
+  my $haml = HAML.new(
+    :compiled-cache-dir($dir.add('cache')),
+    :search-paths($views.absolute),
+  );
+
+  my $site  = $haml.compiled-cache-key-for-file(:file<page>, :context(SiteContext.new(:name('Acme'))));
+  my $greet = $haml.compiled-cache-key-for-file(:file<page>, :context(GreetContext.new(:who('World'))));
+  isnt $site, $greet, 'file cache key varies by context helper set';
+
+  my $bare = $haml.compiled-cache-key-for-file(:file<page>);
+  isnt $site, $bare, 'a helper-bearing context differs from the no-context file key';
+
+  LEAVE { rm-rf($dir); }
+}

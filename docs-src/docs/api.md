@@ -218,6 +218,13 @@ Invalidation is automatic for both flavors of the API:
   file's mtime, so editing the file produces a different key and a clean
   cache miss — no slurp + re-hash is needed on a cache hit.
 
+The cache key also embeds the sorted list of helper names visible on the
+`:context` object (see [Render context](syntax/context.md)). The compiled
+module is specialized to that helper set, so rendering the same source against
+two contexts with different helpers produces two keys and two cached modules.
+A render with no `:context` contributes an empty helper list, which is a
+distinct key from any helper-bearing context.
+
 Stale entries left behind on disk are not garbage-collected automatically; see
 [`clear-compiled-cache`](#hamlclear-compiled-cache) below.
 
@@ -229,9 +236,10 @@ module into `<cache-dir>/.precomp/` and reuses the bytecode across
 processes. Subsequent fresh interpreters loading the same cache dir
 skip the parse-and-compile of the generated Raku source as well.
 
-On top of the on-disk cache, each unique `(src, config)` or `(file, mtime,
-config)` pair produces a compiled `&fn` closure that is memoized in-process,
-so the cache file is loaded at most once per process per template. See
+On top of the on-disk cache, each unique `(src, config, helper-names)` or
+`(file, mtime, config, helper-names)` tuple produces a compiled `&fn` closure
+that is memoized in-process, so the cache file is loaded at most once per
+process per template. See
 [`compiled-fn-cache-size`](#hamlcompiled-fn-cache-size) and
 [`clear-compiled-fn-cache`](#hamlclear-compiled-fn-cache).
 
@@ -252,19 +260,22 @@ Default cache directory resolution order:
 ```raku
 my $key = $haml.compiled-cache-key(:src("%p hi\n"));
 my $key = $haml.compiled-cache-key(:src(...), :config(...));
+my $key = $haml.compiled-cache-key(:src(...), :context(...));
 ```
 
-Returns a 16-character hex digest of `(source, config)`. Stable across
-processes; changes whenever either input changes.
+Returns a 16-character hex digest of `(source, config, helper-names)`, where
+`helper-names` is the sorted set of helper methods on the optional `:context`.
+Stable across processes; changes whenever any input changes.
 
 ### `HAML.compiled-cache-path`
 
 ```raku
 my IO::Path $path = $haml.compiled-cache-path(:src(...), :config(...));
+my IO::Path $path = $haml.compiled-cache-path(:src(...), :context(...));
 ```
 
-Returns the absolute path where the compiled artifact for `(src, config)`
-would live. Layout: `<cache-dir>/Template/HAML/Compiled/T<key>.rakumod`.
+Returns the absolute path where the compiled artifact for
+`(src, config, helper-names)` would live. Layout: `<cache-dir>/Template/HAML/Compiled/T<key>.rakumod`.
 The `T` prefix on the basename keeps the module name a valid Raku
 identifier; the `Template/HAML/Compiled/` nesting matches the module name
 so the cache dir can be used directly as a
@@ -312,13 +323,19 @@ key matches.
 ### File-based cache API
 
 The same on-disk layout is reused for cached compilations keyed by file
-path + mtime + config, so editing the template file is enough to invalidate.
+path + mtime + config + context helper names, so editing the template file is
+enough to invalidate.
 
 ```raku
+my Str      $key  = $haml.compiled-cache-key-for-file(:file<views/home>);
 my IO::Path $path = $haml.compiled-cache-path-for-file(:file<views/home>);
 my IO::Path $path = $haml.compile-file-to-cache(:file<views/home>);
 my Str      $html = $haml.render-file-cached(:file<views/home>, :%locals);
 ```
+
+`compiled-cache-key-for-file` and `compiled-cache-path-for-file` accept
+`:context`, mirroring the string-based `compiled-cache-key` and
+`compiled-cache-path`: the context's helper names feed into the key.
 
 File names are resolved through `:search-paths` and the same extension
 fallbacks as `HAML.render(:file)` (bare name, `.haml`, `.html.haml`, partial
@@ -328,6 +345,13 @@ changes, so touching the file or editing it both force a recompile.
 `render-file-cached` plumbs `:current-dir` through to the
 `Template::HAML::Context` so that `render(:partial)` inside the template
 resolves relative paths the same way `HAML.render(:file)` does.
+
+Both `render-cached` and `render-file-cached` accept `:context`, and the
+context's helper names participate in the cache key. The same template
+rendered against contexts with different helper sets compiles and caches
+separately, so a helper is never resolved against a module compiled for a
+context that lacked it. When a `:layout` is given, the same helper set is
+applied to both the inner template and the layout compilations.
 
 Like `render-cached`, the compiled `&fn` is memoized in-process by cache key
 (which includes the file's mtime). An edited file produces a new key and a
