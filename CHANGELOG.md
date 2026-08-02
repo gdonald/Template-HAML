@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.9.6 — 2026-08-02
+
+### Fixed
+
+- **Compiled-template cache key.** The on-disk and in-process caches now include
+  the render context's helper names in the key. A template compiled without a
+  context, or with a different set of helpers, is no longer reused for a render
+  whose context resolves different bare identifiers.
+
+### Changed
+
+- **CI test command.** The workflow runs the staged runner (`./test.raku`) for
+  each matrix stage instead of invoking the test paths directly.
+- **Release process.** The install check in `RELEASE.md` uses
+  `zef --force-install install .` so re-installing the same version from a
+  working tree succeeds.
+
 ## v0.9.5 — 2026-06-27
 
 ### Added
