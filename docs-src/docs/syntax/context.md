@@ -2,8 +2,8 @@
 
 `HAML.render` accepts a `:context` named argument — a Raku object whose methods
 become reachable inside templates as **bare identifiers** in expression
-position. This is the "view context" of frameworks like Rails: a place to put
-template-facing helpers without polluting global scope.
+position. This is the template's "view context": a place to put template-facing
+helpers without polluting global scope.
 
 ```raku
 class MyView {
@@ -200,5 +200,5 @@ HAML.render(
 # → <h1>from-locals</h1>
 ```
 
-This is the same precedence used by Rails-style view contexts and keeps
-per-render values from being silently shadowed by a stray helper method.
+This precedence keeps per-render values from being silently shadowed by a stray
+helper method.

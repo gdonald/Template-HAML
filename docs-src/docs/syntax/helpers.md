@@ -172,9 +172,8 @@ embedded code in this implementation is plain Raku, not HAML.
 
 ## `page-class(:$controller, :$action, :$separator = '-', :$prefix = '')`
 
-Emits a default class derived from a controller/action pair, in the Rails
-`page_class` style. Useful as the body class on a layout so per-page styles
-can target `.controller-action` selectors.
+Emits a default class derived from a controller/action pair. Useful as the body
+class on a layout so per-page styles can target `.controller-action` selectors.
 
 With no arguments, `page-class` looks up `controller-name` / `action-name` on
 the current [render context](context.md) (falling back to `controller` /
