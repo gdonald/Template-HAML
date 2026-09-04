@@ -87,7 +87,7 @@ describe 'doctype errors', {
     expect($e.snippet).to.not.be-nil;
   }
 
-  it 'raises X::HAML::UnknownDoctype on an unrecognised doctype argument', {
+  it 'raises X::HAML::UnknownDoctype on an unrecognized doctype argument', {
     my $e = catch-it({ HAML.render(:src("!!! Bogus\n")) });
     expect($e).to.be-a(X::HAML::UnknownDoctype);
     expect($e.arg).to.be('Bogus');
@@ -95,7 +95,7 @@ describe 'doctype errors', {
 }
 
 describe 'filter errors', {
-  it 'raises X::HAML::UnknownFilter for an unrecognised :filter name', {
+  it 'raises X::HAML::UnknownFilter for an unrecognized :filter name', {
     my $e = catch-it({ HAML.render(:src(":nope\n  body\n")) });
     expect($e).to.be-a(X::HAML::UnknownFilter);
     expect($e.name).to.be('nope');
