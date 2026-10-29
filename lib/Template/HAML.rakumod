@@ -330,8 +330,7 @@ class HAML is export {
     my $tmp-tree = Node.new;
     $tmp-tree.add-child(Node.new);
     my $tmp-actions = Actions.new(:tree($tmp-tree), :config($cfg));
-    my $raw-to = do {
-      CATCH { default { 0 } }
+    my $raw-to = try {
       my $partial = Grammar.subparse($joined, :actions($tmp-actions));
       $partial.defined ?? $partial.to !! 0;
     };

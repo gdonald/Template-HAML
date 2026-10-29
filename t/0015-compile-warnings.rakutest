@@ -1,0 +1,25 @@
+#!/usr/bin/env raku
+
+use v6;
+use Test;
+
+sub find-rakumod(IO::Path $dir) {
+  gather for $dir.dir {
+    when .d                      { .take for find-rakumod($_) }
+    when .extension eq 'rakumod' { .take }
+  }
+}
+
+my @rakumod-files = find-rakumod('lib'.IO).sort;
+
+plan @rakumod-files.elems;
+
+for @rakumod-files -> $file {
+  my $proc   = run $*EXECUTABLE, '-Ilib', '-c', $file, :out, :err;
+  my $stderr = $proc.err.slurp(:close);
+  $proc.out.slurp(:close);
+
+  is $stderr, '', "{$file.relative} compiles without warnings";
+}
+
+done-testing;
