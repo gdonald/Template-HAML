@@ -1,0 +1,71 @@
+#!/usr/bin/env raku
+
+use v6;
+use lib 'lib';
+use Template::HAML;
+use Test;
+
+plan 5;
+
+class Deal {
+  method id { 7 }
+}
+
+my $top-level = HAML.render(
+  :src(q:to/HAML/),
+    %a{href: "/deals/#{$deal.id}"} x
+    HAML
+  :locals(%( deal => Deal.new )),
+);
+
+ok $top-level.contains("href='/deals/7'"),
+  'an interpolated attribute at the top level reads a local passed to the template';
+
+my $in-loop = HAML.render(
+  :src(q:to/HAML/),
+    - for $items -> $item
+      %a{href: "/deals/#{$deal.id}/#{$item}"}= $item
+    HAML
+  :locals(%( items => <a b>, deal => Deal.new )),
+);
+
+ok $in-loop.contains("href='/deals/7/a'"),
+  'an interpolated attribute inside a for loop body reads a local passed to the template';
+
+my $in-loop-after-outer-read = HAML.render(
+  :src(q:to/HAML/),
+    %h1= $deal.id
+    - for $items -> $item
+      %a{href: "/deals/#{$deal.id}/#{$item}"}= $item
+    HAML
+  :locals(%( items => <a b>, deal => Deal.new )),
+);
+
+ok $in-loop-after-outer-read.contains("href='/deals/7/b'"),
+  'an interpolated attribute inside a for loop body reads a local the template also reads outside the loop';
+
+my $in-nested-loops = HAML.render(
+  :src(q:to/HAML/),
+    - for $groups -> $group
+      - for $items -> $item
+        %a{href: "/deals/#{$deal.id}/#{$group}/#{$item}"}= $item
+    HAML
+  :locals(%( groups => <g h>, items => <a b>, deal => Deal.new )),
+);
+
+ok $in-nested-loops.contains("href='/deals/7/h/b'"),
+  'an interpolated attribute inside nested for loop bodies reads a local passed to the template and both loop variables';
+
+my $in-given = HAML.render(
+  :src(q:to/HAML/),
+    - given $status
+      - when 'open'
+        %a{href: "/deals/#{$deal.id}/#{$_}"} x
+    HAML
+  :locals(%( status => 'open', deal => Deal.new )),
+);
+
+ok $in-given.contains("href='/deals/7/open'"),
+  'an interpolated attribute inside a given block reads a local passed to the template and the topic';
+
+done-testing;

@@ -608,7 +608,7 @@ class DirectCodegen is export {
     my $var  = $s.loop-var;
     my $iter-expr = self!wrap-eval($iter, $s.line // 0, $s.column // 0);
     @lines.push: '  for @(' ~ $iter-expr ~ ' // ()) -> $' ~ $var ~ ' {';
-    @lines.push: '    my %*HAML-LOCALS = %*HAML-LOCALS.clone;';
+    @lines.push: '    my %*HAML-LOCALS = CALLERS::<%*HAML-LOCALS>.clone;';
     @lines.push: '    %*HAML-LOCALS<' ~ $var ~ '> = $' ~ $var ~ ';';
     @!scope-vars.push: $var;
     @lines.append: self!emit-children-lines($node, $offset + 1);
@@ -659,7 +659,7 @@ class DirectCodegen is export {
     @lines.push: '  do {';
     @lines.push: '    my Bool $_haml_matched = False;';
     @lines.push: '    given ' ~ $topic ~ ' {';
-    @lines.push: '      my %*HAML-LOCALS = %*HAML-LOCALS.clone;';
+    @lines.push: '      my %*HAML-LOCALS = CALLERS::<%*HAML-LOCALS>.clone;';
     @lines.push: '      %*HAML-LOCALS<_> = $_;';
     for $node.children -> $k {
       my $o = $k.object;
